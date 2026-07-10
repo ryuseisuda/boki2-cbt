@@ -3,7 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>日商簿記2級 CBT模擬試験システム</title>
+<title>簿記2級 Studio | 無料のCBT模擬試験・全出題パターン網羅アプリ(非公式)</title>
+<meta name="description" content="日商簿記2級CBT対策の無料学習アプリ(非公式)。本試験の全47出題パターンを代表問題で網羅。模擬試験4回分・仕訳ドリル58問・間違い自動復習・弱点分析。登録不要、ブラウザだけで動きます。">
+<meta property="og:title" content="簿記2級 Studio | 全47の出題パターンを、代表問題で制覇する。">
+<meta property="og:description" content="日商簿記2級CBT対策の無料アプリ(非公式)。模擬試験4回分・仕訳ドリル58問・間違い自動復習・弱点分析。登録不要。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ryuseisuda.github.io/boki2-cbt/">
+<meta property="og:image" content="https://ryuseisuda.github.io/boki2-cbt/og.png">
+<meta property="og:site_name" content="簿記2級 Studio">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="簿記2級 Studio | 全47の出題パターンを、代表問題で制覇する。">
+<meta name="twitter:description" content="日商簿記2級CBT対策の無料アプリ(非公式)。模試4回分・仕訳ドリル58問・弱点分析。登録不要。">
+<meta name="twitter:image" content="https://ryuseisuda.github.io/boki2-cbt/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -1000,7 +1011,7 @@ function renderResult(ex,secRes,total,detail,auto){
   <table class="rtable"><tr><th>大問</th><th>分野</th><th>得点</th><th>所要時間</th></tr>
   ${secRes.map(r=>`<tr><td>${r.name}</td><td>${r.tag}</td><td class="${r.got>=r.max*0.7?"correct":"wrong"}">${r.got} / ${r.max}</td><td>${mmss(r.time)}</td></tr>`).join("")}
   <tr><th>合計</th><th></th><th>${total} / 100</th><th>${mmss(secRes.reduce((s,r)=>s+r.time,0))}</th></tr></table>
-  <div style="display:flex;gap:10px;"><button class="btn" onclick="renderDash()">📊 分析を見る</button><button class="btn gray" onclick="renderHome()">ホームへ</button></div></div>`;
+  <div style="display:flex;gap:10px;flex-wrap:wrap;"><button class="btn" onclick="shareX(${total})">結果をXでシェア</button><button class="btn gray" onclick="renderDash()">分析を見る</button><button class="btn gray" onclick="renderHome()">ホームへ</button></div></div>`;
   detail.forEach(d=>{
     html+=`<div class="qpane"><h2>${d.sec.name} の解答・解説</h2>`;
     d.items.forEach(it=>{
@@ -1266,6 +1277,11 @@ document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{
   if(exState)stopExam();
   ({home:renderHome,study:renderStudy,exams:renderExams,dash:renderDash})[b.dataset.v]();
 });
+window.shareX=function(total){
+  const {po,pt}=patCount();
+  const text=`簿記2級 Studio の模試で ${total}点${total>=70?"(合格ライン突破!)":"(合格ラインまであと"+(70-total)+"点)"} 出題パターン ${po}/${pt} 制覇 #簿記2級 #簿記`;
+  window.open("https://twitter.com/intent/tweet?text="+encodeURIComponent(text)+"&url="+encodeURIComponent("https://ryuseisuda.github.io/boki2-cbt/"),"_blank");
+};
 window.closeWlc=function(){
   LS.set("b2_seen",1);
   const v=document.getElementById("wexd").value;
