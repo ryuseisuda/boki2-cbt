@@ -225,7 +225,9 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",s
 <div id="acct-box">
 <h2>アカウント(学習記録の同期)</h2>
 <div id="acct-in">
-<p>メールアドレスに<b>ログイン用リンク</b>を送ります(パスワード不要・無料)。ログインすると学習記録がクラウドに保存され、<b>端末やブラウザを変えても引き継がれます</b>。</p>
+<p>ログインすると学習記録がクラウドに保存され、<b>端末やブラウザを変えても引き継がれます</b>。</p>
+<button class="btn" style="width:100%;background:#fff;color:var(--navy);border:1.5px solid var(--bd);margin:6px 0;" onclick="googleLogin()">Googleでログイン</button>
+<div style="text-align:center;color:#8a84a3;font-size:12px;margin:4px 0;">または、メールアドレスにログイン用リンクを送る(パスワード不要)</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
 <input id="acct-email" type="email" placeholder="mail@example.com" style="flex:1;min-width:220px;border:1px solid var(--bd);border-radius:999px;padding:10px 16px;font-family:inherit;font-size:14px;">
 <button class="btn" onclick="sendLink()">リンクを送る</button>
@@ -1347,6 +1349,10 @@ window.openAcct=function(){
   document.getElementById("acct-in").classList.toggle("hidden",!!sbUser);
   document.getElementById("acct-out").classList.toggle("hidden",!sbUser);
   if(sbUser)document.getElementById("acct-mail").textContent=sbUser.email||"";
+};
+window.googleLogin=async function(){
+  const {error}=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:"https://ryuseisuda.github.io/boki2-cbt/"}});
+  if(error)document.getElementById("acct-msg").textContent="Googleログインを開始できませんでした: "+error.message;
 };
 window.sendLink=async function(){
   const em=document.getElementById("acct-email").value.trim(),msg=document.getElementById("acct-msg");
