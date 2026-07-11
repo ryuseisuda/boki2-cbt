@@ -276,7 +276,7 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",s
 <ul><li>未ログインの場合、学習記録(得点・正答率・連続日数など)は<b>お使いのブラウザ内(localStorage)にのみ</b>保存されます。</li>
 <li>ログイン機能(任意)を利用した場合、メールアドレスと学習記録が認証・同期のためデータベースサービス(Supabase)に保存されます。他の目的には使用しません。</li>
 <li>そのため、ブラウザの閲覧データを削除すると学習記録も消えます。また、別の端末・ブラウザとは同期されません。</li>
-<li>本サイトはCookie・アクセス解析・広告を使用していません(ホスティングのGitHub Pagesが技術的なアクセスログを記録する場合があります)。</li></ul>
+<li>サイト改善のため、匿名の利用統計(画面の表示回数・模試の完了数など)を収集しています。Cookieは使用せず、個人を特定できる情報は含まれません。広告は使用していません(ホスティングのGitHub Pagesが技術的なアクセスログを記録する場合があります)。</li></ul>
 <h3>4. 禁止事項</h3>
 <ul><li>問題・解説・その他コンテンツの無断転載、再配布、販売</li>
 <li>本サイトを自作と偽って公開する行為</li>
@@ -756,7 +756,8 @@ function setMode(m){ /* home|exam|other */
   document.getElementById("ftr").classList.toggle("hidden",m==="exam");
 }
 window.showTos=function(){document.getElementById("tos-ovl").classList.remove("hidden");};
-function setNav(v){document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("act",b.dataset.v===v));}
+function setNav(v){document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("act",b.dataset.v===v));
+  try{if(window._lastScreen!==v){window._lastScreen=v;if(typeof track==="function")track("screen",{s:v});}}catch(e){}}
 /* ---------- 学習アクティビティ(連続日数など) ---------- */
 const KEY_A="b2_days";
 function daysKey(t){return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");}
@@ -1022,6 +1023,7 @@ function finishExam(auto){
   let ti=0,ci=0;detail.forEach(d=>d.items.forEach(it=>{if(it.kind!=="exp"){ti++;if(it.ok)ci++;}}));
   recordActivity(ti,ci);
   const total=secRes.reduce((s,r)=>s+r.got,0);
+  try{track("exam_finish",{exam:ex.id,score:total});}catch(e){}
   const rec={examId:ex.id,title:ex.title,date:new Date().toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}),total,secs:secRes.map(r=>({no:r.no,got:r.got,max:r.max,tag:r.tag,time:r.time}))};
   const h=LS.get(KEY_H,[]);h.push(rec);LS.set(KEY_H,h);
   exState=null;setMode("home");$("#hdr-title").textContent="✦ 簿記2級 Studio";
@@ -1314,6 +1316,18 @@ window.closeWlc=function(){
   document.getElementById("wlc-ovl").classList.add("hidden");
   renderHome();
 };
+/* ---------- サイト利用統計(匿名・Cookie不使用・自前計測) ---------- */
+const AN_URL="https://ijddujtdsvmbrwtboodt.supabase.co/rest/v1/site_events";
+const AN_KEY="sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt";
+function anId(store,key){let v=store.getItem(key);if(!v){v=Math.random().toString(36).slice(2)+Date.now().toString(36);store.setItem(key,v);}return v;}
+function track(ev,meta){
+  try{
+    fetch(AN_URL,{method:"POST",headers:{"apikey":AN_KEY,"Authorization":"Bearer "+AN_KEY,"Content-Type":"application/json","Prefer":"return=minimal"},
+      body:JSON.stringify({vid:anId(localStorage,"b2_vid"),sid:anId(sessionStorage,"b2_sid"),ev,meta:meta||{},ref:document.referrer?new URL(document.referrer).hostname:null,ua:navigator.userAgent.slice(0,120)}),
+      keepalive:true}).catch(()=>{});
+  }catch(e){}
+}
+track("visit",{screen:"home"});
 /* ---------- アカウント同期(Supabase) ---------- */
 const SB_URL="https://ijddujtdsvmbrwtboodt.supabase.co",SB_KEY="sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt";
 let sb=null,sbUser=null,pushT=null;
