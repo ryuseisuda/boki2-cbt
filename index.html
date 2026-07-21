@@ -1349,6 +1349,13 @@ function gradePat(q){
     const inp=main.querySelector(`input[data-pq="${i}"]`);
     let ok;
     if(patLock&&patLock[i]){ok=true;}
+    else if(inp.value.trim()===""){
+      ok=false;
+      inp.style.background="#fef9c3";
+      const mark=document.createElement("span");
+      mark.className="prog";mark.textContent=" − 未回答(正解は表示しません)";
+      if(!inp.parentNode.querySelector(".correct,.wrong,.prog"))inp.parentNode.appendChild(mark);
+    }
     else{
       newTry++;
       const u=parseNum(inp.value);
