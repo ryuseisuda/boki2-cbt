@@ -1,0 +1,3 @@
+name: keepalive
+on: {schedule: [{cron: "0 21 * * *"}], workflow_dispatch: {}}
+jobs: {ping: {runs-on: ubuntu-latest, steps: [{name: ping, run: 'curl -s -o /dev/null "https://ijddujtdsvmbrwtboodt.supabase.co/rest/v1/site_events?select=id&limit=1" -H "apikey: sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt"'}]}}
