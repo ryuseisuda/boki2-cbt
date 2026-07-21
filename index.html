@@ -1279,11 +1279,11 @@ function refId(item){return "ref_"+item.exam+"_"+item.no+"_"+(item.pi||0);}
 function patStat(item){
   if(item.k==="tag"){
     const qs=DRILLS.filter(d=>d.tag===item.tag),st=LS.get(KEY_D,{});
-    const tried=qs.filter(q=>st[q.id]);
-    if(!tried.length)return{s:"未",cls:"none",d:qs.length+"問"};
-    let t=0,o=0;tried.forEach(q=>{t+=st[q.id].t;o+=st[q.id].o;});
-    const acc=o/t;
-    return {s:tried.length===qs.length&&acc>=0.8?"○":"△",cls:tried.length===qs.length&&acc>=0.8?"ok":"mid",d:"正答率"+Math.round(acc*100)+"% ("+tried.length+"/"+qs.length+"問)"};
+    const tried=qs.filter(q=>st[q.id]).length;
+    const mastered=qs.filter(q=>st[q.id]&&st[q.id].o>0).length;
+    if(!tried)return{s:"未",cls:"none",d:"全"+qs.length+"問"};
+    const done=mastered===qs.length;
+    return {s:done?"○":"△",cls:done?"ok":"mid",d:"正解済み "+mastered+" / "+qs.length+"問"};
   }
   const id=item.k==="pq"?item.id:refId(item);
   const p=LS.get(KEY_P,{})[id];
