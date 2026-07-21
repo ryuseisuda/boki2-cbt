@@ -1317,14 +1317,18 @@ function resolvePat(item){
 window.startPat=function(gi,ii){
   const item=PATMAP[gi].items[ii];
   if(item.k==="tag"){startDrill([...DRILLS.filter(d=>d.tag===item.tag)].sort(()=>Math.random()-.5),"drill");return;}
-  patRender(resolvePat(item),null);
+  const q=resolvePat(item);
+  const p=LS.get(KEY_P,{})[q.id];
+  const lock=(p&&Array.isArray(p.ok)&&p.ok.length===q.boxes.length&&p.ok.some(v=>v)&&!p.ok.every(v=>v))?p.ok:null;
+  patRender(q,lock);
 };
 let patLock=null;
+window.patRender=patRender;
 function patRender(q,lock){
   pqCur=q;patLock=lock;
   const remain=lock?lock.filter(v=>!v).length:q.boxes.length;
   main.innerHTML=`<div class="qpane"><h2>${q.title}</h2>
-  ${lock?`<div class="note">正解済みの欄はロックされています。残り ${remain} 問だけ解き直してください。</div>`:""}
+  ${lock?`<div class="note">前回正解した欄はロック済み(○)。<b>残り ${remain} 問だけ</b>解けばOKです。 <a style="text-decoration:underline;cursor:pointer;" onclick="patRender(pqCur,null)">最初から全部解き直す</a></div>`:""}
   <div class="qtext">${q.intro}</div>
   ${q.boxes.map((b,i)=>{
     const lk=lock&&lock[i];
@@ -1362,7 +1366,7 @@ function gradePat(q){
   });
   const pct=Math.round(got/q.boxes.length*100);
   recordActivity(newTry,newOk);
-  const st=LS.get(KEY_P,{});const p=st[q.id]||{t:0,best:0};p.t++;p.best=Math.max(p.best,pct);st[q.id]=p;LS.set(KEY_P,st);
+  const st=LS.get(KEY_P,{});const p=st[q.id]||{t:0,best:0};p.t++;p.best=Math.max(p.best,pct);p.ok=okFlags;st[q.id]=p;LS.set(KEY_P,st);
   const wrong=q.boxes.length-got;
   $("#pqres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${pct>=80?"correct":"wrong"}">${got} / ${q.boxes.length} 正解 (${pct}%)${wrong===0?" — このパターン完全制覇!":(pct>=80?" — 制覇! あと少しで満点":"")}</div><div class="exp">【解説】\n${q.exp}</div>`;
   const btn=$("#pq-grade");
