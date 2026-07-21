@@ -1317,43 +1317,67 @@ function resolvePat(item){
 window.startPat=function(gi,ii){
   const item=PATMAP[gi].items[ii];
   if(item.k==="tag"){startDrill([...DRILLS.filter(d=>d.tag===item.tag)].sort(()=>Math.random()-.5),"drill");return;}
-  const q=resolvePat(item);
+  patRender(resolvePat(item),null);
+};
+let patLock=null;
+function patRender(q,lock){
+  pqCur=q;patLock=lock;
+  const remain=lock?lock.filter(v=>!v).length:q.boxes.length;
   main.innerHTML=`<div class="qpane"><h2>${q.title}</h2>
+  ${lock?`<div class="note">正解済みの欄はロックされています。残り ${remain} 問だけ解き直してください。</div>`:""}
   <div class="qtext">${q.intro}</div>
-  ${q.boxes.map((b,i)=>`<div class="boxrow"><span class="lbl">${b.label}</span><input data-pq="${i}" placeholder="金額" inputmode="numeric">${b.fav!==undefined?`<select class="fav" data-pqf="${i}"><option value=""></option><option>有利</option><option>不利</option></select>`:""}</div>`).join("")}
+  ${q.boxes.map((b,i)=>{
+    const lk=lock&&lock[i];
+    return `<div class="boxrow"><span class="lbl">${b.label}</span><input data-pq="${i}" inputmode="numeric" ${lk?`value="${fmt(b.ans)}" disabled style="background:#dcfce7;border-color:var(--ok);"`:`placeholder="金額"`}>${b.fav!==undefined?`<select class="fav" data-pqf="${i}" ${lk?"disabled":""}><option value=""></option><option ${lk&&b.fav==="有利"?"selected":""}>有利</option><option ${lk&&b.fav==="不利"?"selected":""}>不利</option></select>`:""}${lk?'<span class="correct">○</span>':""}</div>`;
+  }).join("")}
   <div id="pqres"></div>
-  <div style="margin-top:14px;display:flex;gap:10px;">
+  <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
     <button class="btn" id="pq-grade">採点する</button>
     <button class="btn gray" onclick="renderPatMap()">マップへ戻る</button>
   </div></div>`;
-  main.querySelectorAll("input[data-pq]").forEach(inp=>inp.addEventListener("blur",()=>{const n=parseNum(inp.value);inp.value=n==null?"":fmt(n);}));
+  main.querySelectorAll("input[data-pq]:not([disabled])").forEach(inp=>inp.addEventListener("blur",()=>{const n=parseNum(inp.value);inp.value=n==null?"":fmt(n);}));
   $("#pq-grade").onclick=()=>gradePat(q);
   window.scrollTo(0,0);
-};
+}
 function gradePat(q){
-  let got=0;
+  let got=0;const okFlags=[];let newTry=0,newOk=0;
   q.boxes.forEach((b,i)=>{
     const inp=main.querySelector(`input[data-pq="${i}"]`);
-    const u=parseNum(inp.value);
-    let ok=u===b.ans;
-    if(b.fav!==undefined){const f=main.querySelector(`select[data-pqf="${i}"]`).value;ok=ok&&f===b.fav;}
+    let ok;
+    if(patLock&&patLock[i]){ok=true;}
+    else{
+      newTry++;
+      const u=parseNum(inp.value);
+      ok=u===b.ans;
+      if(b.fav!==undefined){const f=main.querySelector(`select[data-pqf="${i}"]`).value;ok=ok&&f===b.fav;}
+      if(ok)newOk++;
+      inp.style.background=ok?"#dcfce7":"#fee2e2";
+      const mark=document.createElement("span");
+      mark.className=ok?"correct":"wrong";
+      mark.textContent=ok?" ○":" × 正解: "+fmt(b.ans)+(b.fav!==undefined?" "+b.fav:"");
+      if(!inp.parentNode.querySelector(".correct,.wrong"))inp.parentNode.appendChild(mark);
+    }
+    okFlags.push(ok);
     if(ok)got++;
-    inp.style.background=ok?"#dcfce7":"#fee2e2";
-    const mark=document.createElement("span");
-    mark.className=ok?"correct":"wrong";
-    mark.textContent=ok?" ○":" × 正解: "+fmt(b.ans)+(b.fav!==undefined?" "+b.fav:"");
-    if(!inp.parentNode.querySelector(".correct,.wrong"))inp.parentNode.appendChild(mark);
   });
   const pct=Math.round(got/q.boxes.length*100);
-  recordActivity(q.boxes.length,got);
+  recordActivity(newTry,newOk);
   const st=LS.get(KEY_P,{});const p=st[q.id]||{t:0,best:0};p.t++;p.best=Math.max(p.best,pct);st[q.id]=p;LS.set(KEY_P,st);
-  $("#pqres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${pct>=80?"correct":"wrong"}">${got} / ${q.boxes.length} 正解 (${pct}%)${pct>=80?" — このパターン制覇!":" — 解説を読んでもう一度"}</div><div class="exp">【解説】\n${q.exp}</div>`;
-  const btn=$("#pq-grade");btn.textContent="もう一度解く";btn.onclick=()=>reRenderPat(q);
+  const wrong=q.boxes.length-got;
+  $("#pqres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${pct>=80?"correct":"wrong"}">${got} / ${q.boxes.length} 正解 (${pct}%)${wrong===0?" — このパターン完全制覇!":(pct>=80?" — 制覇! あと少しで満点":"")}</div><div class="exp">【解説】\n${q.exp}</div>`;
+  const btn=$("#pq-grade");
+  if(wrong>0){
+    btn.textContent=`間違えた${wrong}問だけやり直す`;
+    btn.onclick=()=>patRender(q,okFlags);
+    const all=document.createElement("button");
+    all.className="btn gray";all.textContent="最初から解き直す";
+    all.onclick=()=>patRender(q,null);
+    btn.parentNode.insertBefore(all,btn.nextSibling);
+  }else{
+    btn.textContent="マップへ戻る";
+    btn.onclick=()=>renderPatMap();
+  }
   window.scrollTo(0,document.body.scrollHeight);
-}
-function reRenderPat(q){
-  for(const[gi,g]of PATMAP.entries()){const ii=g.items.findIndex(it=>(it.k==="pq"?it.id:it.k==="ref"?refId(it):null)===q.id);if(ii>=0){window.startPat(gi,ii);return;}}
-  renderPatMap();
 }
 
 /* ---------- 一問一答(電卓不要) ---------- */
