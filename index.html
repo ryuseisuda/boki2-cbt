@@ -67,6 +67,19 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 .qzc.ok{background:#dcfce7;border-color:var(--ok);font-weight:700;}
 .qzc.ng{background:#fee2e2;border-color:var(--ng);}
 .qzc:disabled{cursor:default;}
+/* 祝福・ガチャ・庭 */
+#cele-ovl{position:fixed;inset:0;background:rgba(28,23,51,.72);z-index:120;display:flex;align-items:center;justify-content:center;padding:20px;}
+#cele-box{background:#fff;border-radius:26px;padding:34px 30px;text-align:center;max-width:480px;width:100%;}
+.confetti{position:fixed;top:-16px;width:10px;height:14px;z-index:121;pointer-events:none;border-radius:2px;animation:confFall linear forwards;}
+@keyframes confFall{to{transform:translateY(112vh) rotate(720deg);}}
+@keyframes gshake{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}75%{transform:rotate(14deg)}}
+#garden{position:relative;height:440px;border-radius:26px;overflow:hidden;background:linear-gradient(#bfe3f7 0%,#e2f3fc 42%,#a6d88b 42%,#8cc973 100%);box-shadow:0 2px 14px rgba(28,23,51,.08);}
+#garden .sun{position:absolute;top:24px;right:36px;width:56px;height:56px;border-radius:50%;background:#ffd66b;box-shadow:0 0 30px #ffd66b;}
+#garden .cloud{position:absolute;background:#fff;border-radius:20px;opacity:.9;}
+.dog{position:absolute;transition:left 4s linear,top 4s linear;will-change:left,top;}
+.dog .dflip{transition:transform .3s;}
+.dog svg{display:block;width:100%;animation:dogBob .7s ease-in-out infinite alternate;}
+@keyframes dogBob{from{transform:translateY(0)}to{transform:translateY(-4px)}}
 .card h3{font-size:16px;color:var(--navy);margin-bottom:6px;}
 .card p{font-size:13px;color:#64748b;line-height:1.6;}
 .card .meta{margin-top:8px;font-size:12px;color:var(--blue);font-weight:600;}
@@ -218,6 +231,7 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",s
   <button data-v="study">勉強する</button>
   <button data-v="exams">模擬試験</button>
   <button data-v="dash">分析</button>
+  <button data-v="garden">庭</button>
 </div>
 <div id="tabs" class="hidden"></div>
 <div class="wrap" id="main"></div>
@@ -1177,6 +1191,7 @@ function startReview(){
   startDrill([...qs].sort(()=>Math.random()-.5),"review");
 }
 window.renderDrillSetup=renderDrillSetup;window.startReview=startReview;
+window.retryWrongDrill=function(){const qs=[...(drill.wrong||[])];if(qs.length)startDrill(qs.sort(()=>Math.random()-.5),drill.mode);};
 function renderDrillQ(){
   setMode("home");setNav("study");
   const q=drill.qs[drill.idx];
@@ -1212,16 +1227,24 @@ function gradeDrill(q){
   if(!ok&&!wrong.includes(q.id))wrong.push(q.id);
   if(ok){const i=wrong.indexOf(q.id);if(i>=0)wrong.splice(i,1);}
   LS.set(KEY_W,wrong);
+  if(!ok){drill.wrong=drill.wrong||[];if(!drill.wrong.find(w=>w.id===q.id))drill.wrong.push(q);}
+  if(ok&&q.tag){
+    const tagQs=DRILLS.filter(d=>d.tag===q.tag);
+    if(tagQs.length&&tagQs.every(d=>{const x=st[d.id];return x&&x.o>0;}))awardTicket("tag:"+q.tag,"仕訳: "+q.tag);
+  }
   $("#dres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${ok?"correct":"wrong"}">${ok?"○ 正解！":"× 不正解"}</div>
   <div class="ans-cmp">あなた: <span class="u">${journalUserText(a)}</span><br>正解: <span class="a">${journalAnsText(q)}</span></div>
   <div class="exp">${q.exp}</div>`;
   const btn=$("#d-grade");
   if(drill.idx<drill.qs.length-1){btn.textContent="次の問題 →";btn.onclick=()=>{drill.idx++;renderDrillQ();};}
   else{btn.textContent="結果を見る";btn.onclick=()=>{
+    const wr=drill.wrong||[];
     main.innerHTML=`<div class="qpane" style="text-align:center;"><h2>ドリル終了</h2>
     <div class="res-big ${drill.ok/drill.qs.length>=0.8?"pass":"fail"}">${drill.ok} / ${drill.qs.length} 問正解</div>
-    <p style="color:#64748b;">間違えた問題は復習モードにたまっています。</p>
-    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;"><button class="btn" onclick="renderDrillSetup()">もう一度</button><button class="btn gray" onclick="renderHome()">ホームへ</button></div></div>`;
+    <p style="color:#64748b;">${wr.length?"間違えた問題だけすぐ解き直すのが一番効きます。":"全問正解です!"}</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
+    ${wr.length?`<button class="btn" onclick="retryWrongDrill()">間違えた${wr.length}問だけやり直す</button>`:""}
+    <button class="btn ${wr.length?"gray":""}" onclick="renderDrillSetup()">もう一度</button><button class="btn gray" onclick="renderHome()">ホームへ</button></div></div>`;
   };}
   window.scrollTo(0,document.body.scrollHeight);
 }
@@ -1375,6 +1398,7 @@ function gradePat(q){
   recordActivity(newTry,newOk);
   const st=LS.get(KEY_P,{});const p=st[q.id]||{t:0,best:0};p.t++;p.best=Math.max(p.best,pct);p.ok=okFlags;st[q.id]=p;LS.set(KEY_P,st);
   const wrong=q.boxes.length-got;
+  if(wrong===0)awardTicket(q.id,q.title);
   $("#pqres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${pct>=80?"correct":"wrong"}">${got} / ${q.boxes.length} 正解 (${pct}%)${wrong===0?" — このパターン完全制覇!":(pct>=80?" — 制覇! あと少しで満点":"")}</div><div class="exp">【解説】\n${q.exp}</div>`;
   const btn=$("#pq-grade");
   if(wrong>0){
@@ -1449,6 +1473,97 @@ window.nextQuiz=function(){
     <p style="color:#6b6488;">80%以上で合格ライン。間違えた論点は要点カードで確認を。</p>
     <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;"><button class="btn" onclick="renderQuizSetup()">もう一度</button><button class="btn gray" onclick="renderStudy()">戻る</button></div></div>`;
 };
+/* ---------- チケット・祝福・ガチャ・庭 ---------- */
+const KEY_T="b2_tickets",KEY_CL="b2_cleared",KEY_DOG="b2_dogs";
+const DOG_SVG=`<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg"><g stroke="#3f2d28" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M118 112 q20 -2 24 -16 q-16 -6 -28 4" fill="#9a9089"/><path d="M70 60 q34 4 42 32 q6 22 -8 30 l-46 0 q-10 -36 12 -62z" fill="#9a9089"/><path d="M92 84 q14 8 10 26 q-14 8 -26 2 q-4 -18 16 -28z" fill="#cfa16f" stroke="none"/><path d="M44 62 q-16 26 -6 60 l38 0 q10 -30 -4 -54 q-12 -12 -28 -6z" fill="#ffffff"/><path d="M42 122 q8 5 16 0" fill="none"/><path d="M62 122 q8 5 16 0" fill="none"/><path d="M28 26 q-8 -16 2 -22 q12 4 16 16z" fill="#9a9089"/><path d="M74 22 q6 -16 16 -16 q6 10 -2 22z" fill="#9a9089"/><path d="M22 44 q0 -28 32 -30 q32 -2 36 26 q2 22 -18 28 q-30 8 -44 -6 q-6 -8 -6 -18z" fill="#9a9089"/><path d="M24 46 q2 12 12 16 q10 4 20 2 l-4 -22 q-16 -8 -28 4z" fill="#cfa16f" stroke="none"/><path d="M86 42 q2 14 -10 20 l-6 -22 q8 -6 16 2z" fill="#cfa16f" stroke="none"/><path d="M40 40 q12 -8 24 0 q8 10 2 20 q-14 8 -26 0 q-6 -10 0 -20z" fill="#ffffff" stroke="none"/><circle cx="38" cy="38" r="3.4" fill="#3f2d28" stroke="none"/><circle cx="72" cy="36" r="3.4" fill="#3f2d28" stroke="none"/><path d="M52 44 q4 -3 8 0 q-2 5 -4 5 q-2 0 -4 -5z" fill="#3f2d28" stroke="none"/><path d="M44 54 q10 12 22 2 q-2 10 -11 10 q-9 0 -11 -12z" fill="#3f2d28" stroke="none"/></g></svg>`;
+function confettiBurst(){
+  for(let i=0;i<90;i++){
+    const c=document.createElement("div");c.className="confetti";
+    c.style.left=Math.random()*100+"vw";
+    c.style.background=["#7c6fd0","#f59e0b","#16a34a","#ec4899","#3b82f6"][i%5];
+    c.style.animationDuration=(2+Math.random()*2.2)+"s";
+    c.style.animationDelay=(Math.random()*.8)+"s";
+    document.body.appendChild(c);setTimeout(()=>c.remove(),5200);
+  }
+}
+function awardTicket(pid,label){
+  const cl=LS.get(KEY_CL,[]);
+  if(cl.includes(pid))return false;
+  cl.push(pid);LS.set(KEY_CL,cl);
+  LS.set(KEY_T,LS.get(KEY_T,0)+1);
+  showCele(label);
+  return true;
+}
+function showCele(label){
+  window._celeLabel=label;
+  confettiBurst();
+  const old=document.getElementById("cele-ovl");if(old)old.remove();
+  const ovl=document.createElement("div");ovl.id="cele-ovl";
+  ovl.innerHTML=`<div id="cele-box">
+    <div style="font-size:54px;">🎉</div>
+    <h2 style="color:var(--navy);font-size:22px;margin:6px 0;">パターン制覇!</h2>
+    <p style="color:#6b6488;">「${label}」を全問正解しました</p>
+    <div style="background:#fff6dd;border-radius:14px;padding:12px;margin:16px 0;font-weight:800;color:#92400e;font-size:16px;">🎫 ガチャチケットを1枚 獲得!</div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn" onclick="document.getElementById('cele-ovl').remove();renderGarden();">ガチャを回しに行く →</button>
+      <button class="btn gray" onclick="shareCele()">Xでシェア</button>
+      <button class="btn gray" onclick="document.getElementById('cele-ovl').remove()">閉じる</button>
+    </div></div>`;
+  document.body.appendChild(ovl);
+}
+window.shareCele=function(){
+  const {po,pt}=patCount();
+  const text=`簿記2級 Studio で「${window._celeLabel}」を全問制覇! パターン進捗 ${po}/${pt} #17日で簿記2級 #簿記2級`;
+  window.open("https://twitter.com/intent/tweet?text="+encodeURIComponent(text)+"&url="+encodeURIComponent("https://ryuseisuda.github.io/boki2-cbt/"),"_blank");
+};
+let dogTimer=null;
+window.renderGarden=function(){
+  setMode("home");setNav("garden");exState=null;
+  clearInterval(dogTimer);
+  const tk=LS.get(KEY_T,0),n=LS.get(KEY_DOG,0);
+  let dogs="";
+  for(let i=0;i<n;i++){
+    const l=5+Math.random()*78,t=46+Math.random()*38,s=64+Math.random()*34;
+    dogs+=`<div class="dog" style="left:${l}%;top:${t}%;width:${s}px;z-index:${Math.round(t)}"><div class="dflip">${DOG_SVG}</div></div>`;
+  }
+  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">庭</h2><p>パターンを全問正解(各パターン初回)でチケット1枚。ガチャを回すと犬が庭にやってきます。</p></div>
+  <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+    <span style="font-weight:800;color:var(--navy);font-size:16px;">🎫 チケット ${tk}枚</span>
+    <button class="btn" ${tk<1?"disabled":""} onclick="rollGacha()">ガチャを回す(1枚)</button>
+    <span class="prog">🐶 ${n}匹が暮らしています</span>
+  </div>
+  <div id="garden">
+    <div class="sun"></div>
+    <div class="cloud" style="top:36px;left:12%;width:90px;height:26px;"></div>
+    <div class="cloud" style="top:70px;left:52%;width:64px;height:20px;"></div>
+    ${n?dogs:`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#3f6b30;font-weight:700;text-align:center;padding:20px;">まだ誰もいません。<br>パターン網羅マップを制覇してチケットを集めよう!</div>`}
+  </div>`;
+  if(n){dogTimer=setInterval(moveDogs,4200);setTimeout(moveDogs,400);}
+};
+function moveDogs(){
+  document.querySelectorAll("#garden .dog").forEach(d=>{
+    const nl=5+Math.random()*78,nt=46+Math.random()*38;
+    const cur=parseFloat(d.style.left)||50;
+    d.querySelector(".dflip").style.transform=nl<cur?"scaleX(1)":"scaleX(-1)";
+    d.style.left=nl+"%";d.style.top=nt+"%";d.style.zIndex=Math.round(nt);
+  });
+}
+window.rollGacha=function(){
+  const t=LS.get(KEY_T,0);
+  if(t<1)return;
+  LS.set(KEY_T,t-1);
+  const ovl=document.createElement("div");ovl.id="cele-ovl";
+  ovl.innerHTML=`<div id="cele-box"><div style="font-size:76px;display:inline-block;animation:gshake .5s ease-in-out 3;">🎁</div><p style="color:#6b6488;margin-top:8px;">ガチャを回しています…</p></div>`;
+  document.body.appendChild(ovl);
+  setTimeout(()=>{
+    LS.set(KEY_DOG,LS.get(KEY_DOG,0)+1);
+    confettiBurst();
+    ovl.querySelector("#cele-box").innerHTML=`<div style="width:140px;margin:0 auto;">${DOG_SVG}</div>
+      <h2 style="color:var(--navy);font-size:21px;margin:8px 0;">犬が仲間になった!</h2>
+      <p style="color:#6b6488;">庭でのんびり暮らします</p>
+      <button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove();renderGarden();">庭を見る</button>`;
+  },1700);
+};
 /* ---------- 電卓 ---------- */
 (function(){
   const panel=$("#calc"),disp=$("#calc-d");let cur="0",prev=null,op=null,fresh=true;
@@ -1470,7 +1585,7 @@ window.nextQuiz=function(){
 document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{
   if(exState&&!confirm("試験を中断しますか？(解答は破棄されます)"))return;
   if(exState)stopExam();
-  ({home:renderHome,study:renderStudy,exams:renderExams,dash:renderDash})[b.dataset.v]();
+  ({home:renderHome,study:renderStudy,exams:renderExams,dash:renderDash,garden:renderGarden})[b.dataset.v]();
 });
 window.shareX=function(total){
   const {po,pt}=patCount();
@@ -1499,7 +1614,7 @@ track("visit",{screen:"home"});
 /* ---------- アカウント同期(Supabase) ---------- */
 const SB_URL="https://ijddujtdsvmbrwtboodt.supabase.co",SB_KEY="sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt";
 let sb=null,sbUser=null,pushT=null;
-const SYNC_KEYS=[KEY_H,KEY_D,KEY_W,KEY_P,KEY_A,"b2_exam","b2_seen"];
+const SYNC_KEYS=[KEY_H,KEY_D,KEY_W,KEY_P,KEY_A,"b2_exam","b2_seen","b2_qz","b2_tickets","b2_cleared","b2_dogs"];
 function collectLocal(){const o={};SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)o[k]=v;});return o;}
 function tqOf(o){try{const d=JSON.parse(o[KEY_A]||"{}");let t=0;Object.values(d).forEach(e=>t+=e.q||0);return t;}catch(e){return 0;}}
 function applyData(o){SYNC_KEYS.forEach(k=>{if(o[k]!=null)localStorage.setItem(k,o[k]);});}
