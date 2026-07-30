@@ -222,6 +222,7 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",s
   <div style="display:flex;gap:12px;align-items:center;">
     <div id="timer" class="hidden">90:00</div>
     <button class="hbtn danger hidden" id="btn-finish">試験終了</button>
+    <button class="hbtn" id="btn-eod" onclick="showEOD()" style="background:#fff6dd;color:#92400e;">今日はここまで</button>
     <button class="hbtn" id="btn-acct" onclick="openAcct()" style="background:#efedf7;color:var(--navy);">ログイン</button>
     <button class="hbtn" id="btn-home">ホーム</button>
   </div>
@@ -850,6 +851,7 @@ function setNav(v){document.querySelectorAll("#nav button").forEach(b=>b.classLi
 const KEY_A="b2_days";
 function daysKey(t){return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");}
 function recordActivity(n,o){const d=LS.get(KEY_A,{});const k=daysKey(new Date());const e=d[k]||{q:0,o:0};e.q+=n;e.o+=o;d[k]=e;LS.set(KEY_A,d);}
+function recordRescue(k){const d=LS.get(KEY_A,{});const key=daysKey(new Date());const e=d[key]||{q:0,o:0};e.r=(e.r||0)+k;d[key]=e;LS.set(KEY_A,d);}
 function actInfo(){
   const d=LS.get(KEY_A,{});let s=0;const c=new Date();
   if(!d[daysKey(c)])c.setDate(c.getDate()-1);
@@ -1225,7 +1227,7 @@ function gradeDrill(q){
   const st=LS.get(KEY_D,{});const s=st[q.id]||{t:0,o:0};s.t++;if(ok)s.o++;st[q.id]=s;LS.set(KEY_D,st);
   const wrong=LS.get(KEY_W,[]);
   if(!ok&&!wrong.includes(q.id))wrong.push(q.id);
-  if(ok){const i=wrong.indexOf(q.id);if(i>=0)wrong.splice(i,1);}
+  if(ok){const i=wrong.indexOf(q.id);if(i>=0){wrong.splice(i,1);recordRescue(1);}}
   LS.set(KEY_W,wrong);
   if(!ok){drill.wrong=drill.wrong||[];if(!drill.wrong.find(w=>w.id===q.id))drill.wrong.push(q);}
   if(ok&&q.tag){
@@ -1396,6 +1398,7 @@ function gradePat(q){
   });
   const pct=Math.round(got/q.boxes.length*100);
   recordActivity(newTry,newOk);
+  if(patLock&&newOk)recordRescue(newOk);
   const st=LS.get(KEY_P,{});const p=st[q.id]||{t:0,best:0};p.t++;p.best=Math.max(p.best,pct);p.ok=okFlags;st[q.id]=p;LS.set(KEY_P,st);
   const wrong=q.boxes.length-got;
   if(wrong===0)awardTicket(q.id,q.title);
@@ -1563,6 +1566,35 @@ window.rollGacha=function(){
       <p style="color:#6b6488;">庭でのんびり暮らします</p>
       <button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove();renderGarden();">庭を見る</button>`;
   },1700);
+};
+/* ---------- 今日はここまで(日次サマリー) ---------- */
+window.showEOD=function(){
+  const a=actInfo();
+  const d=LS.get(KEY_A,{})[daysKey(new Date())]||{q:0,o:0,r:0};
+  const {po,pt}=patCount();
+  const h=LS.get(KEY_H,[]);const best=h.length?Math.max(...h.map(x=>x.total)):null;
+  const ed=examDate();const t0=new Date();t0.setHours(0,0,0,0);
+  const left=ed?Math.max(0,Math.round((ed-t0)/86400000)):null;
+  const acc=d.q?Math.round(d.o/d.q*100):0;
+  window._eodText=`今日の簿記2級きろく\n・解いた問題 ${d.q}問(正解${d.o}/不正解${d.q-d.o})\n・復習で正解にした問題 ${d.r||0}問\n・パターン進捗 ${po}/${pt}${best!=null?"・模試ベスト"+best+"点":""}${left!=null?"\n・試験まであと"+left+"日":""}\n#17日で簿記2級 #簿記2級`;
+  const old=document.getElementById("cele-ovl");if(old)old.remove();
+  const ovl=document.createElement("div");ovl.id="cele-ovl";
+  ovl.innerHTML=`<div id="cele-box">
+    <h2 style="color:var(--navy);font-size:21px;margin-bottom:4px;">今日はここまで、おつかれさま!</h2>
+    <p style="color:#8a84a3;font-size:13px;">🔥 ${a.streak}日連続</p>
+    <div style="text-align:left;background:var(--lt);border-radius:14px;padding:14px 18px;margin:14px 0;line-height:2.1;font-size:14.5px;">
+      解いた問題: <b>${d.q}問</b>(正解 <b class="correct">${d.o}</b> / 不正解 <b class="wrong">${d.q-d.o}</b>${d.q?` / 正解率 ${acc}%`:""})<br>
+      復習で正解にした問題: <b>${d.r||0}問</b><br>
+      パターン進捗: <b>${po} / ${pt}</b>${best!=null?`<br>模試ベスト: <b>${best}点</b>`:""}${left!=null?`<br>試験まで: <b>あと${left}日</b>`:""}
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn" onclick="shareEOD()">Xに投稿する</button>
+      <button class="btn gray" onclick="document.getElementById('cele-ovl').remove()">閉じる</button>
+    </div></div>`;
+  document.body.appendChild(ovl);
+};
+window.shareEOD=function(){
+  window.open("https://twitter.com/intent/tweet?text="+encodeURIComponent(window._eodText)+"&url="+encodeURIComponent("https://ryuseisuda.github.io/boki2-cbt/"),"_blank");
 };
 /* ---------- 電卓 ---------- */
 (function(){
