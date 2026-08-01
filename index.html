@@ -269,6 +269,75 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",s
 @media(max-width:820px){.exgrid{grid-template-columns:1fr;}}
 .herodog{background:rgba(255,255,255,.6);border-radius:22px;padding:16px 22px 10px;text-align:center;cursor:pointer;border:2px solid rgba(255,255,255,.8);}
 .herodog:hover{background:rgba(255,255,255,.78);}
+/* ===== v5 sidebar layout / blue theme / dark mode ===== */
+:root{--navy:#152a52;--blue:#2b6cea;--lt:#eaf1fb;--bd:#dbe4f2;--cream:#ffffff;--lav:#bcd3f2;--bg:#f2f5fa;--card:#ffffff;--tx2:#67718c;}
+body{background:var(--bg);color:var(--navy);}
+#hdr{background:var(--cream);}
+#nav{position:fixed;left:0;top:57px;bottom:0;width:216px;flex-direction:column;align-items:stretch;gap:5px;padding:16px 12px;border-right:2px solid var(--bd);border-bottom:none;background:var(--card);overflow:visible;}
+#nav button{text-align:left;padding:12px 16px;border-radius:14px;font-size:14.5px;letter-spacing:.03em;color:var(--tx2);}
+#nav button:hover{background:var(--lt);}
+#nav button.act{background:var(--lt);color:var(--blue);border:2px solid var(--blue);padding:10px 14px;}
+#nav #btn-theme{margin-top:auto;font-size:13px;color:var(--tx2);}
+.wrap{margin-left:216px;max-width:none;padding:24px 28px 90px;}
+#ftr{margin-left:216px;max-width:none;}
+#nav.hidden~.wrap,#nav.hidden~#ftr{margin-left:0;}
+.wrap>*:not(.page){max-width:920px;margin-left:auto;margin-right:auto;}
+.page{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start;max-width:1160px;margin:0 auto;}
+.page.noRail{grid-template-columns:minmax(0,1fr);max-width:920px;}
+.pgr{position:sticky;top:76px;}
+.rcard{background:var(--card);border:2px solid var(--bd);box-shadow:0 3px 0 var(--bd);border-radius:18px;padding:16px 18px;margin-bottom:14px;}
+.rcard h3{color:var(--navy);font-size:15px;margin-bottom:6px;}
+.rrowi{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;color:var(--tx2);}
+.rrowi:last-child{border-bottom:none;}
+.rrowi b{color:var(--navy);font-size:15px;}
+.hero2{background:linear-gradient(160deg,#dce9fc 0%,#b9d3f8 45%,#86b0f0 100%);}
+.hero2::after{background:radial-gradient(circle at 32% 30%,rgba(255,255,255,.6),rgba(255,255,255,0) 62%);}
+.tcard.light{background:linear-gradient(170deg,#e4eefb,#caddf8);color:var(--navy);border-color:#a9c6f0;box-shadow:0 3px 0 #a9c6f0;}
+.stepbar>div{background:linear-gradient(90deg,#2b6cea,#7fa8e8);}
+.step.now{border-color:var(--blue);box-shadow:0 3px 0 var(--blue);}
+.step.now .stepc{background:var(--blue);border-color:#1d4fa8;}
+#tabs{background:var(--lt);}
+.sub{color:#3d517a;}
+.eyebrow{color:#3d517a;}
+.hero2 .disp{color:#152a52;}
+.prog{color:var(--tx2);}
+body.dark{--navy:#e8eef9;--blue:#4d8bff;--lt:#20304d;--bd:#2c3c5c;--cream:#131c2e;--bg:#0e1626;--card:#182338;--tx2:#8fa0bd;color:#dfe7f5;}
+body.dark #hdr h1{color:#e8eef9;}
+body.dark .qpane,body.dark .step,body.dark .rrow,body.dark .rtab,body.dark .dogico,body.dark .bcell,body.dark .tcard.white,body.dark .dcard,body.dark .chip,body.dark .qzc,body.dark .jitem,body.dark details.kc{background:var(--card);border-color:var(--bd);color:#dfe7f5;}
+body.dark .qpane,body.dark .step,body.dark .rrow,body.dark .rtab,body.dark .dogico,body.dark .bcell,body.dark .tcard.white,body.dark .dcard{box-shadow:0 3px 0 #0a111f;}
+body.dark .tcard.white p,body.dark .card p{color:var(--tx2);}
+body.dark .gmach{background:var(--card);border-color:var(--bd);box-shadow:0 4px 0 #0a111f;}
+body.dark .tcard.light{background:linear-gradient(170deg,#1d2f52,#162642);color:#dfe7f5;border-color:#2c4470;box-shadow:0 3px 0 #0a111f;}
+body.dark .tcard.dark{background:#233458;border-color:#31497a;box-shadow:0 3px 0 #0a111f;}
+body.dark .hero2{background:linear-gradient(160deg,#1c2f55 0%,#1c3f74 60%,#1d4fa8 100%);}
+body.dark .hero2 .disp{color:#eaf1fd;}
+body.dark .sub,body.dark .eyebrow{color:#9fb4d8;}
+body.dark .herodog{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);}
+body.dark .herodog:hover{background:rgba(255,255,255,.14);}
+body.dark .stepc{background:var(--lt);border-color:var(--bd);color:var(--tx2);}
+body.dark .note{background:var(--lt);color:var(--tx2);}
+body.dark .rtable th{background:var(--lt);color:var(--tx2);}
+body.dark .rtable th,body.dark .rtable td{border-color:var(--bd);}
+body.dark .btn{box-shadow:0 4px 0 #0a111f;}
+body.dark .btn.gray{background:#3a4a68;box-shadow:0 4px 0 #0a111f;}
+body.dark .exp{background:#2e2a18;border-color:#5c4d1d;color:#e8dfb8;}
+body.dark .boxrow input,body.dark .jrow input,body.dark .jrow select,body.dark input,body.dark select{background:var(--card);color:#dfe7f5;border-color:var(--bd);}
+body.dark #cele-box,body.dark #tos-box,body.dark #wlc-box,body.dark #acct-box{background:var(--card);color:#dfe7f5;}
+body.dark #tos-box p,body.dark #tos-box li,body.dark #wlc-box p,body.dark #acct-box p{color:#b9c6de;}
+body.dark #calc{background:var(--card);border-color:var(--bd);}
+body.dark #calc button{background:var(--lt);color:#dfe7f5;border-color:var(--bd);}
+body.dark #calc input{background:var(--card);color:#dfe7f5;}
+body.dark .qtext table th,body.dark .qpane table.tb th{background:var(--lt);}
+body.dark .qtext,body.dark .qpane{color:#dfe7f5;}
+body.dark .hbtn{filter:brightness(.95);}
+@media(max-width:900px){
+  #nav{position:sticky;top:56px;left:auto;right:auto;bottom:auto;width:auto;flex-direction:row;align-items:center;gap:4px;padding:8px 10px;border-right:none;border-bottom:2px solid var(--bd);overflow-x:auto;}
+  #nav button{padding:8px 14px;white-space:nowrap;}
+  #nav #btn-theme{margin-top:0;}
+  .wrap,#ftr{margin-left:0;}
+  .page{grid-template-columns:1fr;}
+  .pgr{position:static;}
+}
 </style>
 </head>
 <body>
@@ -282,12 +351,13 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",s
   </div>
 </div>
 <div id="nav">
-  <button data-v="home">ホーム</button>
-  <button data-v="exams">模擬試験</button>
-  <button data-v="dash">分析</button>
-  <button data-v="garden">マイドッグ</button>
-  <button data-v="gacha">ガチャ</button>
-  <button data-v="rank">ランキング</button>
+  <button data-v="home">🏠 ホーム</button>
+  <button data-v="exams">🎓 模擬試験</button>
+  <button data-v="dash">📊 分析</button>
+  <button data-v="garden">🐶 マイドッグ</button>
+  <button data-v="gacha">🎰 ガチャ</button>
+  <button data-v="rank">🏆 ランキング</button>
+  <button id="btn-theme" onclick="toggleTheme()">🌙 ダークモード</button>
 </div>
 <div id="tabs" class="hidden"></div>
 <div class="wrap" id="main"></div>
@@ -915,6 +985,49 @@ function actInfo(){
   let tq=0,to=0;Object.values(d).forEach(e=>{tq+=e.q;to+=e.o;});
   return{streak:s,today,tq,to,days:Object.keys(d).length};
 }
+/* ---------- テーマ(ライト/ダーク) ---------- */
+window.toggleTheme=function(){
+  const d=!document.body.classList.contains("dark");
+  document.body.classList.toggle("dark",d);
+  LS.set("b2_theme",d?"dark":"light");
+  const b=document.getElementById("btn-theme");if(b)b.textContent=d?"☀️ ライトモード":"🌙 ダークモード";
+};
+(function(){
+  let t=null;try{t=LS.get("b2_theme",null);}catch(e){}
+  if(!t)t=(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";
+  if(t==="dark"){document.body.classList.add("dark");const b=document.getElementById("btn-theme");if(b)b.textContent="☀️ ライトモード";}
+})();
+/* ---------- 右レール(共通サイドブロック) ---------- */
+function railHTML(kind){
+  if(kind==="none")return "";
+  if(kind==="exams"){
+    const h=LS.get(KEY_H,[]);
+    const rows=h.slice(-10).reverse().map(a=>`<tr><td>${a.date}</td><td>${a.title.replace("模擬試験 ","")}</td><td class="${a.total>=70?"correct":"wrong"}">${a.total}点</td></tr>`).join("");
+    return `<div class="rcard"><h3>受験履歴</h3>${h.length?`<table class="rtable" style="margin:6px 0 0;font-size:12.5px;"><tr><th>日時</th><th>模試</th><th>得点</th></tr>${rows}</table>`:`<p class="prog">まだ受験していません</p>`}</div>`;
+  }
+  const a=actInfo(),h=LS.get(KEY_H,[]),wrong=LS.get(KEY_W,[]);
+  const best=h.length?Math.max(...h.map(x=>x.total)):null;
+  const {po,pt}=patCount();
+  const dogs=getDogs(),food=LS.get(KEY_F,0);
+  const dogCard=kind==="status"?"":(dogs.length
+    ?`<div class="rcard" style="text-align:center;cursor:pointer;" onclick="renderGarden()"><div id="raildog" style="min-height:70px;display:flex;align-items:flex-end;justify-content:center;"></div><b style="color:var(--navy);" id="raildogname"></b><div class="prog">🍖 ${food}</div></div>`
+    :`<div class="rcard" style="text-align:center;cursor:pointer;" onclick="renderGacha()"><div style="font-size:40px;">🎁</div><b style="color:var(--navy);">犬をむかえる</b></div>`);
+  return dogCard+`<div class="rcard"><h3>ステータス</h3>
+    <div class="rrowi"><span>🔥 連続日数</span><b>${a.streak}日</b></div>
+    <div class="rrowi"><span>✏️ 今日の問題</span><b>${a.today.q}問</b></div>
+    <div class="rrowi"><span>🗺️ パターン制覇</span><b>${po} / ${pt}</b></div>
+    <div class="rrowi"><span>🏆 模試ベスト</span><b>${best==null?"—":best+"点"}</b></div>
+    <div class="rrowi"><span>📌 間違い残</span><b>${wrong.length}問</b></div>
+  </div>`;
+}
+function page(center,kind){
+  const r=railHTML(kind);
+  return `<div class="page ${r?"":"noRail"}"><div class="pgc">${center}</div>${r?`<aside class="pgr">${r}</aside>`:""}</div>`;
+}
+function mountRail(){
+  const el=document.getElementById("raildog");
+  if(el){const dogs=getDogs();if(dogs.length){const d=dogs[getPartner()];el.appendChild(dogCanvas(dogStage(d.f),3,d.b));const nm=document.getElementById("raildogname");if(nm)nm.textContent=d.n;}}
+}
 $("#hdr-title").onclick=()=>{
   if(exState&&!confirm("試験を中断してホームに戻りますか？(解答は破棄されます)"))return;
   stopExam();renderHome();
@@ -955,32 +1068,19 @@ function renderHome(){
   const {po,pt}=patCount();
   const ed=examDate();const t0=new Date();t0.setHours(0,0,0,0);
   const left=ed?Math.max(0,Math.round((ed-t0)/86400000)):null;
-  const dogs=getDogs(),pi=getPartner(),food=LS.get(KEY_F,0);
-  main.innerHTML=`
-  <div class="topstat">
-    <div><span class="ico">🔥</span><div><div class="n">${a.streak}</div><div class="t">連続日数</div></div></div>
-    <div><span class="ico">✏️</span><div><div class="n">${a.today.q}</div><div class="t">今日の問題</div></div></div>
-    <div><span class="ico">🗺️</span><div><div class="n">${po}<span style="font-size:13px;color:#8a84a3;">/${pt}</span></div><div class="t">パターン制覇</div></div></div>
-    <div><span class="ico">🏆</span><div><div class="n">${best==null?"—":best}</div><div class="t">模試ベスト</div></div></div>
-    <div><span class="ico">📌</span><div><div class="n">${wrong.length}</div><div class="t">間違い残</div></div></div>
-  </div>
-  <section class="hero2" style="margin-top:16px;padding:clamp(24px,4vw,42px);"><div class="hero-flex">
-    <div style="max-width:520px;">
+  const center=`
+  <section class="hero2" style="margin-top:4px;padding:clamp(24px,4vw,42px);">
+    <div style="position:relative;z-index:1;max-width:560px;">
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
       <button class="btn" style="margin-top:10px;" onclick="renderPatMap()">学習を始める　→</button>
-      <div style="margin-top:14px;font-size:12.5px;color:#4d4670;">試験日: ${ed?`${ed.getFullYear()}/${ed.getMonth()+1}/${ed.getDate()}　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">変更</a>`:`未設定　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">設定する</a>`}</div>
+      <div style="margin-top:14px;font-size:12.5px;">試験日: ${ed?`${ed.getFullYear()}/${ed.getMonth()+1}/${ed.getDate()}　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">変更</a>`:`未設定　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">設定する</a>`}</div>
       <div id="dcfg" class="hidden" style="margin-top:10px;background:rgba(255,255,255,.55);border-radius:12px;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <input type="date" id="exd" value="${ed?ed.toISOString().slice(0,10):""}" style="border:1px solid var(--bd);border-radius:8px;padding:7px 10px;font-family:inherit;">
         <button class="btn" style="padding:8px 18px;font-size:13px;" onclick="saveExamDate(document.getElementById('exd').value)">保存</button>
         ${ed?`<button class="btn gray" style="padding:8px 18px;font-size:13px;" onclick="saveExamDate(null)">表示しない</button>`:""}
       </div>
     </div>
-    ${dogs.length?`<div class="herodog" onclick="renderGarden()">
-      <div id="homedog" style="min-height:90px;display:flex;align-items:flex-end;justify-content:center;"></div>
-      <b style="color:var(--navy);" id="homedogname"></b>
-      <div class="prog">🍖 ${food}</div>
-    </div>`:`<div class="herodog" onclick="renderGacha()"><div style="font-size:52px;">🎁</div><b style="color:var(--navy);">ガチャで犬をむかえる</b></div>`}
-  </div></section>
+  </section>
   <div class="sechead"><h2 class="disp2">合格までのステップ</h2></div>
   ${roadmapHTML()}
   <div class="sechead"><h2 class="disp2">学習メニュー</h2></div>
@@ -992,11 +1092,8 @@ function renderHome(){
     <div class="tcard white" onclick="renderCards()"><h3>📖 要点カード</h3><div class="arw">全${CARDS.length}枚　→</div></div>
     <div class="tcard white" onclick="renderExams()"><h3>🎓 模擬試験</h3><div class="arw">${best==null?"未受験":"ベスト "+best+"点"}　→</div></div>
   </div>`;
-  if(dogs.length){
-    const d=dogs[pi];
-    document.getElementById("homedog").appendChild(dogCanvas(dogStage(d.f),4,d.b));
-    document.getElementById("homedogname").textContent=d.n;
-  }
+  main.innerHTML=page(center,"default");
+  mountRail();
 }
 function renderStudy(){renderHome();}
 function renderExams(){
@@ -1006,12 +1103,9 @@ function renderExams(){
     const att=h.filter(a=>a.examId===ex.id);
     const best=att.length?Math.max(...att.map(a=>a.total)):null;
     return `<div class="tcard ${att.length?"white":"light"}" onclick="startExam('${ex.id}')"><h3>${ex.title}</h3><div class="arw">${att.length?`受験${att.length}回 / 最高 ${best}点`:"未受験"}　→</div></div>`;}).join("");
-  const rows=h.slice(-8).reverse().map(a=>`<tr><td>${a.date}</td><td>${a.title.replace("模擬試験 ","")}</td><td class="${a.total>=70?"correct":"wrong"}">${a.total}点</td></tr>`).join("");
-  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">模擬試験</h2></div>
-  <div class="exgrid">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${cards}</div>
-    <div class="qpane" style="margin-top:0;"><h2>受験履歴</h2>${h.length?`<table class="rtable" style="margin:8px 0 0;"><tr><th>日時</th><th>模試</th><th>得点</th></tr>${rows}</table>`:`<p class="prog">まだ受験していません</p>`}</div>
-  </div>`;
+  const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">模擬試験</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${cards}</div>`;
+  main.innerHTML=page(center,"exams");
 }
 window.renderStudy=renderStudy;window.renderExams=renderExams;
 function drillDoneCount(){const d=LS.get(KEY_D,{});return Object.keys(d).length;}
@@ -1320,7 +1414,7 @@ function renderDash(){
     return `<div class="bar"><span class="bl">第${s.no}問 (${s.tag})</span><div class="bt"><div class="bf" style="width:${Math.min(100,Math.round(r*100*3))}%"></div></div><span class="bv">${mmss(s.time)}</span></div>`;}).join(""):"<p class='prog'>データなし</p>";
   /* 学習カレンダー(GitHub風) */
   const dd=LS.get(KEY_A,{});
-  const CCOL=["#edeaf6","#cfc7ee","#a99ce0","#7c6fd0","#4c3fa0"];
+  const CCOL=document.body.classList.contains("dark")?["#20304d","#2c4a7d","#3f6cb5","#5b8fe0","#8fb8f5"]:["#e4ecf8","#bcd3f2","#7fa8e8","#3f74d6","#1d4fa8"];
   const lvOf=q=>q<=0?0:q<3?1:q<8?2:q<15?3:4;
   const today=new Date();today.setHours(0,0,0,0);
   const end=new Date(today);end.setDate(end.getDate()+(7-((end.getDay()+6)%7)-1));
@@ -1336,7 +1430,7 @@ function renderDash(){
     }
     cal+=`<div style="display:flex;flex-direction:column;gap:4px;">${col}</div>`;
   }
-  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">分析</h2></div>
+  const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">分析</h2></div>
   <div class="qpane"><h2>🔥 学習カレンダー</h2>
     <div style="display:flex;gap:4px;overflow-x:auto;padding:8px 0;">${cal}</div>
     <div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:12px;color:#8a84a3;">
@@ -1348,6 +1442,7 @@ function renderDash(){
   <div style="margin-top:16px;">
    <button class="btn gray" style="font-size:12px;padding:8px 18px;" onclick="if(confirm('学習データ(履歴・統計・間違いリスト)をすべて削除しますか？')){localStorage.removeItem('b2_history');localStorage.removeItem('b2_drill');localStorage.removeItem('b2_wrong');renderDash();}">データをリセット</button>
   </div>`;
+  main.innerHTML=page(center,"none");
 }
 window.renderDash=renderDash;
 
@@ -1661,9 +1756,9 @@ window.renderGarden=function(){
       <span style="font-size:10px;color:#8a84a3;">${DOG_NAMES[st]}</span>
       <span style="font-size:10px;color:#8a84a3;">${next?"🍖 "+d.f+"/"+next:"MAX"}</span>
     </div>`;}).join("");
-  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">マイドッグ</h2></div>
+  main.innerHTML=page(`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">マイドッグ</h2></div>
   ${card}
-  ${dogs.length?`<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-top:14px;">${list}</div>`:""}`;
+  ${dogs.length?`<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-top:14px;">${list}</div>`:""}`,"status");
   if(dogs.length){
     const d=dogs[pi];
     document.getElementById("dogname").textContent=d.n;
@@ -1684,17 +1779,17 @@ window.renderGacha=function(){
     const dog=dogs.find(x=>x.b===i);
     return `<div class="bcell ${have?"":"no"}"><div id="bc${i}" style="height:52px;display:flex;align-items:flex-end;justify-content:center;"></div>
       <div style="font-size:11px;font-weight:700;color:${have?"var(--navy)":"#b0aac4"};margin-top:4px;">${have?b.nm:"？？？"}</div></div>`;}).join("");
-  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">ガチャ</h2></div>
+  main.innerHTML=page(`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">ガチャ</h2></div>
   <div class="gmach">
     <div style="font-size:64px;">🎰</div>
     <div style="font-weight:800;color:var(--navy);font-size:17px;margin:8px 0 14px;">🎫 チケット ${tk}枚</div>
     ${allOwned
-      ?`<div style="font-weight:800;color:var(--navy);margin-bottom:10px;">全犬種コンプリート! 🎉</div><button class="btn gray" ${tk<1?"disabled":""} onclick="ticketToFood();renderGacha();">🎫1枚 → 🍖10個</button>`
+      ?`<button class="btn gray" ${tk<1?"disabled":""} onclick="ticketToFood();renderGacha();">🎫1枚 → 🍖10個</button>`
       :`<button class="btn" style="font-size:18px;padding:14px 48px;" ${tk<1?"disabled":""} onclick="rollGacha()">ガチャを回す</button>`}
-    ${tk<1&&!allOwned?`<p class="prog" style="margin-top:12px;">パターン網羅マップで1パターン全問正解するとチケットGET</p>`:""}
   </div>
   <div class="sechead"><h2 class="disp2">コレクション <span style="font-size:15px;color:#8a84a3;">${owned.size} / ${DOG_BREEDS.length}</span></h2></div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;">${cells}</div>`;
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;">${cells}</div>`,"default");
+  mountRail();
   DOG_BREEDS.forEach((b,i)=>{
     const el=document.getElementById("bc"+i);if(!el)return;
     const dog=dogs.find(x=>x.b===i);
@@ -1825,11 +1920,12 @@ window.renderRank=async function(){
   let joinUi="";
   if(!sbUser)joinUi=`<div class="qpane" style="text-align:center;margin-bottom:14px;"><p>ランキングに参加するにはログインしてください。</p><button class="btn" style="margin-top:8px;" onclick="openAcct()">ログインする</button></div>`;
   else if(!nick)joinUi=`<div class="qpane" style="text-align:center;margin-bottom:14px;"><p>ランキングに表示するニックネームを決めてください。</p><div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;"><input id="nick-in" maxlength="12" placeholder="ニックネーム(12文字まで)" style="border:1px solid var(--bd);border-radius:999px;padding:10px 16px;font-family:inherit;"><button class="btn" onclick="setNickname()">参加する</button></div></div>`;
-  main.innerHTML=head+joinUi+`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+  main.innerHTML=page(head+joinUi+`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
     <button class="rtab ${rankTab==="week"?"act":""}" onclick="setRankTab('week')">今週の問題数</button>
     <button class="rtab ${rankTab==="streak"?"act":""}" onclick="setRankTab('streak')">連続日数</button>
     <button class="rtab ${rankTab==="pat"?"act":""}" onclick="setRankTab('pat')">パターン制覇</button>
-  </div><div id="rlist" class="prog">読み込み中…</div>`;
+  </div><div id="rlist" class="prog">読み込み中…</div>`,"default");
+  mountRail();
   if(sbUser&&nick)pushProfile();
   loadRank();
 };
