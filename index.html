@@ -1250,7 +1250,7 @@ function renderHome(){
   mountIcons(main);loadRailRank();
   if(dogs.length){
     const d=dogs[pi];const hd=document.getElementById("homedog");
-    if(hd)hd.appendChild(walkDogEl(d.b,2.5+dogStage(d.f)*0.4));
+    if(hd)hd.appendChild(bigDogEl(d,3.2));
     const msg=document.getElementById("homedog-msg");
     if(msg){
       const aw=awaySt();
@@ -1968,6 +1968,20 @@ function walkDogEl(breed,scale){
   });
   return wrap;
 }
+function bigDogEl(d,baseScale){
+  const st=dogStage(d.f);
+  if(st===2)return walkDogEl(d.b,baseScale);
+  const fac=[0.55,0.72,1,1.06,1.16][st];
+  const wrap=document.createElement("span");
+  wrap.style.cssText="display:inline-block;transform:scaleX(-1);line-height:0;";
+  const c=document.createElement("canvas");c.width=64;c.height=64;
+  const disp=Math.round(64*baseScale*fac);
+  c.style.width=disp+"px";c.style.height=disp+"px";c.className="pixwalk pixdog";
+  const x=c.getContext("2d");x.imageSmoothingEnabled=false;
+  getStageSheet(d.b,false,sheet=>{x.drawImage(sheet,st*64,0,64,64,0,0,64,64);});
+  wrap.appendChild(c);
+  return wrap;
+}
 function confettiBurst(){
   for(let i=0;i<90;i++){
     const c=document.createElement("div");c.className="confetti";
@@ -2055,7 +2069,7 @@ window.renderGarden=function(){
     const d=dogs[pi];
     document.getElementById("dogname").textContent=d.n;
     const box=document.getElementById("dogbox");
-    box.appendChild(walkDogEl(d.b,3+dogStage(d.f)*0.5));
+    box.appendChild(bigDogEl(d,3.8));
     box.onclick=()=>{const c=box.querySelector("canvas");c.classList.remove("paw");void c.offsetWidth;c.classList.add("paw");spawnHearts(box,2);showEvo(pi);};
     box.onmousemove=()=>{const now=Date.now();if(now-petCd>350){petCd=now;spawnHearts(box,1);}};
     dogs.forEach((dg,i)=>{const el=document.getElementById("dico"+i);if(el)el.appendChild(dogCanvas(dogStage(dg.f),2,dg.b));const nm=document.getElementById("dnm"+i);if(nm)nm.textContent=dg.n;});
