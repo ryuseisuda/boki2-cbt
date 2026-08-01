@@ -373,7 +373,7 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
   <div style="display:flex;gap:12px;align-items:center;">
     <div id="timer" class="hidden">90:00</div>
     <button class="hbtn danger hidden" id="btn-finish">試験終了</button>
-    <button class="hbtn" id="btn-eod" onclick="showEOD()" style="background:#fff6dd;color:#92400e;">今日はここまで</button>
+    <button class="hbtn" id="btn-eod" onclick="showEOD()" style="background:#fff6dd;color:#92400e;">進捗をXに投稿</button>
     <button class="hbtn" id="btn-acct" onclick="openAcct()" style="background:#efedf7;color:var(--navy);">ログイン</button>
   </div>
 </div>
@@ -381,7 +381,7 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
   <button data-v="home"><span class="nicon" data-icon="home"></span>ホーム</button>
   <button data-v="exams"><span class="nicon" data-icon="cap"></span>模擬試験</button>
   <button data-v="dash"><span class="nicon" data-icon="chart"></span>分析</button>
-  <button data-v="garden"><span class="nicon" data-icon="paw"></span>マイドッグ</button>
+  <button data-v="garden"><span class="nicon" data-icon="paw"></span>ペット</button>
   <button data-v="gacha"><span class="nicon" data-icon="capsule"></span>ガチャ</button>
   <button data-v="rank"><span class="nicon" data-icon="trophy"></span>ランキング</button>
   <button id="btn-theme" onclick="toggleTheme()"><span class="nicon" data-icon="moon"></span>ダークモード</button>
@@ -1042,18 +1042,14 @@ function railHTML(kind){
   const a=actInfo(),h=LS.get(KEY_H,[]),wrong=LS.get(KEY_W,[]);
   const best=h.length?Math.max(...h.map(x=>x.total)):null;
   const {po,pt}=patCount();
-  const dogs=getDogs(),food=LS.get(KEY_F,0);
-  const dogCard=kind==="status"?"":(dogs.length
-    ?`<div class="rcard" style="text-align:center;cursor:pointer;padding:22px 18px 16px;" onclick="renderGarden()"><div id="raildog" style="min-height:120px;display:flex;align-items:flex-end;justify-content:center;"></div><b style="color:var(--navy);font-size:16px;" id="raildogname"></b><div class="prog"><span class="sicon" data-icon="food"></span>${food}</div></div>`
-    :`<div class="rcard" style="text-align:center;cursor:pointer;" onclick="renderGacha()"><div><span data-icon="gift" data-s="4"></span></div><b style="color:var(--navy);">犬をむかえる</b></div>`);
   const rankCard=kind==="home"?`<div class="rcard" style="cursor:pointer;" onclick="renderRank()"><h3><span class="sicon" data-icon="trophy"></span>今週のランキング</h3><div id="rail-rank-list" class="prog">読み込み中…</div></div>`:"";
-  return dogCard+`<div class="rcard"><h3>ステータス</h3>
+  return rankCard+`<div class="rcard"><h3>ステータス</h3>
     <div class="rrowi"><span><span class="sicon" data-icon="fire"></span>連続日数</span><b>${a.streak}日</b></div>
     <div class="rrowi"><span><span class="sicon" data-icon="pencil"></span>今日の問題</span><b>${a.today.q}問</b></div>
     <div class="rrowi"><span><span class="sicon" data-icon="map"></span>パターン制覇</span><b>${po} / ${pt}</b></div>
     <div class="rrowi"><span><span class="sicon" data-icon="trophy"></span>模試ベスト</span><b>${best==null?"—":best+"点"}</b></div>
     <div class="rrowi"><span><span class="sicon" data-icon="pin"></span>間違い残</span><b>${wrong.length}問</b></div>
-  </div>`+rankCard;
+  </div>`;
 }
 async function loadRailRank(){
   const el=document.getElementById("rail-rank-list");if(!el||!sb)return;
@@ -1066,10 +1062,10 @@ async function loadRailRank(){
     el.innerHTML=rows.length?rows.map((r,i)=>`<div class="rrowi"><span>${i+1}位 <b style="font-size:13px;">${escapeHtml(r.nickname)}</b></span><b>${r.wk}問</b></div>`).join(""):'<p class="prog">まだ参加者がいません</p>';
   }catch(e){}
 }
-function page(center,kind){
-  const r=railHTML(kind);
-  return `<div class="page ${r?"":"noRail"}"><div class="pgc">${center}</div>${r?`<aside class="pgr">${r}</aside>`:""}</div>`;
+function pageRaw(center,rail){
+  return `<div class="page ${rail?"":"noRail"}"><div class="pgc">${center}</div>${rail?`<aside class="pgr">${rail}</aside>`:""}</div>`;
 }
+function page(center,kind){return pageRaw(center,railHTML(kind));}
 function mountRail(){
   const el=document.getElementById("raildog");
   if(el){const dogs=getDogs();if(dogs.length){const d=dogs[getPartner()];el.appendChild(dogCanvas(dogStage(d.f),5,d.b));const nm=document.getElementById("raildogname");if(nm)nm.textContent=d.n;}}
@@ -1114,9 +1110,11 @@ function renderHome(){
   const {po,pt}=patCount();
   const ed=examDate();const t0=new Date();t0.setHours(0,0,0,0);
   const left=ed?Math.max(0,Math.round((ed-t0)/86400000)):null;
+  const dogs=getDogs(),pi=getPartner();
   const center=`
   <section class="hero2" style="margin-top:4px;padding:clamp(24px,4vw,42px);">
-    <div style="position:relative;z-index:1;max-width:560px;">
+    <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;">
+    <div style="position:relative;z-index:1;max-width:520px;">
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
       <button class="btn" style="margin-top:10px;" onclick="renderPatMap()">学習を始める　→</button>
       <div style="margin-top:14px;font-size:12.5px;">試験日: ${ed?`${ed.getFullYear()}/${ed.getMonth()+1}/${ed.getDate()}　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">変更</a>`:`未設定　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">設定する</a>`}</div>
@@ -1125,6 +1123,8 @@ function renderHome(){
         <button class="btn" style="padding:8px 18px;font-size:13px;" onclick="saveExamDate(document.getElementById('exd').value)">保存</button>
         ${ed?`<button class="btn gray" style="padding:8px 18px;font-size:13px;" onclick="saveExamDate(null)">表示しない</button>`:""}
       </div>
+    </div>
+    <div id="homedog" onclick="renderGarden()" style="cursor:pointer;display:flex;align-items:flex-end;justify-content:center;min-width:220px;"></div>
     </div>
   </section>
   <div class="trio" style="margin-top:26px;">
@@ -1136,7 +1136,8 @@ function renderHome(){
     <div class="tcard white" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>模擬試験</h3><div class="arw">${best==null?"未受験":"ベスト "+best+"点"}　→</div></div>
   </div>`;
   main.innerHTML=page(center,"home");
-  mountRail();mountIcons(main);loadRailRank();
+  mountIcons(main);loadRailRank();
+  if(dogs.length){const d=dogs[pi];const hd=document.getElementById("homedog");if(hd)hd.appendChild(dogCanvas(dogStage(d.f),8,d.b));}
 }
 function renderStudy(){renderHome();}
 function renderExams(){
@@ -1807,15 +1808,16 @@ window.renderGarden=function(){
   }
   const list=dogs.map((d,i)=>{
     const st=dogStage(d.f),next=st<EVO.length?EVO[st]:null;
-    return `<div class="dogico ${i===pi?"sel":""}" onclick="pickDog(${i})" style="width:auto;min-width:96px;height:auto;padding:8px 10px;flex-direction:column;gap:4px;">
-      <div id="dico${i}" style="height:48px;display:flex;align-items:flex-end;"></div>
-      <b style="font-size:12px;color:var(--navy);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="dnm${i}"></b>
-      <span style="font-size:10px;color:#8a84a3;">${DOG_NAMES[st]}</span>
-      <span style="font-size:10px;color:#8a84a3;">${next?d.f+"/"+next:"MAX"}</span>
+    return `<div class="rrowi" onclick="pickDog(${i})" style="cursor:pointer;${i===pi?"background:var(--lt);border-radius:10px;padding-left:8px;padding-right:8px;":""}">
+      <span style="display:flex;align-items:center;gap:10px;">
+        <span id="dico${i}" style="width:50px;display:flex;justify-content:center;align-items:flex-end;"></span>
+        <span><b id="dnm${i}" style="font-size:13px;color:var(--navy);"></b><br><span style="font-size:11px;color:var(--tx2);">${DOG_BREEDS[d.b%DOG_BREEDS.length].nm}・${DOG_NAMES[st]}</span></span>
+      </span>
+      <span style="font-size:11px;color:var(--tx2);">${next?d.f+"/"+next:"MAX"}</span>
     </div>`;}).join("");
-  main.innerHTML=page(`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">マイドッグ</h2></div>
-  ${card}
-  ${dogs.length?`<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-top:14px;">${list}</div>`:""}`,"status");
+  const rail=dogs.length?`<div class="rcard pixf"><h3>ペットと種類 ${dogs.length}/${DOG_BREEDS.length}</h3>${list}</div>`:"";
+  main.innerHTML=pageRaw(`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">ペット</h2></div>
+  ${card}`,rail);
   mountIcons(main);
   if(dogs.length){
     const d=dogs[pi];
@@ -1837,7 +1839,7 @@ window.renderGacha=function(){
     const dog=dogs.find(x=>x.b===i);
     return `<div class="bcell ${have?"":"no"}"><div id="bc${i}" style="height:52px;display:flex;align-items:flex-end;justify-content:center;"></div>
       <div style="font-size:11px;font-weight:700;color:${have?"var(--navy)":"#b0aac4"};margin-top:4px;">${have?b.nm:"？？？"}</div></div>`;}).join("");
-  main.innerHTML=page(`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">ガチャ</h2></div>
+  main.innerHTML=pageRaw(`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">ガチャ</h2></div>
   <div class="gmach">
     <div><span data-icon="capsule" data-s="7"></span></div>
     <div style="font-weight:800;color:var(--navy);font-size:17px;margin:8px 0 14px;"><span class="sicon" data-icon="ticket"></span>チケット ${tk}枚</div>
@@ -1845,9 +1847,9 @@ window.renderGacha=function(){
       ?`<button class="btn gray" ${tk<1?"disabled":""} onclick="ticketToFood();renderGacha();"><span class="sicon" data-icon="ticket"></span>1枚 → <span class="sicon" data-icon="food"></span>10個</button>`
       :`<button class="btn" style="font-size:18px;padding:14px 48px;" ${tk<1?"disabled":""} onclick="rollGacha()">ガチャを回す</button>`}
   </div>
-  <div class="sechead"><h2 class="disp2">コレクション <span style="font-size:15px;color:#8a84a3;">${owned.size} / ${DOG_BREEDS.length}</span></h2></div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;">${cells}</div>`,"default");
-  mountRail();mountIcons(main);
+  `,`<div class="rcard pixf"><h3>コレクション ${owned.size} / ${DOG_BREEDS.length}</h3>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px;">${cells}</div></div>`);
+  mountIcons(main);
   DOG_BREEDS.forEach((b,i)=>{
     const el=document.getElementById("bc"+i);if(!el)return;
     const dog=dogs.find(x=>x.b===i);
