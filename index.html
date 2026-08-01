@@ -346,6 +346,16 @@ body.dark .hbtn{filter:none;}
   .page{grid-template-columns:1fr;}
   .pgr{position:static;}
 }
+/* ===== v6 neutral bg / plain hero ===== */
+:root{--bg:#f6f7f8;--card:#ffffff;--lt:#eef0f3;--bd:#e4e6ea;--cream:#ffffff;--lav:#dbe3ee;--tx2:#6b7280;}
+body.dark{--bg:#101318;--card:#181c24;--lt:#232833;--bd:#2b313d;--cream:#141821;--tx2:#94a0b3;}
+.hero2{background:none;box-shadow:none;border-radius:0;padding:14px 4px 4px;overflow:visible;}
+.hero2::after{display:none;}
+body.dark .hero2{background:none;}
+.hero2 .disp,body.dark .hero2 .disp{color:var(--navy);}
+.sub,.eyebrow{color:var(--tx2);}
+.tcard.light{background:var(--card);color:var(--navy);border-color:var(--blue);box-shadow:0 3px 0 var(--blue);}
+body.dark .tcard.light{background:var(--card);color:var(--navy);border-color:var(--blue);box-shadow:0 3px 0 #0a111f;}
 </style>
 </head>
 <body>
@@ -1018,7 +1028,7 @@ function railHTML(kind){
   const {po,pt}=patCount();
   const dogs=getDogs(),food=LS.get(KEY_F,0);
   const dogCard=kind==="status"?"":(dogs.length
-    ?`<div class="rcard" style="text-align:center;cursor:pointer;" onclick="renderGarden()"><div id="raildog" style="min-height:70px;display:flex;align-items:flex-end;justify-content:center;"></div><b style="color:var(--navy);" id="raildogname"></b><div class="prog">🍖 ${food}</div></div>`
+    ?`<div class="rcard" style="text-align:center;cursor:pointer;padding:22px 18px 16px;" onclick="renderGarden()"><div id="raildog" style="min-height:120px;display:flex;align-items:flex-end;justify-content:center;"></div><b style="color:var(--navy);font-size:16px;" id="raildogname"></b><div class="prog">🍖 ${food}</div></div>`
     :`<div class="rcard" style="text-align:center;cursor:pointer;" onclick="renderGacha()"><div style="font-size:40px;">🎁</div><b style="color:var(--navy);">犬をむかえる</b></div>`);
   return dogCard+`<div class="rcard"><h3>ステータス</h3>
     <div class="rrowi"><span>🔥 連続日数</span><b>${a.streak}日</b></div>
@@ -1034,7 +1044,7 @@ function page(center,kind){
 }
 function mountRail(){
   const el=document.getElementById("raildog");
-  if(el){const dogs=getDogs();if(dogs.length){const d=dogs[getPartner()];el.appendChild(dogCanvas(dogStage(d.f),3,d.b));const nm=document.getElementById("raildogname");if(nm)nm.textContent=d.n;}}
+  if(el){const dogs=getDogs();if(dogs.length){const d=dogs[getPartner()];el.appendChild(dogCanvas(dogStage(d.f),5,d.b));const nm=document.getElementById("raildogname");if(nm)nm.textContent=d.n;}}
 }
 $("#hdr-title").onclick=()=>{
   if(exState&&!confirm("試験を中断してホームに戻りますか？(解答は破棄されます)"))return;
@@ -1089,10 +1099,7 @@ function renderHome(){
       </div>
     </div>
   </section>
-  <div class="sechead"><h2 class="disp2">合格までのステップ</h2></div>
-  ${roadmapHTML()}
-  <div class="sechead"><h2 class="disp2">学習メニュー</h2></div>
-  <div class="trio">
+  <div class="trio" style="margin-top:26px;">
     <div class="tcard light" onclick="renderPatMap()"><h3>🗺️ パターン網羅マップ</h3><div class="arw">${po} / ${pt} 制覇　→</div></div>
     <div class="tcard white" onclick="renderDrillSetup()"><h3>✍️ 仕訳ドリル</h3><div class="arw">${drillDoneCount()} / ${DRILLS.length} 問　→</div></div>
     <div class="tcard white" onclick="renderQuizSetup()"><h3>⚡ 一問一答(電卓不要)</h3><div class="arw">${Object.keys(LS.get("b2_qz",{})).length} / ${QZ.length} 問　→</div></div>
