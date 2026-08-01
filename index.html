@@ -357,8 +357,8 @@ body.dark .hero2{background:none;}
 .tcard.light{background:var(--card);color:var(--navy);border-color:var(--blue);box-shadow:0 3px 0 var(--blue);}
 body.dark .tcard.light{background:var(--card);color:var(--navy);border-color:var(--blue);box-shadow:0 3px 0 #0a111f;}
 /* ===== v7 dot font & pixel icons ===== */
-body{font-family:'DotGothic16','Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN",sans-serif;}
-.qpane,.qzc,.exp,details.kc,.rtable,.note,.jitem,.qtext,.boxrow,.ans-cmp,#tos-box,#wlc-box,#acct-box,.tab,.chip,#calc,.prow{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;}
+body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;}
+#hdr h1,.disp,.disp2,.gmach,.bcell,#cele-box h2,.rrowi b,.res-big,.rnum2,.rrow .rv{font-family:'DotGothic16','Zen Kaku Gothic New',sans-serif;}
 .pixf,.pixf *{font-family:'DotGothic16',sans-serif!important;}
 .pixico{image-rendering:pixelated;}
 .nicon,.micon,.sicon{display:inline-flex;align-items:center;margin-right:9px;vertical-align:-5px;}
@@ -1044,15 +1044,27 @@ function railHTML(kind){
   const {po,pt}=patCount();
   const dogs=getDogs(),food=LS.get(KEY_F,0);
   const dogCard=kind==="status"?"":(dogs.length
-    ?`<div class="rcard" style="text-align:center;cursor:pointer;padding:22px 18px 16px;" onclick="renderGarden()"><div id="raildog" style="min-height:120px;display:flex;align-items:flex-end;justify-content:center;"></div><b style="color:var(--navy);font-size:16px;" id="raildogname"></b><div class="prog"><span class="sicon" data-icon="bone"></span>${food}</div></div>`
+    ?`<div class="rcard" style="text-align:center;cursor:pointer;padding:22px 18px 16px;" onclick="renderGarden()"><div id="raildog" style="min-height:120px;display:flex;align-items:flex-end;justify-content:center;"></div><b style="color:var(--navy);font-size:16px;" id="raildogname"></b><div class="prog"><span class="sicon" data-icon="food"></span>${food}</div></div>`
     :`<div class="rcard" style="text-align:center;cursor:pointer;" onclick="renderGacha()"><div><span data-icon="gift" data-s="4"></span></div><b style="color:var(--navy);">犬をむかえる</b></div>`);
+  const rankCard=kind==="home"?`<div class="rcard" style="cursor:pointer;" onclick="renderRank()"><h3><span class="sicon" data-icon="trophy"></span>今週のランキング</h3><div id="rail-rank-list" class="prog">読み込み中…</div></div>`:"";
   return dogCard+`<div class="rcard"><h3>ステータス</h3>
     <div class="rrowi"><span><span class="sicon" data-icon="fire"></span>連続日数</span><b>${a.streak}日</b></div>
     <div class="rrowi"><span><span class="sicon" data-icon="pencil"></span>今日の問題</span><b>${a.today.q}問</b></div>
     <div class="rrowi"><span><span class="sicon" data-icon="map"></span>パターン制覇</span><b>${po} / ${pt}</b></div>
     <div class="rrowi"><span><span class="sicon" data-icon="trophy"></span>模試ベスト</span><b>${best==null?"—":best+"点"}</b></div>
     <div class="rrowi"><span><span class="sicon" data-icon="pin"></span>間違い残</span><b>${wrong.length}問</b></div>
-  </div>`;
+  </div>`+rankCard;
+}
+async function loadRailRank(){
+  const el=document.getElementById("rail-rank-list");if(!el||!sb)return;
+  try{
+    const {data}=await sb.from("profiles").select("*").limit(200);
+    const ws=weekStart();
+    const rows=(data||[]).filter(r=>r.nickname).map(r=>({...r,wk:r.week_start===ws?(r.week_solved||0):0})).sort((a,b)=>b.wk-a.wk).slice(0,5);
+    if(!document.getElementById("rail-rank-list"))return;
+    el.className="";
+    el.innerHTML=rows.length?rows.map((r,i)=>`<div class="rrowi"><span>${i+1}位 <b style="font-size:13px;">${escapeHtml(r.nickname)}</b></span><b>${r.wk}問</b></div>`).join(""):'<p class="prog">まだ参加者がいません</p>';
+  }catch(e){}
 }
 function page(center,kind){
   const r=railHTML(kind);
@@ -1123,8 +1135,8 @@ function renderHome(){
     <div class="tcard white" onclick="renderCards()"><h3><span class="micon" data-icon="book"></span>要点カード</h3><div class="arw">全${CARDS.reduce((s,c)=>s+c.items.length,0)}枚　→</div></div>
     <div class="tcard white" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>模擬試験</h3><div class="arw">${best==null?"未受験":"ベスト "+best+"点"}　→</div></div>
   </div>`;
-  main.innerHTML=page(center,"default");
-  mountRail();mountIcons(main);
+  main.innerHTML=page(center,"home");
+  mountRail();mountIcons(main);loadRailRank();
 }
 function renderStudy(){renderHome();}
 function renderExams(){
@@ -1462,14 +1474,14 @@ function renderDash(){
     cal+=`<div style="display:flex;flex-direction:column;gap:4px;">${col}</div>`;
   }
   const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">分析</h2></div>
-  <div class="qpane pixf"><h2><span class="sicon" data-icon="fire"></span>学習カレンダー</h2>
+  <div class="qpane"><h2><span class="sicon" data-icon="fire"></span>学習カレンダー</h2>
     <div style="display:flex;gap:4px;overflow-x:auto;padding:8px 0;">${cal}</div>
     <div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:12px;color:#8a84a3;">
       <b style="color:var(--navy);">学習日 ${totActive}日 ・ のべ ${totQ}問</b>
       <span style="margin-left:auto;">少</span>${CCOL.map(c=>`<div style="width:12px;height:12px;border-radius:3px;background:${c};"></div>`).join("")}<span>多</span>
     </div></div>
-  <div class="qpane pixf"><h2><span class="sicon" data-icon="chart"></span>模試の得点推移(合格ライン70点)</h2>${trend}</div>
-  <div class="qpane pixf"><h2><span class="sicon" data-icon="clock"></span>直近の模試: 大問別 所要時間</h2>${timeRows}</div>
+  <div class="qpane"><h2><span class="sicon" data-icon="chart"></span>模試の得点推移(合格ライン70点)</h2>${trend}</div>
+  <div class="qpane"><h2><span class="sicon" data-icon="clock"></span>直近の模試: 大問別 所要時間</h2>${timeRows}</div>
   <div style="margin-top:16px;">
    <button class="btn gray" style="font-size:12px;padding:8px 18px;" onclick="if(confirm('学習データ(履歴・統計・間違いリスト)をすべて削除しますか？')){localStorage.removeItem('b2_history');localStorage.removeItem('b2_drill');localStorage.removeItem('b2_wrong');renderDash();}">データをリセット</button>
   </div>`;
@@ -1717,7 +1729,7 @@ function dogCanvas(st,scale,breed,sil){
   return c;
 }
 const ICON_PAL={"K": "#28201c", "W": "#ffffff", "R": "#e05656", "Y": "#ffce50", "G": "#9a9089", "P": "#f4a4a0", "C": "#ef922a", "B": "#966636", "L": "#2b6cea", "E": "#16a34a", "O": "#f59e0b", "D": "#1d4fa8"};
-const ICONS={home:[".....K.....", "....KRK....", "...KRRRK...", "..KRRRRRK..", ".KRRRRRRRK.", "KKKKKKKKKKK", ".KWWWWWWWK.", ".KWWKKKWWK.", ".KWWKBKWWK.", ".KWWKBKWWK.", ".KKKKKKKKK."],cap:["...........", "....KKK....", ".KKKKDKKKK.", "KDDDDDDDDDK", "KKKKKKKKKKK", "..KDDDDDKY.", "..KDDDDDKY.", "..KKKKKKKY.", ".........KY", "..........Y", "..........."],chart:["...........", "........KK.", "........KLK", "...KK...KLK", "...KEK..KLK", "KK.KEK..KLK", "KOKKEK..KLK", "KOKKEK.KKLK", "KOKKEKKKKLK", "KKKKKKKKKKK", "..........."],paw:["...........", "..KK...KK..", ".KBBK.KBBK.", ".KBBK.KBBK.", "..KK...KK..", "...KKKKK...", "..KBBBBBK..", ".KBBBBBBBK.", ".KBBBBBBBK.", "..KKKKKKK..", "..........."],capsule:["...........", "...KKKKK...", "..KRRRRRK..", ".KRRWWRRRK.", ".KRRWWRRRK.", ".KKKKKKKKK.", ".KWWWWWWWK.", ".KWWWWWWWK.", "..KWWWWWK..", "...KKKKK...", "..........."],trophy:["...........", ".KKKKKKKKK.", ".KYYYYYYYK.", "KKYYYYYYYKK", "KYKYYYYYKYK", ".KKYYYYYKK.", "...KYYYK...", "....KYK....", "...KKYKK...", "..KYYYYYK..", "..KKKKKKK.."],fire:[".....K.....", "....KRK....", "...KRRK....", "...KRRRK...", "..KRRORRK..", "..KRORORK..", ".KRROYORRK.", ".KROYYYORK.", ".KROYYYORK.", "..KOYYYOK..", "...KKKKK..."],pencil:["...........", ".......KK..", "......KRRK.", ".....KYYRK.", "....KYYYK..", "...KYYYK...", "..KYYYK....", ".KWYYK.....", ".KWWK......", ".KKK.......", "..........."],map:["...........", "KKK.KKK.KKK", "KEEKEWEKEEK", "KEEKEWEKEEK", "KEEKWWEKEEK", "KEEKWEEKEEK", "KEEKWWWKEEK", "KEEKEEWKEEK", "KEEKEWWKEEK", "KKK.KKK.KKK", "..........."],pin:["...........", "...KKKKK...", "..KRRRRRK..", ".KRRWRRRRK.", ".KRRRRRRRK.", ".KRRRRRRRK.", "..KRRRRRK..", "...KRRRK...", "....KRK....", ".....K.....", "..........."],bone:["...........", ".KK.....KK.", "KWWK...KWWK", "KWWWKKKWWWK", ".KWWWWWWWK.", "..KWWWWWK..", ".KWWWKWWWK.", "KWWK...KWWK", ".KK.....KK.", "...........", "..........."],book:["...........", ".KKKKKKKK..", ".KLLLLLLKK.", ".KLLLLLLKWK", ".KLLLLLLKWK", ".KLKKKLLKWK", ".KLLLLLLKWK", ".KLLLLLLKWK", ".KLLLLLLKK.", ".KKKKKKKK..", "..........."],zap:["...........", ".....KKKK..", "....KYYYK..", "...KYYYK...", "..KYYYKKKK.", ".KYYYYYYYK.", "..KKKKYYK..", ".....KYYK..", "....KYYK...", "....KYK....", "....KK....."],repeat:["...........", "..KKKKKKK..", ".KLLLLLLLK.", ".KLKKKKKLK.", ".KLK...KLK.", ".......KLKK", "......KLLLK", ".KLK...KLK.", ".KLKK...K..", ".KLLLLLLK..", "..KKKKKK..."],clock:["...........", "...KKKKK...", "..KWWWWWK..", ".KWWWKWWWK.", ".KWWWKWWWK.", ".KWWWKKWWK.", ".KWWWWWWWK.", ".KWWWWWWWK.", "..KWWWWWK..", "...KKKKK...", "..........."],moon:["...........", "....KKKK...", "...KYYYKK..", "..KYYYK....", ".KYYYK.....", ".KYYYK.....", ".KYYYK.....", ".KYYYKK....", "..KYYYYKKK.", "...KKYYYYK.", ".....KKKKK."],sun:[".....K.....", "..K..K..K..", "...KKKKK...", "..KYYYYYK..", ".KYYYYYYYK.", "KKYYYYYYYKK", ".KYYYYYYYK.", "..KYYYYYK..", "...KKKKK...", "..K..K..K..", ".....K....."],ticket:["...........", ".KKKKKKKKK.", "KOOOKOKOOOK", "KOOOKOKOOOK", "KOOOKOKOOOK", "KOOOKOKOOOK", "KOOOKOKOOOK", ".KKKKKKKKK.", "...........", "...........", "..........."],gift:["...........", "..KK...KK..", ".KYYK.KYYK.", "..KKYKYKK..", ".KKKKYKKKK.", ".KRRKYKRRK.", ".KKKKKKKKK.", ".KRRKYKRRK.", ".KRRKYKRRK.", ".KKKKKKKKK.", "..........."]};
+const ICONS={food:["...........", "...........", "..K..K..K..", ".KBK.KBKBK.", "..KKKKKKK..", ".KBKBKBKBK.", "KKKKKKKKKKK", "KRRRRRRRRRK", ".KRRRRRRRK.", "..KKKKKKK..", "..........."],home:[".....K.....", "....KRK....", "...KRRRK...", "..KRRRRRK..", ".KRRRRRRRK.", "KKKKKKKKKKK", ".KWWWWWWWK.", ".KWWKKKWWK.", ".KWWKBKWWK.", ".KWWKBKWWK.", ".KKKKKKKKK."],cap:["...........", "....KKK....", ".KKKKDKKKK.", "KDDDDDDDDDK", "KKKKKKKKKKK", "..KDDDDDKY.", "..KDDDDDKY.", "..KKKKKKKY.", ".........KY", "..........Y", "..........."],chart:["...........", "........KK.", "........KLK", "...KK...KLK", "...KEK..KLK", "KK.KEK..KLK", "KOKKEK..KLK", "KOKKEK.KKLK", "KOKKEKKKKLK", "KKKKKKKKKKK", "..........."],paw:["...........", "..KK...KK..", ".KBBK.KBBK.", ".KBBK.KBBK.", "..KK...KK..", "...KKKKK...", "..KBBBBBK..", ".KBBBBBBBK.", ".KBBBBBBBK.", "..KKKKKKK..", "..........."],capsule:["...........", "...KKKKK...", "..KRRRRRK..", ".KRRWWRRRK.", ".KRRWWRRRK.", ".KKKKKKKKK.", ".KWWWWWWWK.", ".KWWWWWWWK.", "..KWWWWWK..", "...KKKKK...", "..........."],trophy:["...........", ".KKKKKKKKK.", ".KYYYYYYYK.", "KKYYYYYYYKK", "KYKYYYYYKYK", ".KKYYYYYKK.", "...KYYYK...", "....KYK....", "...KKYKK...", "..KYYYYYK..", "..KKKKKKK.."],fire:[".....K.....", "....KRK....", "...KRRK....", "...KRRRK...", "..KRRORRK..", "..KRORORK..", ".KRROYORRK.", ".KROYYYORK.", ".KROYYYORK.", "..KOYYYOK..", "...KKKKK..."],pencil:["...........", ".......KK..", "......KRRK.", ".....KYYRK.", "....KYYYK..", "...KYYYK...", "..KYYYK....", ".KWYYK.....", ".KWWK......", ".KKK.......", "..........."],map:["...........", "KKK.KKK.KKK", "KEEKEWEKEEK", "KEEKEWEKEEK", "KEEKWWEKEEK", "KEEKWEEKEEK", "KEEKWWWKEEK", "KEEKEEWKEEK", "KEEKEWWKEEK", "KKK.KKK.KKK", "..........."],pin:["...........", "...KKKKK...", "..KRRRRRK..", ".KRRWRRRRK.", ".KRRRRRRRK.", ".KRRRRRRRK.", "..KRRRRRK..", "...KRRRK...", "....KRK....", ".....K.....", "..........."],bone:["...........", ".KK.....KK.", "KWWK...KWWK", "KWWWKKKWWWK", ".KWWWWWWWK.", "..KWWWWWK..", ".KWWWKWWWK.", "KWWK...KWWK", ".KK.....KK.", "...........", "..........."],book:["...........", ".KKKKKKKK..", ".KLLLLLLKK.", ".KLLLLLLKWK", ".KLLLLLLKWK", ".KLKKKLLKWK", ".KLLLLLLKWK", ".KLLLLLLKWK", ".KLLLLLLKK.", ".KKKKKKKK..", "..........."],zap:["...........", ".....KKKK..", "....KYYYK..", "...KYYYK...", "..KYYYKKKK.", ".KYYYYYYYK.", "..KKKKYYK..", ".....KYYK..", "....KYYK...", "....KYK....", "....KK....."],repeat:["...........", "..KKKKKKK..", ".KLLLLLLLK.", ".KLKKKKKLK.", ".KLK...KLK.", ".......KLKK", "......KLLLK", ".KLK...KLK.", ".KLKK...K..", ".KLLLLLLK..", "..KKKKKK..."],clock:["...........", "...KKKKK...", "..KWWWWWK..", ".KWWWKWWWK.", ".KWWWKWWWK.", ".KWWWKKWWK.", ".KWWWWWWWK.", ".KWWWWWWWK.", "..KWWWWWK..", "...KKKKK...", "..........."],moon:["...........", "....KKKK...", "...KYYYKK..", "..KYYYK....", ".KYYYK.....", ".KYYYK.....", ".KYYYK.....", ".KYYYKK....", "..KYYYYKKK.", "...KKYYYYK.", ".....KKKKK."],sun:[".....K.....", "..K..K..K..", "...KKKKK...", "..KYYYYYK..", ".KYYYYYYYK.", "KKYYYYYYYKK", ".KYYYYYYYK.", "..KYYYYYK..", "...KKKKK...", "..K..K..K..", ".....K....."],ticket:["...........", ".KKKKKKKKK.", "KOOOKOKOOOK", "KOOOKOKOOOK", "KOOOKOKOOOK", "KOOOKOKOOOK", "KOOOKOKOOOK", ".KKKKKKKKK.", "...........", "...........", "..........."],gift:["...........", "..KK...KK..", ".KYYK.KYYK.", "..KKYKYKK..", ".KKKKYKKKK.", ".KRRKYKRRK.", ".KKKKKKKKK.", ".KRRKYKRRK.", ".KRRKYKRRK.", ".KKKKKKKKK.", "..........."]};
 function iconCanvas(name,scale){
   if(name==="dog")return dogCanvas(0,scale,0);
   const g=ICONS[name];if(!g)return document.createElement("span");
@@ -1781,7 +1793,7 @@ window.renderGarden=function(){
     const prev=st===0?0:EVO[st-1],next=st<EVO.length?EVO[st]:null;
     const pct=next?Math.round((d.f-prev)/(next-prev)*100):100;
     card=`<div class="qpane pixf" style="text-align:center;">
-      <div style="font-weight:800;color:var(--navy);font-size:17px;"><span class="sicon" data-icon="bone"></span>${food}</div>
+      <div style="font-weight:800;color:var(--navy);font-size:17px;"><span class="sicon" data-icon="food"></span>${food}</div>
       <div id="dogbox" style="display:inline-block;position:relative;padding:14px 40px;cursor:pointer;"></div>
       <h3 style="color:var(--navy);font-size:21px;margin:6px 0 2px;"><span id="dogname"></span> <button onclick="renameDog(${pi})" style="border:none;background:none;cursor:pointer;color:#8a84a3;font-size:14px;">✎</button></h3>
       <p style="color:#8a84a3;font-size:13px;margin:0;">${DOG_BREEDS[d.b%DOG_BREEDS.length].nm}・${DOG_NAMES[st]}</p>
@@ -1790,7 +1802,7 @@ window.renderGarden=function(){
         <div style="display:flex;justify-content:flex-end;font-size:12px;color:#8a84a3;"><span>${next?d.f+" / "+next:"MAX"}</span></div>
         <div style="background:var(--lt);border-radius:6px;height:14px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#f59e0b,#e05656);"></div></div>
       </div>
-      <button class="btn" style="font-size:17px;padding:13px 44px;" ${food<1||!next?"disabled":""} onclick="feedDog(1)"><span class="sicon" data-icon="bone"></span>たべさせる</button>
+      <button class="btn" style="font-size:17px;padding:13px 44px;" ${food<1||!next?"disabled":""} onclick="feedDog(1)"><span class="sicon" data-icon="food"></span>たべさせる</button>
     </div>`;
   }
   const list=dogs.map((d,i)=>{
@@ -1830,7 +1842,7 @@ window.renderGacha=function(){
     <div><span data-icon="capsule" data-s="7"></span></div>
     <div style="font-weight:800;color:var(--navy);font-size:17px;margin:8px 0 14px;"><span class="sicon" data-icon="ticket"></span>チケット ${tk}枚</div>
     ${allOwned
-      ?`<button class="btn gray" ${tk<1?"disabled":""} onclick="ticketToFood();renderGacha();"><span class="sicon" data-icon="ticket"></span>1枚 → <span class="sicon" data-icon="bone"></span>10個</button>`
+      ?`<button class="btn gray" ${tk<1?"disabled":""} onclick="ticketToFood();renderGacha();"><span class="sicon" data-icon="ticket"></span>1枚 → <span class="sicon" data-icon="food"></span>10個</button>`
       :`<button class="btn" style="font-size:18px;padding:14px 48px;" ${tk<1?"disabled":""} onclick="rollGacha()">ガチャを回す</button>`}
   </div>
   <div class="sechead"><h2 class="disp2">コレクション <span style="font-size:15px;color:#8a84a3;">${owned.size} / ${DOG_BREEDS.length}</span></h2></div>
