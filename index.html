@@ -229,25 +229,64 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",s
 .wstep{display:flex;gap:14px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--bd);}
 .wstep .wn{font-size:20px;font-weight:800;color:#c9c2ea;min-width:32px;}
 .wstep b{color:var(--navy);}
+/* ===== v4 duolingo-style ===== */
+.sechead{margin:34px 4px 12px;}
+.sechead p{display:none;}
+.btn{border-radius:16px;font-weight:800;box-shadow:0 4px 0 rgba(28,23,51,.35);transition:.08s;}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(28,23,51,.35);}
+.btn.gray{box-shadow:0 4px 0 #64748b;}
+.btn.green{box-shadow:0 4px 0 #0f7a35;}
+.btn:disabled{box-shadow:none;transform:none;}
+.tcard,.qpane,.dcard{border-radius:20px;border:2px solid var(--bd);box-shadow:0 3px 0 var(--bd);}
+.tcard{min-height:0;padding:22px 24px;}
+.tcard:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--bd);}
+.tcard.light{border-color:#c3b8ea;box-shadow:0 3px 0 #c3b8ea;}
+.tcard.dark{border-color:var(--navy);box-shadow:0 3px 0 #0c0a1a;}
+.rrow{border:2px solid var(--bd);box-shadow:0 2px 0 var(--bd);}
+.rrow.me{outline:none;border-color:var(--blue);box-shadow:0 2px 0 var(--blue);}
+.rtab{border:2px solid var(--bd);box-shadow:0 3px 0 var(--bd);}
+.rtab.act{border-color:var(--navy);box-shadow:0 3px 0 #0c0a1a;}
+.dogico{box-shadow:0 3px 0 var(--bd);}
+.dogico.sel{box-shadow:0 3px 0 var(--blue);}
+.topstat{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;}
+.topstat>div{flex:1;min-width:120px;background:#fff;border:2px solid var(--bd);box-shadow:0 3px 0 var(--bd);border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.topstat .ico{font-size:24px;}
+.topstat .n{font-size:22px;font-weight:900;color:var(--navy);line-height:1.1;}
+.topstat .t{font-size:10.5px;color:#8a84a3;font-weight:700;letter-spacing:.06em;}
+.steps{position:relative;margin:6px 0 0;}
+.step{display:flex;gap:16px;align-items:center;background:#fff;border:2px solid var(--bd);box-shadow:0 3px 0 var(--bd);border-radius:20px;padding:16px 20px;margin-bottom:12px;position:relative;}
+.step.now{border-color:var(--blue);box-shadow:0 3px 0 var(--blue);}
+.step.done{opacity:.72;}
+.stepc{width:46px;height:46px;border-radius:50%;background:var(--lt);color:#8a84a3;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;flex-shrink:0;border:3px solid var(--bd);}
+.step.now .stepc{background:var(--blue);color:#fff;border-color:#5b4fb5;}
+.step.done .stepc{background:var(--ok);color:#fff;border-color:#0f7a35;}
+.stepbar{background:var(--lt);border-radius:6px;height:10px;overflow:hidden;margin-top:6px;max-width:340px;}
+.stepbar>div{height:100%;background:linear-gradient(90deg,#7c6fd0,#a99ce0);border-radius:6px;}
+.gmach{background:linear-gradient(170deg,#fff,#f5f3fc);border:2px solid var(--bd);box-shadow:0 4px 0 var(--bd);border-radius:26px;padding:34px 20px;text-align:center;}
+.bcell{background:#fff;border:2px solid var(--bd);box-shadow:0 3px 0 var(--bd);border-radius:18px;padding:14px 8px 10px;text-align:center;}
+.bcell.no{opacity:.55;}
+.exgrid{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;}
+@media(max-width:820px){.exgrid{grid-template-columns:1fr;}}
+.herodog{background:rgba(255,255,255,.6);border-radius:22px;padding:16px 22px 10px;text-align:center;cursor:pointer;border:2px solid rgba(255,255,255,.8);}
+.herodog:hover{background:rgba(255,255,255,.78);}
 </style>
 </head>
 <body>
 <div id="hdr">
-  <h1 id="hdr-title">✦ 簿記2級 Studio</h1>
+  <h1 id="hdr-title" style="cursor:pointer;">✦ 簿記2級 Studio</h1>
   <div style="display:flex;gap:12px;align-items:center;">
     <div id="timer" class="hidden">90:00</div>
     <button class="hbtn danger hidden" id="btn-finish">試験終了</button>
     <button class="hbtn" id="btn-eod" onclick="showEOD()" style="background:#fff6dd;color:#92400e;">今日はここまで</button>
     <button class="hbtn" id="btn-acct" onclick="openAcct()" style="background:#efedf7;color:var(--navy);">ログイン</button>
-    <button class="hbtn" id="btn-home">ホーム</button>
   </div>
 </div>
 <div id="nav">
   <button data-v="home">ホーム</button>
-  <button data-v="study">勉強する</button>
   <button data-v="exams">模擬試験</button>
   <button data-v="dash">分析</button>
   <button data-v="garden">マイドッグ</button>
+  <button data-v="gacha">ガチャ</button>
   <button data-v="rank">ランキング</button>
 </div>
 <div id="tabs" class="hidden"></div>
@@ -284,7 +323,7 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",s
 <h2>ようこそ、簿記2級 Studio へ</h2>
 <p>日商簿記2級(CBT方式)のための無料学習アプリです(非公式)。使い方は3ステップだけ。</p>
 <div class="wstep"><span class="wn">01</span><div><b>模試で現在地を知る</b><br>「模擬試験」を本番同様90分で1回。弱い大問がわかります。</div></div>
-<div class="wstep"><span class="wn">02</span><div><b>パターンを○で埋める</b><br>「勉強する → パターン網羅マップ」が本体。本試験の全出題パターンに代表問題が1問ずつ。全部○=どの回が出ても対応できる状態。</div></div>
+<div class="wstep"><span class="wn">02</span><div><b>パターンを○で埋める</b><br>「ホーム → パターン網羅マップ」が本体。本試験の全出題パターンに代表問題が1問ずつ。全部○=どの回が出ても対応できる状態。</div></div>
 <div class="wstep"><span class="wn">03</span><div><b>間違いを消して仕上げ</b><br>間違えた仕訳は自動でリスト化。復習モードで消化し、模試80点で仕上がり。</div></div>
 <p style="margin-top:12px;font-size:12.5px;color:#8a84a3;">学習記録はこの端末のブラウザにだけ保存されます(サーバー送信なし)。</p>
 <div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -876,7 +915,7 @@ function actInfo(){
   let tq=0,to=0;Object.values(d).forEach(e=>{tq+=e.q;to+=e.o;});
   return{streak:s,today,tq,to,days:Object.keys(d).length};
 }
-$("#btn-home").onclick=()=>{
+$("#hdr-title").onclick=()=>{
   if(exState&&!confirm("試験を中断してホームに戻りますか？(解答は破棄されます)"))return;
   stopExam();renderHome();
 };
@@ -893,17 +932,21 @@ function roadmapHTML(){
   const {po,pt}=patCount();
   const ed=examDate();
   const steps=[
-    {label:"現在地の診断",desc:"模試を1回解いて、どの大問が弱いか把握する",done:h.length>=1,goal:`模試の受験 ${h.length} / 1回`,go:"renderExams()"},
-    {label:"パターン制覇",desc:"網羅マップの代表問題を全部○に。忘れた分野は要点カードから",done:po>=pt,goal:`${po} / ${pt} パターン`,go:"renderPatMap()"},
-    {label:"仕上げ",desc:"間違いリストを空にして、模試80点で安定させる",done:wrong.length===0&&best>=80,goal:`間違い残 ${wrong.length}問 ・ 模試ベスト ${best}点 / 80点`,go:"startReview()"},
-    {label:"試験本番"+(ed?`(${ed.getMonth()+1}/${ed.getDate()})`:""),desc:"得意な大問から解く。おすすめは 第1問→第4問→第5問→第2問→第3問",done:false,goal:"70点で合格",go:""}
+    {label:"現在地の診断",done:h.length>=1,goal:`模試 ${Math.min(h.length,1)} / 1回`,pct:Math.min(h.length,1)*100,go:"renderExams()"},
+    {label:"パターン制覇",done:po>=pt,goal:`${po} / ${pt}`,pct:Math.round(po/pt*100),go:"renderPatMap()"},
+    {label:"仕上げ",done:wrong.length===0&&best>=80,goal:`間違い残${wrong.length}問・ベスト${best}点`,pct:Math.min(100,Math.round(((wrong.length===0?50:Math.max(0,50-wrong.length*5))+(Math.min(best,80)/80*50)))),go:"startReview()"},
+    {label:"試験本番"+(ed?`(${ed.getMonth()+1}/${ed.getDate()})`:""),done:false,goal:"70点で合格",pct:0,go:""}
   ];
   let now=steps.findIndex(s=>!s.done);if(now<0)now=steps.length-1;
-  return steps.map((s,i)=>{
+  return `<div class="steps">`+steps.map((s,i)=>{
     const cls=s.done?"done":(i===now?"now":"");
-    const chip=s.done?"達成":(i===now?"今ここ":"この先");
-    return `<div class="rstep ${cls}" ${s.go?`onclick="${s.go}" style="cursor:pointer;"`:""}><span class="rnum">0${i+1}</span><span class="rchip">${chip}</span><div style="flex:1;"><b>${s.label}</b>　<span class="prog">${s.desc}</span><div class="rgoal">${s.done?"✓ ":""}${s.goal}</div></div>${s.go?'<span style="color:#c9c2ea;font-weight:700;">→</span>':""}</div>`;
-  }).join("");
+    return `<div class="step ${cls}" ${s.go?`onclick="${s.go}" style="cursor:pointer;"`:""}>
+      <div class="stepc">${s.done?"✓":i+1}</div>
+      <div style="flex:1;"><b style="color:var(--navy);font-size:16px;">${s.label}</b>
+      <div class="stepbar"><div style="width:${s.done?100:s.pct}%;"></div></div>
+      <div class="prog" style="margin-top:4px;">${s.goal}</div></div>
+      ${s.go?'<span style="color:#c9c2ea;font-weight:900;font-size:20px;">›</span>':""}
+    </div>`;}).join("")+`</div>`;
 }
 function renderHome(){
   setMode("home");exState=null;setNav("home");
@@ -912,65 +955,63 @@ function renderHome(){
   const {po,pt}=patCount();
   const ed=examDate();const t0=new Date();t0.setHours(0,0,0,0);
   const left=ed?Math.max(0,Math.round((ed-t0)/86400000)):null;
+  const dogs=getDogs(),pi=getPartner(),food=LS.get(KEY_F,0);
   main.innerHTML=`
-  <section class="hero2"><div class="hero-flex">
-    <div style="max-width:560px;">
-      <div class="eyebrow">日商簿記2級 · CBT対策(非公式)</div>
-      <h1 class="disp" style="margin:12px 0 14px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
-      <p class="sub">本試験の出題パターン全${pt}種を、代表問題でひとつずつ○に。すべて○になれば、どの回が出ても戦える。</p>
-      <button class="btn" style="margin-top:18px;" onclick="renderStudy()">学習を始める　→</button>
-      <div style="margin-top:14px;font-size:12.5px;color:#4d4670;">試験日: ${ed?`${ed.getFullYear()}/${ed.getMonth()+1}/${ed.getDate()}　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">変更</a>`:`未設定　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">設定する(任意)</a>`}</div>
+  <div class="topstat">
+    <div><span class="ico">🔥</span><div><div class="n">${a.streak}</div><div class="t">連続日数</div></div></div>
+    <div><span class="ico">✏️</span><div><div class="n">${a.today.q}</div><div class="t">今日の問題</div></div></div>
+    <div><span class="ico">🗺️</span><div><div class="n">${po}<span style="font-size:13px;color:#8a84a3;">/${pt}</span></div><div class="t">パターン制覇</div></div></div>
+    <div><span class="ico">🏆</span><div><div class="n">${best==null?"—":best}</div><div class="t">模試ベスト</div></div></div>
+    <div><span class="ico">📌</span><div><div class="n">${wrong.length}</div><div class="t">間違い残</div></div></div>
+  </div>
+  <section class="hero2" style="margin-top:16px;padding:clamp(24px,4vw,42px);"><div class="hero-flex">
+    <div style="max-width:520px;">
+      <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
+      <button class="btn" style="margin-top:10px;" onclick="renderPatMap()">学習を始める　→</button>
+      <div style="margin-top:14px;font-size:12.5px;color:#4d4670;">試験日: ${ed?`${ed.getFullYear()}/${ed.getMonth()+1}/${ed.getDate()}　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">変更</a>`:`未設定　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">設定する</a>`}</div>
       <div id="dcfg" class="hidden" style="margin-top:10px;background:rgba(255,255,255,.55);border-radius:12px;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <input type="date" id="exd" value="${ed?ed.toISOString().slice(0,10):""}" style="border:1px solid var(--bd);border-radius:8px;padding:7px 10px;font-family:inherit;">
         <button class="btn" style="padding:8px 18px;font-size:13px;" onclick="saveExamDate(document.getElementById('exd').value)">保存</button>
         ${ed?`<button class="btn gray" style="padding:8px 18px;font-size:13px;" onclick="saveExamDate(null)">表示しない</button>`:""}
       </div>
     </div>
-    <div class="hstat">
-      <div><div class="n">${a.streak}</div><div class="t">日連続</div></div>
-      <div><div class="n">${a.today.q}</div><div class="t">今日の問題</div></div>
-      <div><div class="n">${po}<span style="font-size:16px;font-weight:600;color:#4d4670;">/${pt}</span></div><div class="t">パターン制覇</div></div>
-    </div>
+    ${dogs.length?`<div class="herodog" onclick="renderGarden()">
+      <div id="homedog" style="min-height:90px;display:flex;align-items:flex-end;justify-content:center;"></div>
+      <b style="color:var(--navy);" id="homedogname"></b>
+      <div class="prog">🍖 ${food}</div>
+    </div>`:`<div class="herodog" onclick="renderGacha()"><div style="font-size:52px;">🎁</div><b style="color:var(--navy);">ガチャで犬をむかえる</b></div>`}
   </div></section>
-  <div class="sechead"><h2 class="disp2">進め方はこれだけ</h2><p>ステップをクリックするとその画面に移動します。達成状況は学習データから自動判定。</p></div>
+  <div class="sechead"><h2 class="disp2">合格までのステップ</h2></div>
   ${roadmapHTML()}
-  <div class="sechead"><h2 class="disp2">今日やること</h2><p>迷ったら左から順に。1日3〜5パターン○にできれば十分なペース。</p></div>
+  <div class="sechead"><h2 class="disp2">学習メニュー</h2></div>
   <div class="trio">
-    <div class="tcard light" onclick="renderPatMap()"><h3>パターンを進める</h3><p>未・△のパターンを選んで代表問題を解く。合格への最短ルート。</p><div class="arw">→　${po} / ${pt} 制覇</div></div>
-    <div class="tcard dark" onclick="startReview()"><h3>間違いを消化する</h3><p>間違えた仕訳だけを再出題。正解すればリストから消える。</p><div class="arw">→　${wrong.length}問 待機中</div></div>
-    <div class="tcard dark" onclick="renderExams()"><h3>模試で腕試し</h3><p>本番同様の90分。週末の通し演習で時間配分を身体に入れる。</p><div class="arw">→　${best==null?"未受験":"ベスト "+best+"点"}</div></div>
-  </div>
-  <div class="statstrip" style="margin-top:22px;">
-    <div><div class="n">${a.tq}</div><div class="t">累計問題数</div></div>
-    <div><div class="n">${a.days}</div><div class="t">学習日数</div></div>
-    <div><div class="n">${best==null?"—":best}</div><div class="t">模試ベスト / 70点</div></div>
-    <div><div class="n">${wrong.length}</div><div class="t">間違いリスト</div></div>
-    <div><div class="n">${a.today.q?Math.round(a.today.o/a.today.q*100)+"%":"—"}</div><div class="t">今日の正解率</div></div>
+    <div class="tcard light" onclick="renderPatMap()"><h3>🗺️ パターン網羅マップ</h3><div class="arw">${po} / ${pt} 制覇　→</div></div>
+    <div class="tcard white" onclick="renderDrillSetup()"><h3>✍️ 仕訳ドリル</h3><div class="arw">${drillDoneCount()} / ${DRILLS.length} 問　→</div></div>
+    <div class="tcard white" onclick="renderQuizSetup()"><h3>⚡ 一問一答(電卓不要)</h3><div class="arw">${Object.keys(LS.get("b2_qz",{})).length} / ${QZ.length} 問　→</div></div>
+    <div class="tcard dark" onclick="startReview()"><h3>🔁 間違いを消化</h3><div class="arw">${wrong.length}問 待機中　→</div></div>
+    <div class="tcard white" onclick="renderCards()"><h3>📖 要点カード</h3><div class="arw">全${CARDS.length}枚　→</div></div>
+    <div class="tcard white" onclick="renderExams()"><h3>🎓 模擬試験</h3><div class="arw">${best==null?"未受験":"ベスト "+best+"点"}　→</div></div>
   </div>`;
+  if(dogs.length){
+    const d=dogs[pi];
+    document.getElementById("homedog").appendChild(dogCanvas(dogStage(d.f),4,d.b));
+    document.getElementById("homedogname").textContent=d.n;
+  }
 }
-function renderStudy(){
-  setMode("home");exState=null;setNav("study");
-  const wrong=LS.get(KEY_W,[]);const {po,pt}=patCount();
-  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">勉強する</h2><p>要点カードで3分インプット → 該当パターンを解く、が基本サイクル。</p></div>
-  <div class="trio">
-    <div class="tcard light" onclick="renderPatMap()"><h3>パターン網羅マップ</h3><p>本試験の全${pt}パターン×代表問題。全部○=どの回が出ても対応できる状態。</p><div class="arw">→　${po} / ${pt} 制覇</div></div>
-    <div class="tcard dark" onclick="renderQuizSetup()"><h3>一問一答(電卓不要)</h3><p>4択タップだけの${QZ.length}問。勘定科目の判定・ルール・公式チェック。電車の中はこれ。</p><div class="arw">→　${Object.keys(LS.get("b2_qz",{})).length} / ${QZ.length} 問 挑戦済み</div></div>
-    <div class="tcard dark" onclick="renderDrillSetup()"><h3>仕訳ドリル</h3><p>第1問形式の仕訳${DRILLS.length}問を1問ずつ高速反復。分野を絞って平日30分に。</p><div class="arw">→　${drillDoneCount()} / ${DRILLS.length} 問 挑戦済み</div></div>
-    <div class="tcard white" onclick="startReview()"><h3>復習モード</h3><p>模試・ドリルで間違えた仕訳だけを再出題。</p><div class="arw">→　${wrong.length}問 たまっています</div></div>
-    <div class="tcard white" onclick="renderCards()"><h3>要点カード</h3><p>全23枚の仕訳パターン・公式まとめ。忘れた分野のインプット復元に。</p><div class="arw">→　読む</div></div>
-  </div>`;
-}
+function renderStudy(){renderHome();}
 function renderExams(){
   setMode("home");exState=null;setNav("exams");
   const h=LS.get(KEY_H,[]);
   const cards=EXAMS.map(ex=>{
     const att=h.filter(a=>a.examId===ex.id);
     const best=att.length?Math.max(...att.map(a=>a.total)):null;
-    return `<div class="tcard ${att.length?"white":"light"}" onclick="startExam('${ex.id}')"><h3>${ex.title}</h3><p>90分・100点満点。${(ex.id==="m3"||ex.id==="m4")?"過去問の頻出パターン(商品有高帳・連結・税効果・本支店・シュラッター図など)を収録。":"基本パターン中心の標準回。"}</p><div class="arw">→　${att.length?`受験${att.length}回 / 最高 ${best}点`:"未受験"}</div></div>`;}).join("");
-  const rows=h.slice(-5).reverse().map(a=>`<tr><td>${a.date}</td><td>${a.title}</td><td class="${a.total>=70?"correct":"wrong"}">${a.total}点</td><td>${a.total>=70?"合格":"不合格"}</td></tr>`).join("");
-  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">模擬試験</h2><p>本番同様90分・試験中は解説なし・大問間は自由移動。おすすめの順: 第1問→第4問→第5問→第2問→第3問。</p></div>
-  <div class="trio">${cards}</div>
-  ${h.length?`<div class="sechead"><h2 class="disp2">受験履歴</h2><p>直近5回</p></div><table class="rtable"><tr><th>日時</th><th>模試</th><th>得点</th><th>判定</th></tr>${rows}</table>`:""}`;
+    return `<div class="tcard ${att.length?"white":"light"}" onclick="startExam('${ex.id}')"><h3>${ex.title}</h3><div class="arw">${att.length?`受験${att.length}回 / 最高 ${best}点`:"未受験"}　→</div></div>`;}).join("");
+  const rows=h.slice(-8).reverse().map(a=>`<tr><td>${a.date}</td><td>${a.title.replace("模擬試験 ","")}</td><td class="${a.total>=70?"correct":"wrong"}">${a.total}点</td></tr>`).join("");
+  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">模擬試験</h2></div>
+  <div class="exgrid">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${cards}</div>
+    <div class="qpane" style="margin-top:0;"><h2>受験履歴</h2>${h.length?`<table class="rtable" style="margin:8px 0 0;"><tr><th>日時</th><th>模試</th><th>得点</th></tr>${rows}</table>`:`<p class="prog">まだ受験していません</p>`}</div>
+  </div>`;
 }
 window.renderStudy=renderStudy;window.renderExams=renderExams;
 function drillDoneCount(){const d=LS.get(KEY_D,{});return Object.keys(d).length;}
@@ -1270,30 +1311,13 @@ function gradeDrill(q){
 /* ---------- ダッシュボード ---------- */
 function renderDash(){
   setMode("home");setNav("dash");
-  const h=LS.get(KEY_H,[]),st=LS.get(KEY_D,{}),wrong=LS.get(KEY_W,[]);
-  const barCls=r=>r<0.5?"low":r<0.75?"mid":"high";
-  /* 大問別平均得点率 */
-  const secAgg={};
-  h.forEach(a=>a.secs.forEach(s=>{const k=s.no;secAgg[k]=secAgg[k]||{got:0,max:0,tag:s.tag};secAgg[k].got+=s.got;secAgg[k].max+=s.max;}));
-  const secBars=Object.keys(secAgg).map(k=>{const s=secAgg[k];const r=s.got/s.max;
-    return `<div class="bar"><span class="bl">第${k}問</span><div class="bt"><div class="bf ${barCls(r)}" style="width:${Math.round(r*100)}%"></div></div><span class="bv">${Math.round(r*100)}%</span></div>`;}).join("")||"<p class='prog'>まだ模試のデータがありません。</p>";
-  /* ドリル分野別 */
-  const tagAgg={};
-  DRILLS.forEach(d=>{const s=st[d.id];if(!s)return;tagAgg[d.tag]=tagAgg[d.tag]||{t:0,o:0};tagAgg[d.tag].t+=s.t;tagAgg[d.tag].o+=s.o;});
-  const tagBars=Object.entries(tagAgg).sort((a,b)=>a[1].o/a[1].t-b[1].o/b[1].t).map(([t,s])=>{const r=s.o/s.t;
-    return `<div class="bar"><span class="bl">${t}</span><div class="bt"><div class="bf ${barCls(r)}" style="width:${Math.round(r*100)}%"></div></div><span class="bv">${Math.round(r*100)}% (${s.t}回)</span></div>`;}).join("")||"<p class='prog'>まだドリルのデータがありません。</p>";
+  const h=LS.get(KEY_H,[]);
   /* 得点推移 */
-  const trend=h.map((a,i)=>`<div class="bar"><span class="bl">${a.date}</span><div class="bt"><div class="bf ${a.total>=70?"high":"low"}" style="width:${a.total}%"></div></div><span class="bv">${a.total}点</span></div>`).join("")||"<p class='prog'>まだ受験していません。</p>";
+  const trend=h.map((a,i)=>`<div class="bar"><span class="bl">${a.date}</span><div class="bt" style="height:20px;"><div class="bf ${a.total>=70?"high":"low"}" style="width:${a.total}%"></div></div><span class="bv">${a.total}点</span></div>`).join("")||"<p class='prog'>まだ受験していません</p>";
   /* 直近の時間配分 */
   const lastA=h[h.length-1];
   const timeRows=lastA?lastA.secs.map(s=>{const r=s.time/(90*60);
     return `<div class="bar"><span class="bl">第${s.no}問 (${s.tag})</span><div class="bt"><div class="bf" style="width:${Math.min(100,Math.round(r*100*3))}%"></div></div><span class="bv">${mmss(s.time)}</span></div>`;}).join(""):"<p class='prog'>データなし</p>";
-  /* 弱点コメント */
-  let advice=[];
-  Object.keys(secAgg).forEach(k=>{const r=secAgg[k].got/secAgg[k].max;if(r<0.6)advice.push(`第${k}問(${secAgg[k].tag})の得点率が${Math.round(r*100)}%と低め。ここを優先的に復習しましょう。`);});
-  Object.entries(tagAgg).forEach(([t,s])=>{if(s.t>=2&&s.o/s.t<0.6)advice.push(`仕訳「${t}」の正答率が${Math.round(s.o/s.t*100)}%。類題を反復しましょう。`);});
-  if(wrong.length>=5)advice.push(`間違いリストに${wrong.length}問たまっています。復習モードで消化しましょう。`);
-  if(!advice.length)advice.push("大きな弱点は検出されていません。模試とドリルを続けましょう。");
   /* 学習カレンダー(GitHub風) */
   const dd=LS.get(KEY_A,{});
   const CCOL=["#edeaf6","#cfc7ee","#a99ce0","#7c6fd0","#4c3fa0"];
@@ -1308,29 +1332,22 @@ function renderDash(){
       const k=daysKey(dt),v=dd[k],q=v?(v.q||0):0;
       if(v&&q>0){totActive++;totQ+=q;}
       const fut=dt>today;
-      col+=`<div title="${k}: ${q}問" style="width:13px;height:13px;border-radius:3px;background:${fut?"transparent":CCOL[lvOf(q)]};"></div>`;
+      col+=`<div title="${k}: ${q}問" style="width:16px;height:16px;border-radius:4px;background:${fut?"transparent":CCOL[lvOf(q)]};"></div>`;
     }
-    cal+=`<div style="display:flex;flex-direction:column;gap:3px;">${col}</div>`;
+    cal+=`<div style="display:flex;flex-direction:column;gap:4px;">${col}</div>`;
   }
-  const calCard=`<div class="dcard"><h3>学習カレンダー(直近15週)</h3>
-    <div style="display:flex;gap:3px;overflow-x:auto;padding:4px 0;">${cal}</div>
-    <div style="display:flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;color:#8a84a3;">
-      <span>学習日 ${totActive}日 / のべ${totQ}問</span>
-      <span style="margin-left:auto;">少</span>${CCOL.map(c=>`<div style="width:11px;height:11px;border-radius:3px;background:${c};"></div>`).join("")}<span>多</span>
-    </div></div>`;
-  main.innerHTML=`<div class="qpane"><h2>弱点分析ダッシュボード</h2>
-  <div class="note">📌 ${advice.join("<br>📌 ")}</div>
-  <div class="dgrid">
-    ${calCard}
-    <div class="dcard"><h3>模試: 得点推移(合格ライン70点)</h3>${trend}</div>
-    <div class="dcard"><h3>模試: 大問別 平均得点率</h3>${secBars}</div>
-    <div class="dcard"><h3>ドリル: 分野別 正答率(低い順)</h3>${tagBars}</div>
-    <div class="dcard"><h3>直近の模試: 大問別 所要時間</h3>${timeRows}</div>
-  </div>
-  <div style="margin-top:14px;display:flex;gap:10px;">
-   <button class="btn gray" onclick="renderHome()">ホームへ</button>
-   <button class="btn gray" onclick="if(confirm('学習データ(履歴・統計・間違いリスト)をすべて削除しますか？')){localStorage.removeItem('b2_history');localStorage.removeItem('b2_drill');localStorage.removeItem('b2_wrong');renderDash();}">データをリセット</button>
-  </div></div>`;
+  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">分析</h2></div>
+  <div class="qpane"><h2>🔥 学習カレンダー</h2>
+    <div style="display:flex;gap:4px;overflow-x:auto;padding:8px 0;">${cal}</div>
+    <div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:12px;color:#8a84a3;">
+      <b style="color:var(--navy);">学習日 ${totActive}日 ・ のべ ${totQ}問</b>
+      <span style="margin-left:auto;">少</span>${CCOL.map(c=>`<div style="width:12px;height:12px;border-radius:3px;background:${c};"></div>`).join("")}<span>多</span>
+    </div></div>
+  <div class="qpane"><h2>📈 模試の得点推移(合格ライン70点)</h2>${trend}</div>
+  <div class="qpane"><h2>⏱ 直近の模試: 大問別 所要時間</h2>${timeRows}</div>
+  <div style="margin-top:16px;">
+   <button class="btn gray" style="font-size:12px;padding:8px 18px;" onclick="if(confirm('学習データ(履歴・統計・間違いリスト)をすべて削除しますか？')){localStorage.removeItem('b2_history');localStorage.removeItem('b2_drill');localStorage.removeItem('b2_wrong');renderDash();}">データをリセット</button>
+  </div>`;
 }
 window.renderDash=renderDash;
 
@@ -1615,29 +1632,25 @@ window.shareCele=function(){
 let petCd=0;
 window.renderGarden=function(){
   setMode("home");setNav("garden");exState=null;
-  const tk=LS.get(KEY_T,0),food=LS.get(KEY_F,0),dogs=getDogs(),pi=getPartner();
-  const allOwned=ownedBreeds().size>=DOG_BREEDS.length;
+  const food=LS.get(KEY_F,0),dogs=getDogs(),pi=getPartner();
   let card;
   if(!dogs.length){
-    card=`<div class="qpane" style="text-align:center;padding:40px 20px;"><p style="font-size:40px;">🐾</p><p style="color:#6b6488;">まだ犬がいません。<br>パターンを制覇してチケットを手に入れ、ガチャを回そう!</p></div>`;
+    card=`<div class="qpane" style="text-align:center;padding:44px 20px;"><p style="font-size:44px;">🐾</p><button class="btn" style="margin-top:14px;" onclick="renderGacha()">ガチャで犬をむかえる</button></div>`;
   }else{
     const d=dogs[pi],st=dogStage(d.f);
     const prev=st===0?0:EVO[st-1],next=st<EVO.length?EVO[st]:null;
     const pct=next?Math.round((d.f-prev)/(next-prev)*100):100;
     card=`<div class="qpane" style="text-align:center;">
-      <div id="dogbox" style="display:inline-block;position:relative;padding:12px 36px;cursor:pointer;"></div>
-      <h3 style="color:var(--navy);font-size:20px;margin:6px 0 2px;"><span id="dogname"></span> <button onclick="renameDog(${pi})" title="名前を変える" style="border:none;background:none;cursor:pointer;color:#8a84a3;font-size:14px;">✎</button></h3>
+      <div style="font-weight:800;color:var(--navy);font-size:17px;">🍖 ${food}</div>
+      <div id="dogbox" style="display:inline-block;position:relative;padding:14px 40px;cursor:pointer;"></div>
+      <h3 style="color:var(--navy);font-size:21px;margin:6px 0 2px;"><span id="dogname"></span> <button onclick="renameDog(${pi})" style="border:none;background:none;cursor:pointer;color:#8a84a3;font-size:14px;">✎</button></h3>
       <p style="color:#8a84a3;font-size:13px;margin:0;">${DOG_BREEDS[d.b%DOG_BREEDS.length].nm}・${DOG_NAMES[st]}</p>
       <div style="color:#f59e0b;letter-spacing:3px;font-size:15px;">${"★".repeat(st+1)}${"☆".repeat(4-st)}</div>
       <div style="max-width:300px;margin:12px auto;">
-        <div style="display:flex;justify-content:space-between;font-size:12px;color:#8a84a3;"><span>そだち</span><span>${next?"🍖 "+d.f+" / "+next:"さいだいまで そだった!"}</span></div>
-        <div style="background:var(--lt);border-radius:6px;height:12px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#f59e0b,#e05656);"></div></div>
+        <div style="display:flex;justify-content:flex-end;font-size:12px;color:#8a84a3;"><span>${next?"🍖 "+d.f+" / "+next:"MAX"}</span></div>
+        <div style="background:var(--lt);border-radius:6px;height:14px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#f59e0b,#e05656);"></div></div>
       </div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-        <button class="btn" ${food<1||!next?"disabled":""} onclick="feedDog(1)">🍖 たべさせる</button>
-        <button class="btn gray" ${food<1||!next?"disabled":""} onclick="feedDog(10)">まとめて ×10</button>
-      </div>
-      <p class="prog" style="margin-top:8px;">犬をクリックで進化形態をチェック / なでると よろこぶ</p>
+      <button class="btn" style="font-size:17px;padding:13px 44px;" ${food<1||!next?"disabled":""} onclick="feedDog(1)">🍖 たべさせる</button>
     </div>`;
   }
   const list=dogs.map((d,i)=>{
@@ -1648,15 +1661,9 @@ window.renderGarden=function(){
       <span style="font-size:10px;color:#8a84a3;">${DOG_NAMES[st]}</span>
       <span style="font-size:10px;color:#8a84a3;">${next?"🍖 "+d.f+"/"+next:"MAX"}</span>
     </div>`;}).join("");
-  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">マイドッグ</h2><p>問題に正解するとドッグフードがもらえます(1問=1個)。食べさせると育ち、5段階に進化します。犬種は全${DOG_BREEDS.length}種・同じ犬種は1匹だけです。</p></div>
-  <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
-    <span style="font-weight:800;color:var(--navy);">🎫 チケット ${tk}枚</span>
-    ${allOwned?`<span class="prog">全犬種コンプリート! 🎉</span><button class="btn gray" ${tk<1?"disabled":""} onclick="ticketToFood()">チケット→フード10個</button>`
-      :`<button class="btn" ${tk<1?"disabled":""} onclick="rollGacha()">ガチャを回す(1枚)</button>`}
-    <span style="font-weight:800;color:var(--navy);">🍖 フード ${food}個</span>
-  </div>
+  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">マイドッグ</h2></div>
   ${card}
-  ${dogs.length?`<p class="prog" style="margin:14px 0 6px;">てもちの犬 ${dogs.length}/${DOG_BREEDS.length}匹(タップで切替)</p><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">${list}</div>`:""}`;
+  ${dogs.length?`<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-top:14px;">${list}</div>`:""}`;
   if(dogs.length){
     const d=dogs[pi];
     document.getElementById("dogname").textContent=d.n;
@@ -1666,6 +1673,33 @@ window.renderGarden=function(){
     box.onmousemove=()=>{const now=Date.now();if(now-petCd>350){petCd=now;spawnHearts(box,1);}};
     dogs.forEach((dg,i)=>{const el=document.getElementById("dico"+i);if(el)el.appendChild(dogCanvas(dogStage(dg.f),2,dg.b));const nm=document.getElementById("dnm"+i);if(nm)nm.textContent=dg.n;});
   }
+};
+window.renderGacha=function(){
+  setMode("home");setNav("gacha");exState=null;
+  const tk=LS.get(KEY_T,0),dogs=getDogs();
+  const owned=ownedBreeds();
+  const allOwned=owned.size>=DOG_BREEDS.length;
+  const cells=DOG_BREEDS.map((b,i)=>{
+    const have=owned.has(i);
+    const dog=dogs.find(x=>x.b===i);
+    return `<div class="bcell ${have?"":"no"}"><div id="bc${i}" style="height:52px;display:flex;align-items:flex-end;justify-content:center;"></div>
+      <div style="font-size:11px;font-weight:700;color:${have?"var(--navy)":"#b0aac4"};margin-top:4px;">${have?b.nm:"？？？"}</div></div>`;}).join("");
+  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">ガチャ</h2></div>
+  <div class="gmach">
+    <div style="font-size:64px;">🎰</div>
+    <div style="font-weight:800;color:var(--navy);font-size:17px;margin:8px 0 14px;">🎫 チケット ${tk}枚</div>
+    ${allOwned
+      ?`<div style="font-weight:800;color:var(--navy);margin-bottom:10px;">全犬種コンプリート! 🎉</div><button class="btn gray" ${tk<1?"disabled":""} onclick="ticketToFood();renderGacha();">🎫1枚 → 🍖10個</button>`
+      :`<button class="btn" style="font-size:18px;padding:14px 48px;" ${tk<1?"disabled":""} onclick="rollGacha()">ガチャを回す</button>`}
+    ${tk<1&&!allOwned?`<p class="prog" style="margin-top:12px;">パターン網羅マップで1パターン全問正解するとチケットGET</p>`:""}
+  </div>
+  <div class="sechead"><h2 class="disp2">コレクション <span style="font-size:15px;color:#8a84a3;">${owned.size} / ${DOG_BREEDS.length}</span></h2></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;">${cells}</div>`;
+  DOG_BREEDS.forEach((b,i)=>{
+    const el=document.getElementById("bc"+i);if(!el)return;
+    const dog=dogs.find(x=>x.b===i);
+    el.appendChild(dogCanvas(dog?dogStage(dog.f):2,2,i,!owned.has(i)));
+  });
 };
 function spawnHearts(box,n){for(let i=0;i<n;i++){const h=document.createElement("div");h.className="pheart";h.style.left=(15+Math.random()*70)+"%";h.style.top=(15+Math.random()*45)+"%";box.appendChild(h);setTimeout(()=>h.remove(),1000);}}
 window.pickDog=function(i){LS.set("b2_partner",i);renderGarden();};
@@ -1724,7 +1758,6 @@ window.feedDog=function(n){
 window.ticketToFood=function(){
   const t=LS.get(KEY_T,0);if(t<1)return;
   LS.set(KEY_T,t-1);LS.set(KEY_F,LS.get(KEY_F,0)+10);
-  renderGarden();
 };
 window.rollGacha=function(){
   const t=LS.get(KEY_T,0);
@@ -1796,7 +1829,6 @@ window.renderRank=async function(){
     <button class="rtab ${rankTab==="week"?"act":""}" onclick="setRankTab('week')">今週の問題数</button>
     <button class="rtab ${rankTab==="streak"?"act":""}" onclick="setRankTab('streak')">連続日数</button>
     <button class="rtab ${rankTab==="pat"?"act":""}" onclick="setRankTab('pat')">パターン制覇</button>
-    ${nick?`<button class="rtab" style="margin-left:auto;font-size:12px;" onclick="editNick()">${escapeHtml(nick)} ✎</button>`:""}
   </div><div id="rlist" class="prog">読み込み中…</div>`;
   if(sbUser&&nick)pushProfile();
   loadRank();
@@ -1883,7 +1915,7 @@ window.shareEOD=function(){
 document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{
   if(exState&&!confirm("試験を中断しますか？(解答は破棄されます)"))return;
   if(exState)stopExam();
-  ({home:renderHome,study:renderStudy,exams:renderExams,dash:renderDash,garden:renderGarden,rank:renderRank})[b.dataset.v]();
+  ({home:renderHome,exams:renderExams,dash:renderDash,garden:renderGarden,gacha:renderGacha,rank:renderRank})[b.dataset.v]();
 });
 window.shareX=function(total){
   const {po,pt}=patCount();
