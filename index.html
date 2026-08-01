@@ -1104,7 +1104,7 @@ function renderHome(){
     <div class="tcard white" onclick="renderDrillSetup()"><h3>✍️ 仕訳ドリル</h3><div class="arw">${drillDoneCount()} / ${DRILLS.length} 問　→</div></div>
     <div class="tcard white" onclick="renderQuizSetup()"><h3>⚡ 一問一答(電卓不要)</h3><div class="arw">${Object.keys(LS.get("b2_qz",{})).length} / ${QZ.length} 問　→</div></div>
     <div class="tcard dark" onclick="startReview()"><h3>🔁 間違いを消化</h3><div class="arw">${wrong.length}問 待機中　→</div></div>
-    <div class="tcard white" onclick="renderCards()"><h3>📖 要点カード</h3><div class="arw">全${CARDS.length}枚　→</div></div>
+    <div class="tcard white" onclick="renderCards()"><h3>📖 要点カード</h3><div class="arw">全${CARDS.reduce((s,c)=>s+c.items.length,0)}枚　→</div></div>
     <div class="tcard white" onclick="renderExams()"><h3>🎓 模擬試験</h3><div class="arw">${best==null?"未受験":"ベスト "+best+"点"}　→</div></div>
   </div>`;
   main.innerHTML=page(center,"default");
