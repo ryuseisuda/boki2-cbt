@@ -2068,7 +2068,7 @@ window.shareEOD=function(){
   });
 })();
 
-document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{
+document.querySelectorAll("#nav button[data-v]").forEach(b=>b.onclick=()=>{
   if(exState&&!confirm("試験を中断しますか？(解答は破棄されます)"))return;
   if(exState)stopExam();
   ({home:renderHome,exams:renderExams,dash:renderDash,garden:renderGarden,gacha:renderGacha,rank:renderRank})[b.dataset.v]();
