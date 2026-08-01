@@ -76,10 +76,25 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 #garden{position:relative;height:440px;border-radius:26px;overflow:hidden;background:linear-gradient(#bfe3f7 0%,#e2f3fc 42%,#a6d88b 42%,#8cc973 100%);box-shadow:0 2px 14px rgba(28,23,51,.08);}
 #garden .sun{position:absolute;top:24px;right:36px;width:56px;height:56px;border-radius:50%;background:#ffd66b;box-shadow:0 0 30px #ffd66b;}
 #garden .cloud{position:absolute;background:#fff;border-radius:20px;opacity:.9;}
-.dog{position:absolute;transition:left 4s linear,top 4s linear;will-change:left,top;}
-.dog .dflip{transition:transform .3s;}
-.dog svg{display:block;width:100%;animation:dogBob .7s ease-in-out infinite alternate;}
-@keyframes dogBob{from{transform:translateY(0)}to{transform:translateY(-4px)}}
+.pixdog{image-rendering:pixelated;animation:pixBob 1s steps(1) infinite;}
+@keyframes pixBob{0%,49%{transform:translateY(0)}50%,100%{transform:translateY(-4px)}}
+.pixdog.paw{animation:pawTilt .5s;}
+@keyframes pawTilt{30%{transform:rotate(-10deg) translateY(-6px)}60%{transform:rotate(6deg)}}
+.pheart{position:absolute;width:12px;height:12px;background:#e05656;clip-path:polygon(50% 100%,0 38%,25% 0,50% 26%,75% 0,100% 38%);animation:heartUp 1s ease-out forwards;pointer-events:none;z-index:5;}
+@keyframes heartUp{to{transform:translateY(-52px);opacity:0;}}
+.dogico{width:54px;height:54px;background:#fff;border:2px solid var(--bd);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;}
+.dogico.sel{border-color:var(--blue);background:#f5f3fc;}
+.dogico .pixdog{animation:none;}
+.rrow{display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:10px 16px;margin-bottom:6px;cursor:pointer;box-shadow:0 1px 6px rgba(28,23,51,.05);}
+.rrow.me{outline:2px solid var(--blue);}
+.rrow .ricon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.rrow .ricon .pixdog{animation:none;}
+.rnum2{font-weight:800;color:#8a84a3;min-width:36px;font-size:15px;}
+.rrow .rv{margin-left:auto;font-weight:800;color:var(--navy);white-space:nowrap;}
+.rtab{border:none;background:#fff;border-radius:999px;padding:8px 18px;font-weight:700;color:#6b6488;cursor:pointer;}
+.rtab.act{background:var(--navy);color:#fff;}
+.cgrid{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,13px);gap:3px;overflow-x:auto;padding-bottom:4px;}
+.cgrid div{width:13px;height:13px;border-radius:3px;}
 .card h3{font-size:16px;color:var(--navy);margin-bottom:6px;}
 .card p{font-size:13px;color:#64748b;line-height:1.6;}
 .card .meta{margin-top:8px;font-size:12px;color:var(--blue);font-weight:600;}
@@ -232,7 +247,8 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",s
   <button data-v="study">勉強する</button>
   <button data-v="exams">模擬試験</button>
   <button data-v="dash">分析</button>
-  <button data-v="garden">庭</button>
+  <button data-v="garden">マイドッグ</button>
+  <button data-v="rank">ランキング</button>
 </div>
 <div id="tabs" class="hidden"></div>
 <div class="wrap" id="main"></div>
@@ -850,7 +866,7 @@ function setNav(v){document.querySelectorAll("#nav button").forEach(b=>b.classLi
 /* ---------- 学習アクティビティ(連続日数など) ---------- */
 const KEY_A="b2_days";
 function daysKey(t){return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");}
-function recordActivity(n,o){const d=LS.get(KEY_A,{});const k=daysKey(new Date());const e=d[k]||{q:0,o:0};e.q+=n;e.o+=o;d[k]=e;LS.set(KEY_A,d);}
+function recordActivity(n,o){const d=LS.get(KEY_A,{});const k=daysKey(new Date());const e=d[k]||{q:0,o:0};e.q+=n;e.o+=o;d[k]=e;LS.set(KEY_A,d);if(o>0)LS.set("b2_food",LS.get("b2_food",0)+o);}
 function recordRescue(k){const d=LS.get(KEY_A,{});const key=daysKey(new Date());const e=d[key]||{q:0,o:0};e.r=(e.r||0)+k;d[key]=e;LS.set(KEY_A,d);}
 function actInfo(){
   const d=LS.get(KEY_A,{});let s=0;const c=new Date();
@@ -1278,9 +1294,34 @@ function renderDash(){
   Object.entries(tagAgg).forEach(([t,s])=>{if(s.t>=2&&s.o/s.t<0.6)advice.push(`仕訳「${t}」の正答率が${Math.round(s.o/s.t*100)}%。類題を反復しましょう。`);});
   if(wrong.length>=5)advice.push(`間違いリストに${wrong.length}問たまっています。復習モードで消化しましょう。`);
   if(!advice.length)advice.push("大きな弱点は検出されていません。模試とドリルを続けましょう。");
+  /* 学習カレンダー(GitHub風) */
+  const dd=LS.get(KEY_A,{});
+  const CCOL=["#edeaf6","#cfc7ee","#a99ce0","#7c6fd0","#4c3fa0"];
+  const lvOf=q=>q<=0?0:q<3?1:q<8?2:q<15?3:4;
+  const today=new Date();today.setHours(0,0,0,0);
+  const end=new Date(today);end.setDate(end.getDate()+(7-((end.getDay()+6)%7)-1));
+  let cal="",totActive=0,totQ=0;
+  for(let w=14;w>=0;w--){
+    let col="";
+    for(let dow=0;dow<7;dow++){
+      const dt=new Date(end);dt.setDate(dt.getDate()-w*7-(6-dow));
+      const k=daysKey(dt),v=dd[k],q=v?(v.q||0):0;
+      if(v&&q>0){totActive++;totQ+=q;}
+      const fut=dt>today;
+      col+=`<div title="${k}: ${q}問" style="width:13px;height:13px;border-radius:3px;background:${fut?"transparent":CCOL[lvOf(q)]};"></div>`;
+    }
+    cal+=`<div style="display:flex;flex-direction:column;gap:3px;">${col}</div>`;
+  }
+  const calCard=`<div class="dcard"><h3>学習カレンダー(直近15週)</h3>
+    <div style="display:flex;gap:3px;overflow-x:auto;padding:4px 0;">${cal}</div>
+    <div style="display:flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;color:#8a84a3;">
+      <span>学習日 ${totActive}日 / のべ${totQ}問</span>
+      <span style="margin-left:auto;">少</span>${CCOL.map(c=>`<div style="width:11px;height:11px;border-radius:3px;background:${c};"></div>`).join("")}<span>多</span>
+    </div></div>`;
   main.innerHTML=`<div class="qpane"><h2>弱点分析ダッシュボード</h2>
   <div class="note">📌 ${advice.join("<br>📌 ")}</div>
   <div class="dgrid">
+    ${calCard}
     <div class="dcard"><h3>模試: 得点推移(合格ライン70点)</h3>${trend}</div>
     <div class="dcard"><h3>模試: 大問別 平均得点率</h3>${secBars}</div>
     <div class="dcard"><h3>ドリル: 分野別 正答率(低い順)</h3>${tagBars}</div>
@@ -1478,7 +1519,28 @@ window.nextQuiz=function(){
 };
 /* ---------- チケット・祝福・ガチャ・庭 ---------- */
 const KEY_T="b2_tickets",KEY_CL="b2_cleared",KEY_DOG="b2_dogs";
-const DOG_SVG=`<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg"><g stroke="#3f2d28" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M118 112 q20 -2 24 -16 q-16 -6 -28 4" fill="#9a9089"/><path d="M70 60 q34 4 42 32 q6 22 -8 30 l-46 0 q-10 -36 12 -62z" fill="#9a9089"/><path d="M92 84 q14 8 10 26 q-14 8 -26 2 q-4 -18 16 -28z" fill="#cfa16f" stroke="none"/><path d="M44 62 q-16 26 -6 60 l38 0 q10 -30 -4 -54 q-12 -12 -28 -6z" fill="#ffffff"/><path d="M42 122 q8 5 16 0" fill="none"/><path d="M62 122 q8 5 16 0" fill="none"/><path d="M28 26 q-8 -16 2 -22 q12 4 16 16z" fill="#9a9089"/><path d="M74 22 q6 -16 16 -16 q6 10 -2 22z" fill="#9a9089"/><path d="M22 44 q0 -28 32 -30 q32 -2 36 26 q2 22 -18 28 q-30 8 -44 -6 q-6 -8 -6 -18z" fill="#9a9089"/><path d="M24 46 q2 12 12 16 q10 4 20 2 l-4 -22 q-16 -8 -28 4z" fill="#cfa16f" stroke="none"/><path d="M86 42 q2 14 -10 20 l-6 -22 q8 -6 16 2z" fill="#cfa16f" stroke="none"/><path d="M40 40 q12 -8 24 0 q8 10 2 20 q-14 8 -26 0 q-6 -10 0 -20z" fill="#ffffff" stroke="none"/><circle cx="38" cy="38" r="3.4" fill="#3f2d28" stroke="none"/><circle cx="72" cy="36" r="3.4" fill="#3f2d28" stroke="none"/><path d="M52 44 q4 -3 8 0 q-2 5 -4 5 q-2 0 -4 -5z" fill="#3f2d28" stroke="none"/><path d="M44 54 q10 12 22 2 q-2 10 -11 10 q-9 0 -11 -12z" fill="#3f2d28" stroke="none"/></g></svg>`;
+const KEY_F="b2_food";
+const DOG_PAL={K:"#3f2d28",W:"#ffffff",C:"#f2e3c8",B:"#c89b6a",G:"#9a9089",P:"#f2a0a0",R:"#e05656",Y:"#ffd66b",D:"#8a6a4a"};
+const DOG_NAMES=["ちびわん","こいぬ","せいけん","モフ犬","キング犬"];
+const EVO=[3,10,40,100];
+const DOG_SPR=[
+["..KK....KK..",".KBBK..KBBK.",".KBCKKKKCBK.",".KCCCCCCCCK.","KCCKCCCCKCCK","KCCCCCCCCCCK","KCCCKPPKCCCK",".KCCCKKCCCK.",".KCCCCCCCCK.","..KCCCCCCK..","...KKKKKK..."],
+[".KK........KK.","KBBK......KBBK","KBCCKKKKKKCCBK",".KCCCCCCCCCCK.",".KCKCCCCCCKCK.",".KCCCCKKCCCCK.",".KCCCKPPKCCCK.","..KCCCKKCCCK..","..KWWWWWWWWK..",".KWWWWWWWWWWK.",".KWWKWWWWKWWK.",".KWWKWWWWKWWK.","..KKKKKKKKKK.."],
+[".KK..........KK.","KBBK........KBBK","KBBCKKKKKKKKCBBK",".KCCCCCCCCCCCCK.",".KCKCCCCCCCCKCK.",".KCCCCCKKCCCCCK.",".KCCCCKPPKCCCCK.","..KCCCCKKCCCCK..","..KBBWWWWWWBBK..",".KBBWWWWWWWWBBK.",".KBWWWWWWWWWWBK.",".KBWWKWWWWKWWBK.",".KBWWKWWWWKWWBK.","..KKWWKKKKWWKK..","...KKKK..KKKK..."],
+[".KK............KK.","KGGK..........KGGK","KGGCKKKKKKKKKKCGGK",".KCCCCCCCCCCCCCCK.",".KCKKCCCCCCCCKKCK.",".KCCCCCCKKCCCCCCK.",".KCCCCCKPPKCCCCCK.","..KCCCCCKKCCCCCK..","..KRRRRRRRRRRRRK..","..KWWGWWWWWWGWWK..",".KWWWGGWWWWGGWWWK.",".KWWWWGWWWWGWWWWK.",".KWWWWWWWWWWWWWWK.",".KWWKWWWWWWWWKWWK.",".KWWKWWWWWWWWKWWK.","..KKWWKKKKKKWWKK..","...KKKK....KKKK..."],
+["......KYYK..KYYK......","......KYYYKKYYYK......",".KK...KYYYYYYYYK...KK.","KBBK..KKKKKKKKKK..KBBK","KBBCKKCCCCCCCCCCKKCBBK",".KCCCCCCCCCCCCCCCCCCK.",".KCKKCCCCCCCCCCCKKCK..",".KCCCCCCCKKCCCCCCCCK..",".KCCCCCCKPPKCCCCCCK...","..KCCCCCCKKCCCCCCK....","..KRRRRRRRRRRRRRRK....","..KWWBWWWWWWWWBWWK....",".KWWWBBWWWWWWBBWWWK...",".KWWWWBWWWWWWBWWWWK...",".KWWWWWWWWWWWWWWWWK...",".KWWKWWWWWWWWWWKWWK...",".KWWKWWWWWWWWWWKWWK...","..KKWWKKKKKKKKWWKK....","...KKKK......KKKK....."]
+];
+function getDogs(){let d=LS.get(KEY_DOG,[]);if(typeof d==="number"){d=Array.from({length:d},()=>({f:0}));LS.set(KEY_DOG,d);}return Array.isArray(d)?d:[];}
+function getPartner(){const p=LS.get("b2_partner",0);const n=getDogs().length;return Math.min(Math.max(0,p),Math.max(0,n-1));}
+function dogStage(f){let s=0;for(const t of EVO)if(f>=t)s++;return s;}
+function dogCanvas(st,scale){
+  const g=DOG_SPR[Math.min(st,4)],w=Math.max(...g.map(r=>r.length)),h=g.length;
+  const c=document.createElement("canvas");c.width=w;c.height=h;
+  const x=c.getContext("2d");
+  g.forEach((row,y)=>{for(let i=0;i<row.length;i++){const col=DOG_PAL[row[i]];if(col){x.fillStyle=col;x.fillRect(i,y,1,1);}}});
+  c.style.width=(w*scale)+"px";c.style.height=(h*scale)+"px";c.className="pixdog";
+  return c;
+}
 function confettiBurst(){
   for(let i=0;i<90;i++){
     const c=document.createElement("div");c.className="confetti";
@@ -1519,53 +1581,160 @@ window.shareCele=function(){
   const text=`簿記2級 Studio で「${window._celeLabel}」を全問制覇! パターン進捗 ${po}/${pt} #17日で簿記2級 #簿記2級`;
   window.open("https://twitter.com/intent/tweet?text="+encodeURIComponent(text)+"&url="+encodeURIComponent("https://ryuseisuda.github.io/boki2-cbt/"),"_blank");
 };
-let dogTimer=null;
+let petCd=0;
 window.renderGarden=function(){
   setMode("home");setNav("garden");exState=null;
-  clearInterval(dogTimer);
-  const tk=LS.get(KEY_T,0),n=LS.get(KEY_DOG,0);
-  let dogs="";
-  for(let i=0;i<n;i++){
-    const l=5+Math.random()*78,t=46+Math.random()*38,s=64+Math.random()*34;
-    dogs+=`<div class="dog" style="left:${l}%;top:${t}%;width:${s}px;z-index:${Math.round(t)}"><div class="dflip">${DOG_SVG}</div></div>`;
+  const tk=LS.get(KEY_T,0),food=LS.get(KEY_F,0),dogs=getDogs(),pi=getPartner();
+  let card;
+  if(!dogs.length){
+    card=`<div class="qpane" style="text-align:center;padding:40px 20px;"><p style="font-size:40px;">🐾</p><p style="color:#6b6488;">まだ犬がいません。<br>パターンを制覇してチケットを手に入れ、ガチャを回そう!</p></div>`;
+  }else{
+    const d=dogs[pi],st=dogStage(d.f);
+    const prev=st===0?0:EVO[st-1],next=st<EVO.length?EVO[st]:null;
+    const pct=next?Math.round((d.f-prev)/(next-prev)*100):100;
+    card=`<div class="qpane" style="text-align:center;">
+      <div id="dogbox" style="display:inline-block;position:relative;padding:12px 36px;cursor:pointer;"></div>
+      <h3 style="color:var(--navy);font-size:20px;margin:6px 0 2px;">${DOG_NAMES[st]} <span style="color:#8a84a3;font-size:13px;">#${pi+1}</span></h3>
+      <div style="color:#f59e0b;letter-spacing:3px;font-size:15px;">${"★".repeat(st+1)}${"☆".repeat(4-st)}</div>
+      <div style="max-width:300px;margin:12px auto;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#8a84a3;"><span>そだち</span><span>${next?"🍖 "+d.f+" / "+next:"さいだいまで そだった!"}</span></div>
+        <div style="background:var(--lt);border-radius:6px;height:12px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#f59e0b,#e05656);"></div></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn" ${food<1||!next?"disabled":""} onclick="feedDog(1)">🍖 たべさせる</button>
+        <button class="btn gray" ${food<1||!next?"disabled":""} onclick="feedDog(10)">まとめて ×10</button>
+      </div>
+      <p class="prog" style="margin-top:8px;">犬をクリックで「おて!」/ なでると よろこぶ</p>
+    </div>`;
   }
-  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">庭</h2><p>パターンを全問正解(各パターン初回)でチケット1枚。ガチャを回すと犬が庭にやってきます。</p></div>
+  const icons=dogs.map((d,i)=>`<div class="dogico ${i===pi?"sel":""}" onclick="pickDog(${i})" id="dico${i}" title="#${i+1} ${DOG_NAMES[dogStage(d.f)]}"></div>`).join("");
+  main.innerHTML=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">マイドッグ</h2><p>問題に正解するとドッグフードがもらえます(1問=1個)。食べさせると育ち、5段階に進化します。</p></div>
   <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
-    <span style="font-weight:800;color:var(--navy);font-size:16px;">🎫 チケット ${tk}枚</span>
+    <span style="font-weight:800;color:var(--navy);">🎫 チケット ${tk}枚</span>
     <button class="btn" ${tk<1?"disabled":""} onclick="rollGacha()">ガチャを回す(1枚)</button>
-    <span class="prog">🐶 ${n}匹が暮らしています</span>
+    <span style="font-weight:800;color:var(--navy);">🍖 フード ${food}個</span>
   </div>
-  <div id="garden">
-    <div class="sun"></div>
-    <div class="cloud" style="top:36px;left:12%;width:90px;height:26px;"></div>
-    <div class="cloud" style="top:70px;left:52%;width:64px;height:20px;"></div>
-    ${n?dogs:`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#3f6b30;font-weight:700;text-align:center;padding:20px;">まだ誰もいません。<br>パターン網羅マップを制覇してチケットを集めよう!</div>`}
-  </div>`;
-  if(n){dogTimer=setInterval(moveDogs,4200);setTimeout(moveDogs,400);}
+  ${card}
+  ${dogs.length?`<p class="prog" style="margin:14px 0 6px;">てもちの犬(タップで切替)</p><div style="display:flex;gap:10px;flex-wrap:wrap;">${icons}</div>`:""}`;
+  if(dogs.length){
+    const box=document.getElementById("dogbox");
+    box.appendChild(dogCanvas(dogStage(dogs[pi].f),7));
+    box.onclick=()=>{const c=box.querySelector("canvas");c.classList.remove("paw");void c.offsetWidth;c.classList.add("paw");spawnHearts(box,3);};
+    box.onmousemove=()=>{const now=Date.now();if(now-petCd>350){petCd=now;spawnHearts(box,1);}};
+    dogs.forEach((d,i)=>{const el=document.getElementById("dico"+i);if(el)el.appendChild(dogCanvas(dogStage(d.f),2));});
+  }
 };
-function moveDogs(){
-  document.querySelectorAll("#garden .dog").forEach(d=>{
-    const nl=5+Math.random()*78,nt=46+Math.random()*38;
-    const cur=parseFloat(d.style.left)||50;
-    d.querySelector(".dflip").style.transform=nl<cur?"scaleX(1)":"scaleX(-1)";
-    d.style.left=nl+"%";d.style.top=nt+"%";d.style.zIndex=Math.round(nt);
-  });
-}
+function spawnHearts(box,n){for(let i=0;i<n;i++){const h=document.createElement("div");h.className="pheart";h.style.left=(15+Math.random()*70)+"%";h.style.top=(15+Math.random()*45)+"%";box.appendChild(h);setTimeout(()=>h.remove(),1000);}}
+window.pickDog=function(i){LS.set("b2_partner",i);renderGarden();};
+window.feedDog=function(n){
+  let food=LS.get(KEY_F,0);const dogs=getDogs(),pi=getPartner();
+  if(!dogs.length||food<1)return;
+  const d=dogs[pi],before=dogStage(d.f);
+  if(before>=EVO.length)return;
+  const amt=Math.min(n,food);
+  food-=amt;d.f+=amt;
+  LS.set(KEY_F,food);LS.set(KEY_DOG,dogs);
+  const after=dogStage(d.f);
+  renderGarden();
+  if(after>before){
+    confettiBurst();
+    const ovl=document.createElement("div");ovl.id="cele-ovl";
+    ovl.innerHTML=`<div id="cele-box"><p style="color:#8a84a3;">おめでとう!</p><div id="evobox" style="margin:10px 0;"></div><h2 style="color:var(--navy);font-size:21px;">${DOG_NAMES[after]} に進化した!</h2><button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove()">やったー!</button></div>`;
+    document.body.appendChild(ovl);
+    ovl.querySelector("#evobox").appendChild(dogCanvas(after,6));
+  }
+};
 window.rollGacha=function(){
   const t=LS.get(KEY_T,0);
   if(t<1)return;
   LS.set(KEY_T,t-1);
+  const dogs=getDogs();dogs.push({f:0});LS.set(KEY_DOG,dogs);LS.set("b2_partner",dogs.length-1);
   const ovl=document.createElement("div");ovl.id="cele-ovl";
   ovl.innerHTML=`<div id="cele-box"><div style="font-size:76px;display:inline-block;animation:gshake .5s ease-in-out 3;">🎁</div><p style="color:#6b6488;margin-top:8px;">ガチャを回しています…</p></div>`;
   document.body.appendChild(ovl);
   setTimeout(()=>{
-    LS.set(KEY_DOG,LS.get(KEY_DOG,0)+1);
     confettiBurst();
-    ovl.querySelector("#cele-box").innerHTML=`<div style="width:140px;margin:0 auto;">${DOG_SVG}</div>
-      <h2 style="color:var(--navy);font-size:21px;margin:8px 0;">犬が仲間になった!</h2>
-      <p style="color:#6b6488;">庭でのんびり暮らします</p>
-      <button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove();renderGarden();">庭を見る</button>`;
-  },1700);
+    ovl.querySelector("#cele-box").innerHTML=`<div id="gdog" style="display:flex;justify-content:center;"></div>
+      <h2 style="color:var(--navy);font-size:21px;margin:8px 0;">ちびわん が仲間になった!</h2>
+      <p style="color:#6b6488;">問題に正解してフードをあげよう</p>
+      <button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove();renderGarden();">会いに行く</button>`;
+    ovl.querySelector("#gdog").appendChild(dogCanvas(0,7));
+  },1600);
+};
+/* ---------- ランキング ---------- */
+function weekStart(){const d=new Date();d.setHours(0,0,0,0);const wd=(d.getDay()+6)%7;d.setDate(d.getDate()-wd);return daysKey(d);}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function pushProfile(){
+  if(!sb||!sbUser)return;
+  const nick=LS.get("b2_nick","");if(!nick)return;
+  try{
+    const {po,pt}=patCount();
+    const a=actInfo();
+    const h=LS.get(KEY_H,[]);const best=h.length?Math.max(...h.map(x=>x.total)):null;
+    const ws=weekStart();
+    const dd=LS.get(KEY_A,{});let wk=0;Object.entries(dd).forEach(([k,v])=>{if(k>=ws)wk+=v.q||0;});
+    await sb.from("profiles").upsert({user_id:sbUser.id,nickname:nick,week_start:ws,week_solved:wk,streak:a.streak,pat_done:po,pat_total:pt,mock_best:best,dogs:getDogs().map(x=>({f:x.f||0})),partner:getPartner(),updated_at:new Date().toISOString()});
+  }catch(e){}
+}
+let rankTab="week";
+window.setRankTab=function(t){rankTab=t;renderRank();};
+window.setNickname=function(){
+  const v=(document.getElementById("nick-in").value||"").trim().slice(0,12);
+  if(!v)return;
+  LS.set("b2_nick",v);pushProfile();renderRank();
+};
+window.editNick=function(){
+  const v=prompt("新しいニックネーム(12文字まで)",LS.get("b2_nick",""));
+  if(v&&v.trim()){LS.set("b2_nick",v.trim().slice(0,12));pushProfile();renderRank();}
+};
+window.renderRank=async function(){
+  setMode("home");setNav("rank");exState=null;
+  const head=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">ランキング</h2><p>「今週」は月曜0時リセット。行をタップするとその人の犬が見られます。参加はログイン+ニックネーム登録で。</p></div>`;
+  if(!sb){main.innerHTML=head+`<div class="qpane">通信機能を読み込めませんでした。再読み込みしてください。</div>`;return;}
+  const nick=LS.get("b2_nick","");
+  let joinUi="";
+  if(!sbUser)joinUi=`<div class="qpane" style="text-align:center;margin-bottom:14px;"><p>ランキングに参加するにはログインしてください。</p><button class="btn" style="margin-top:8px;" onclick="openAcct()">ログインする</button></div>`;
+  else if(!nick)joinUi=`<div class="qpane" style="text-align:center;margin-bottom:14px;"><p>ランキングに表示するニックネームを決めてください。</p><div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;"><input id="nick-in" maxlength="12" placeholder="ニックネーム(12文字まで)" style="border:1px solid var(--bd);border-radius:999px;padding:10px 16px;font-family:inherit;"><button class="btn" onclick="setNickname()">参加する</button></div></div>`;
+  main.innerHTML=head+joinUi+`<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+    <button class="rtab ${rankTab==="week"?"act":""}" onclick="setRankTab('week')">今週の問題数</button>
+    <button class="rtab ${rankTab==="streak"?"act":""}" onclick="setRankTab('streak')">連続日数</button>
+    <button class="rtab ${rankTab==="pat"?"act":""}" onclick="setRankTab('pat')">パターン制覇</button>
+    ${nick?`<button class="rtab" style="margin-left:auto;font-size:12px;" onclick="editNick()">${escapeHtml(nick)} ✎</button>`:""}
+  </div><div id="rlist" class="prog">読み込み中…</div>`;
+  if(sbUser&&nick)pushProfile();
+  loadRank();
+};
+async function loadRank(){
+  try{
+    const {data,error}=await sb.from("profiles").select("*").limit(200);
+    const el=document.getElementById("rlist");if(!el)return;
+    if(error||!data){el.textContent="読み込みエラー("+(error?error.message:"")+")";return;}
+    const ws=weekStart();
+    const rows=data.filter(r=>r.nickname).map(r=>({...r,wk:(r.week_start===ws?(r.week_solved||0):0)}));
+    const key=rankTab==="week"?"wk":rankTab==="streak"?"streak":"pat_done";
+    rows.sort((a,b)=>(b[key]||0)-(a[key]||0));
+    window._rankRows=rows;
+    const unit=rankTab==="week"?"問":rankTab==="streak"?"日":"";
+    el.className="";
+    el.innerHTML=rows.length?rows.map((r,i)=>`<div class="rrow ${sbUser&&r.user_id===sbUser.id?"me":""}" onclick="showUserDogs(${i})">
+      <span class="rnum2">${i+1}位</span><span class="ricon" id="ric${i}"></span><b style="color:var(--navy);">${escapeHtml(r.nickname)}</b>
+      <span class="rv">${rankTab==="pat"?(r.pat_done||0)+" / "+(r.pat_total||47):(r[key]||0)+unit}</span></div>`).join("")
+     :`<div class="qpane">まだ参加者がいません。今なら1位!</div>`;
+    rows.forEach((r,i)=>{const ic=document.getElementById("ric"+i);if(ic){const dg=(r.dogs||[])[r.partner||0];ic.appendChild(dogCanvas(dg?dogStage(dg.f||0):0,2));}});
+  }catch(e){const el=document.getElementById("rlist");if(el)el.textContent="読み込みエラー";}
+}
+window.showUserDogs=function(i){
+  const r=(window._rankRows||[])[i];if(!r)return;
+  const old=document.getElementById("cele-ovl");if(old)old.remove();
+  const ovl=document.createElement("div");ovl.id="cele-ovl";ovl.onclick=e=>{if(e.target===ovl)ovl.remove();};
+  const dogs=r.dogs||[];
+  ovl.innerHTML=`<div id="cele-box"><h2 style="color:var(--navy);font-size:19px;">${escapeHtml(r.nickname)} さんの犬 (${dogs.length}匹)</h2>
+  <div id="udogs" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:16px 0;max-height:300px;overflow-y:auto;"></div>
+  ${dogs.length?"":"<p class='prog'>まだ犬がいません</p>"}
+  <button class="btn gray" onclick="document.getElementById('cele-ovl').remove()">閉じる</button></div>`;
+  document.body.appendChild(ovl);
+  const box=ovl.querySelector("#udogs");
+  dogs.slice(0,20).forEach(d=>{const st=dogStage(d.f||0);const w=document.createElement("div");w.style.textAlign="center";w.appendChild(dogCanvas(st,3));const cap=document.createElement("div");cap.style.cssText="font-size:11px;color:#8a84a3;margin-top:2px;";cap.textContent=DOG_NAMES[st];w.appendChild(cap);box.appendChild(w);});
 };
 /* ---------- 今日はここまで(日次サマリー) ---------- */
 window.showEOD=function(){
@@ -1617,7 +1786,7 @@ window.shareEOD=function(){
 document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{
   if(exState&&!confirm("試験を中断しますか？(解答は破棄されます)"))return;
   if(exState)stopExam();
-  ({home:renderHome,study:renderStudy,exams:renderExams,dash:renderDash,garden:renderGarden})[b.dataset.v]();
+  ({home:renderHome,study:renderStudy,exams:renderExams,dash:renderDash,garden:renderGarden,rank:renderRank})[b.dataset.v]();
 });
 window.shareX=function(total){
   const {po,pt}=patCount();
@@ -1646,12 +1815,13 @@ track("visit",{screen:"home"});
 /* ---------- アカウント同期(Supabase) ---------- */
 const SB_URL="https://ijddujtdsvmbrwtboodt.supabase.co",SB_KEY="sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt";
 let sb=null,sbUser=null,pushT=null;
-const SYNC_KEYS=[KEY_H,KEY_D,KEY_W,KEY_P,KEY_A,"b2_exam","b2_seen","b2_qz","b2_tickets","b2_cleared","b2_dogs"];
+const SYNC_KEYS=[KEY_H,KEY_D,KEY_W,KEY_P,KEY_A,"b2_exam","b2_seen","b2_qz","b2_tickets","b2_cleared","b2_dogs","b2_food","b2_partner","b2_nick"];
 function collectLocal(){const o={};SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)o[k]=v;});return o;}
 function tqOf(o){try{const d=JSON.parse(o[KEY_A]||"{}");let t=0;Object.values(d).forEach(e=>t+=e.q||0);return t;}catch(e){return 0;}}
 function applyData(o){SYNC_KEYS.forEach(k=>{if(o[k]!=null)localStorage.setItem(k,o[k]);});}
 function schedulePush(){if(!sbUser||!sb)return;clearTimeout(pushT);pushT=setTimeout(async()=>{
   try{await sb.from("user_progress").upsert({user_id:sbUser.id,data:collectLocal(),updated_at:new Date().toISOString()});}catch(e){}
+  try{pushProfile();}catch(e){}
 },2000);}
 function sbName(){if(!sbUser)return"";const m=sbUser.user_metadata||{};return m.full_name||m.name||(sbUser.email?sbUser.email.split("@")[0]:"アカウント");}
 function setAcctBtn(){
@@ -1668,6 +1838,7 @@ async function onLogin(user){
     if(row&&row.data&&tqOf(row.data)>tqOf(collectLocal()))applyData(row.data);
     await sb.from("user_progress").upsert({user_id:user.id,data:collectLocal(),updated_at:new Date().toISOString()});
   }catch(e){}
+  try{pushProfile();}catch(e){}
   setAcctBtn();
   if(!exState)renderHome();
 }
