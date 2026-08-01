@@ -1013,6 +1013,12 @@ function recordActivity(n,o){
     let f=o;if(first)f+=5;
     LS.set("b2_food",LS.get("b2_food",0)+f);
     if(first)setTimeout(()=>miniToast(`<span data-icon="food" data-s="2"></span>きょう最初の正解! ごはん +5`),600);
+    const aw=awaySt();
+    if(aw&&aw.st==="gone"){
+      aw.cnt=(aw.cnt||0)+o;
+      if(aw.cnt>=10){LS.set("b2_away",aw);setTimeout(dogReturn,900);}
+      else LS.set("b2_away",aw);
+    }
   }
 }
 function miniToast(html){
@@ -1020,10 +1026,69 @@ function miniToast(html){
   document.body.appendChild(t);try{mountIcons(t);}catch(e){}
   setTimeout(()=>{t.classList.add("out");setTimeout(()=>t.remove(),450);},2800);
 }
+/* ---------- 家出システム ---------- */
+function awaySt(){return LS.get("b2_away",null);}
+function dogByBreed(b){const dogs=getDogs();const i=dogs.findIndex(x=>x.b===b);return i<0?null:{d:dogs[i],i};}
+function pickAwayCandidate(){
+  const dogs=getDogs(),pi=getPartner();
+  let best=-1,bestF=Infinity;
+  dogs.forEach((d,i)=>{if(i!==pi&&(d.f||0)<bestF){bestF=d.f||0;best=i;}});
+  return best<0?null:dogs[best].b;
+}
+function triggerAway(gap){
+  if(awaySt())return; /* すでに家出中なら上書きしない */
+  if(gap>=4){
+    const b=pickAwayCandidate();
+    if(b==null){LS.set("b2_hungry",1);return;}
+    LS.set("b2_away",{st:gap>=8?"gone":"sulk",b:b,cnt:0});
+    window._awayNotice=true;
+  }else if(gap>=2){
+    LS.set("b2_hungry",1);
+  }
+}
+window.showAwayNotice=function(){
+  const a=awaySt();if(!a)return;
+  const r=dogByBreed(a.b);if(!r)return;
+  const ovl=document.createElement("div");ovl.id="cele-ovl";
+  const gone=a.st==="gone";
+  ovl.innerHTML=`<div id="cele-box" class="pixf">
+    <div id="awaydog" style="display:flex;justify-content:center;margin-bottom:8px;${gone?"filter:grayscale(1);opacity:.75;":""}"></div>
+    <h2 style="color:var(--navy);font-size:19px;">${gone?`${escapeHtml(r.d.n)} は旅に出てしまった…`:`${escapeHtml(r.d.n)} がすねている…`}</h2>
+    <p style="color:#8a84a3;font-size:13px;margin:8px 0;">${gone?"ごはん10個で呼び戻すか、10問正解すると帰ってくるよ":"ペットのページで ごはんをあげて なかなおりしよう"}</p>
+    <button class="btn" style="margin-top:8px;" onclick="document.getElementById('cele-ovl').remove();renderGarden();">会いに行く</button>
+  </div>`;
+  document.body.appendChild(ovl);
+  ovl.querySelector("#awaydog").appendChild(dogCanvas(dogStage(r.d.f),5,r.d.b));
+};
+window.callBackDog=function(){
+  const a=awaySt();if(!a||a.st!=="gone")return;
+  const food=LS.get(KEY_F,0);if(food<10)return;
+  LS.set(KEY_F,food-10);
+  dogReturn();
+};
+function dogReturn(){
+  const a=awaySt();if(!a)return;
+  const r=dogByBreed(a.b);
+  localStorage.removeItem("b2_away");
+  confettiBurst();
+  const ovl=document.createElement("div");ovl.id="cele-ovl";
+  ovl.innerHTML=`<div id="cele-box" class="pixf">
+    <div id="retdog" style="display:flex;justify-content:center;margin-bottom:8px;"></div>
+    <h2 style="color:var(--navy);font-size:20px;">${r?escapeHtml(r.d.n):""} が帰ってきた!</h2>
+    <button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove();renderGarden();">おかえり!</button>
+  </div>`;
+  document.body.appendChild(ovl);
+  if(r)ovl.querySelector("#retdog").appendChild(dogCanvas(dogStage(r.d.f),5,r.d.b));
+  try{track("dog_return",{});}catch(e){}
+}
 function checkLoginBonus(){
   const today=daysKey(new Date());
   const lb=LS.get("b2_login",{last:null,run:0});
   if(lb.last===today)return;
+  if(lb.last){
+    const gap=Math.round((new Date(today+"T00:00:00")-new Date(lb.last+"T00:00:00"))/86400000);
+    triggerAway(gap);
+  }
   const y=new Date();y.setDate(y.getDate()-1);
   lb.run=(lb.last===daysKey(y))?lb.run+1:1;
   lb.last=today;
@@ -1041,7 +1106,7 @@ function checkLoginBonus(){
       ${ticket?`<span style="text-align:center;"><span data-icon="ticket" data-s="5"></span><b style="display:block;color:var(--navy);font-size:17px;">×1</b></span>`:""}
     </div>
     <p style="color:#8a84a3;font-size:12px;">あすは ごはん×${Math.min(lb.run+3,7)}${(lb.run+1)%7===0?" + ガチャ券":""}</p>
-    <button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove()">うけとる</button>
+    <button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove();if(window._awayNotice){window._awayNotice=false;showAwayNotice();}">うけとる</button>
   </div>`;
   document.body.appendChild(ovl);try{mountIcons(ovl);}catch(e){}
   try{track("login_bonus",{run:lb.run});}catch(e){}
@@ -1167,7 +1232,10 @@ function renderHome(){
         ${ed?`<button class="btn gray" style="padding:8px 18px;font-size:13px;" onclick="saveExamDate(null)">表示しない</button>`:""}
       </div>
     </div>
-    <div id="homedog" onclick="renderGarden()" style="cursor:pointer;display:flex;align-items:flex-end;justify-content:center;min-width:220px;"></div>
+    <div onclick="renderGarden()" style="cursor:pointer;text-align:center;min-width:220px;">
+      <div id="homedog" style="display:flex;align-items:flex-end;justify-content:center;"></div>
+      <div id="homedog-msg" class="prog pixf" style="margin-top:6px;"></div>
+    </div>
     </div>
   </section>
   <div class="trio" style="margin-top:26px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));">
@@ -1178,7 +1246,18 @@ function renderHome(){
   </div>`;
   main.innerHTML=page(center,"home");
   mountIcons(main);loadRailRank();
-  if(dogs.length){const d=dogs[pi];const hd=document.getElementById("homedog");if(hd)hd.appendChild(dogCanvas(dogStage(d.f),8,d.b));}
+  if(dogs.length){
+    const d=dogs[pi];const hd=document.getElementById("homedog");
+    if(hd)hd.appendChild(dogCanvas(dogStage(d.f),8,d.b));
+    const msg=document.getElementById("homedog-msg");
+    if(msg){
+      const aw=awaySt();
+      const rr=aw?dogByBreed(aw.b):null;
+      if(aw&&aw.st==="gone"&&rr)msg.textContent=`${rr.d.n} が旅に出ています…`;
+      else if(aw&&aw.st==="sulk"&&rr)msg.textContent=`${rr.d.n} がすねている…`;
+      else if(LS.get("b2_hungry",0))msg.textContent="おなかぺこぺこ…";
+    }
+  }
 }
 function renderStudy(){renderHome();}
 function renderExams(){
@@ -1840,6 +1919,7 @@ window.renderGarden=function(){
       <h3 style="color:var(--navy);font-size:21px;margin:6px 0 2px;"><span id="dogname"></span> <button onclick="renameDog(${pi})" style="border:none;background:none;cursor:pointer;color:#8a84a3;font-size:14px;">✎</button></h3>
       <p style="color:#8a84a3;font-size:13px;margin:0;">${DOG_BREEDS[d.b%DOG_BREEDS.length].nm}・${DOG_NAMES[st]}</p>
       <div style="color:#f59e0b;letter-spacing:3px;font-size:15px;">${"★".repeat(st+1)}${"☆".repeat(4-st)}</div>
+      ${LS.get("b2_hungry",0)?`<p style="color:#5aa7e8;font-size:13px;margin:4px 0 0;">おなかぺこぺこ…</p>`:""}
       <div style="max-width:300px;margin:12px auto;">
         <div style="display:flex;justify-content:flex-end;font-size:12px;color:#8a84a3;"><span>${next?d.f+" / "+next:"MAX"}</span></div>
         <div style="background:var(--lt);border-radius:6px;height:14px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#f59e0b,#e05656);"></div></div>
@@ -1847,14 +1927,19 @@ window.renderGarden=function(){
       <button class="btn" style="font-size:17px;padding:13px 44px;" ${food<1||!next?"disabled":""} onclick="feedDog(1)"><span class="sicon" data-icon="food"></span>たべさせる</button>
     </div>`;
   }
+  const aw=awaySt();
   const list=dogs.map((d,i)=>{
     const st=dogStage(d.f),next=st<EVO.length?EVO[st]:null;
+    const isAway=aw&&aw.b===d.b;
+    const gone=isAway&&aw.st==="gone",sulk=isAway&&aw.st==="sulk";
+    const sub=gone?`旅に出ています(あと${Math.max(0,10-(aw.cnt||0))}問正解で帰宅)`:sulk?"すねている… ごはんで なかなおり":`${DOG_BREEDS[d.b%DOG_BREEDS.length].nm}・${DOG_NAMES[st]}`;
     return `<div class="rrowi" onclick="pickDog(${i})" style="cursor:pointer;${i===pi?"background:var(--lt);border-radius:10px;padding-left:8px;padding-right:8px;":""}">
       <span style="display:flex;align-items:center;gap:10px;">
-        <span id="dico${i}" style="width:50px;display:flex;justify-content:center;align-items:flex-end;"></span>
-        <span><b id="dnm${i}" style="font-size:13px;color:var(--navy);"></b><br><span style="font-size:11px;color:var(--tx2);">${DOG_BREEDS[d.b%DOG_BREEDS.length].nm}・${DOG_NAMES[st]}</span></span>
+        <span id="dico${i}" style="width:50px;display:flex;justify-content:center;align-items:flex-end;${gone?"filter:grayscale(1);opacity:.55;":""}"></span>
+        <span><b id="dnm${i}" style="font-size:13px;color:var(--navy);"></b>${i===pi?`<span style="font-size:9px;background:var(--blue);color:#fff;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:1px;">メイン</span>`:""}<br><span style="font-size:11px;color:${gone?"#8a84a3":sulk?"#5aa7e8":"var(--tx2)"};">${sub}</span></span>
       </span>
-      <span style="font-size:11px;color:var(--tx2);">${next?d.f+"/"+next:"MAX"}</span>
+      ${gone?`<button class="btn" style="font-size:11px;padding:7px 12px;" ${food<10?"disabled":""} onclick="event.stopPropagation();callBackDog();"><span class="sicon" data-icon="food" data-s="1"></span>10で呼び戻す</button>`
+        :`<span style="font-size:11px;color:var(--tx2);">${next?d.f+"/"+next:"MAX"}</span>`}
     </div>`;}).join("");
   const rail=dogs.length?`<div class="rcard pixf"><h3>ペットと種類 ${dogs.length}/${DOG_BREEDS.length}</h3>${list}</div>`:"";
   main.innerHTML=pageRaw(`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">ペット</h2></div>
@@ -1898,7 +1983,11 @@ window.renderGacha=function(){
   });
 };
 function spawnHearts(box,n){for(let i=0;i<n;i++){const h=document.createElement("div");h.className="pheart";h.style.left=(15+Math.random()*70)+"%";h.style.top=(15+Math.random()*45)+"%";box.appendChild(h);setTimeout(()=>h.remove(),1000);}}
-window.pickDog=function(i){LS.set("b2_partner",i);renderGarden();};
+window.pickDog=function(i){
+  const dogs=getDogs();const aw=awaySt();
+  if(aw&&aw.st==="gone"&&dogs[i]&&dogs[i].b===aw.b)return;
+  LS.set("b2_partner",i);renderGarden();
+};
 window.renameDog=function(i){
   const dogs=getDogs();if(!dogs[i])return;
   const v=prompt("あたらしい名前(10文字まで)",dogs[i].n);
@@ -1940,6 +2029,12 @@ window.feedDog=function(n){
   const amt=Math.min(n,food);
   food-=amt;d.f+=amt;
   LS.set(KEY_F,food);LS.set(KEY_DOG,dogs);
+  if(LS.get("b2_hungry",0))LS.set("b2_hungry",0);
+  const aw=awaySt();
+  if(aw&&aw.st==="sulk"&&d.b===aw.b){
+    localStorage.removeItem("b2_away");
+    setTimeout(()=>miniToast(`<span data-icon="food" data-s="2"></span>${d.n} と なかなおりした!`),400);
+  }
   const after=dogStage(d.f);
   renderGarden();
   if(after>before){
@@ -2149,7 +2244,7 @@ track("visit",{screen:"home"});
 /* ---------- アカウント同期(Supabase) ---------- */
 const SB_URL="https://ijddujtdsvmbrwtboodt.supabase.co",SB_KEY="sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt";
 let sb=null,sbUser=null,pushT=null;
-const SYNC_KEYS=[KEY_H,KEY_D,KEY_W,KEY_P,KEY_A,"b2_exam","b2_seen","b2_qz","b2_tickets","b2_cleared","b2_dogs","b2_food","b2_partner","b2_nick","b2_login","b2_xreward"];
+const SYNC_KEYS=[KEY_H,KEY_D,KEY_W,KEY_P,KEY_A,"b2_exam","b2_seen","b2_qz","b2_tickets","b2_cleared","b2_dogs","b2_food","b2_partner","b2_nick","b2_login","b2_xreward","b2_hungry","b2_away"];
 function collectLocal(){const o={};SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)o[k]=v;});return o;}
 function tqOf(o){try{const d=JSON.parse(o[KEY_A]||"{}");let t=0;Object.values(d).forEach(e=>t+=e.q||0);return t;}catch(e){return 0;}}
 function applyData(o){SYNC_KEYS.forEach(k=>{if(o[k]!=null)localStorage.setItem(k,o[k]);});}
