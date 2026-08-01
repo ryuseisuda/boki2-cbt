@@ -381,7 +381,7 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
   <button data-v="home"><span class="nicon" data-icon="home"></span>ホーム</button>
   <button data-v="exams"><span class="nicon" data-icon="cap"></span>模擬試験</button>
   <button data-v="dash"><span class="nicon" data-icon="chart"></span>分析</button>
-  <button data-v="garden"><span class="nicon" data-icon="paw"></span>ペット</button>
+  <button data-v="garden"><span class="nicon" data-icon="dog"></span>ペット</button>
   <button data-v="gacha"><span class="nicon" data-icon="capsule"></span>ガチャ</button>
   <button data-v="rank"><span class="nicon" data-icon="trophy"></span>ランキング</button>
   <button id="btn-theme" onclick="toggleTheme()"><span class="nicon" data-icon="moon"></span>ダークモード</button>
@@ -1127,12 +1127,10 @@ function renderHome(){
     <div id="homedog" onclick="renderGarden()" style="cursor:pointer;display:flex;align-items:flex-end;justify-content:center;min-width:220px;"></div>
     </div>
   </section>
-  <div class="trio" style="margin-top:26px;">
+  <div class="trio" style="margin-top:26px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));">
     <div class="tcard light" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>パターン網羅マップ</h3><div class="arw">${po} / ${pt} 制覇　→</div></div>
     <div class="tcard white" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>仕訳ドリル</h3><div class="arw">${drillDoneCount()} / ${DRILLS.length} 問　→</div></div>
-    <div class="tcard white" onclick="renderQuizSetup()"><h3><span class="micon" data-icon="zap"></span>一問一答(電卓不要)</h3><div class="arw">${Object.keys(LS.get("b2_qz",{})).length} / ${QZ.length} 問　→</div></div>
-    <div class="tcard dark" onclick="startReview()"><h3><span class="micon" data-icon="repeat"></span>間違いを消化</h3><div class="arw">${wrong.length}問 待機中　→</div></div>
-    <div class="tcard white" onclick="renderCards()"><h3><span class="micon" data-icon="book"></span>要点カード</h3><div class="arw">全${CARDS.reduce((s,c)=>s+c.items.length,0)}枚　→</div></div>
+    <div class="tcard white" onclick="startReview()"><h3><span class="micon" data-icon="repeat"></span>間違いを消化</h3><div class="arw">${wrong.length}問 待機中　→</div></div>
     <div class="tcard white" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>模擬試験</h3><div class="arw">${best==null?"未受験":"ベスト "+best+"点"}　→</div></div>
   </div>`;
   main.innerHTML=page(center,"home");
@@ -1984,8 +1982,8 @@ window.renderRank=async function(){
     <button class="rtab ${rankTab==="week"?"act":""}" onclick="setRankTab('week')">今週の問題数</button>
     <button class="rtab ${rankTab==="streak"?"act":""}" onclick="setRankTab('streak')">連続日数</button>
     <button class="rtab ${rankTab==="pat"?"act":""}" onclick="setRankTab('pat')">パターン制覇</button>
-  </div><div id="rlist" class="prog">読み込み中…</div>`,"default");
-  mountRail();mountIcons(main);
+  </div><div id="rlist" class="prog">読み込み中…</div>`,"none");
+  mountIcons(main);
   if(sbUser&&nick)pushProfile();
   loadRank();
 };
