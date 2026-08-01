@@ -1551,6 +1551,12 @@ function getDogs(){
     if(typeof x.b!=="number"){let b=0;while(used.has(b)&&b<DOG_BREEDS.length-1)b++;used.add(b);x.b=b;dirty=true;}
     if(!x.n){x.n=DOG_BREEDS[x.b%DOG_BREEDS.length].nm;dirty=true;}
   });
+  /* 同犬種は1匹ルール: 重複はフードを合算して統合 */
+  if(new Set(d.map(x=>x.b)).size<d.length){
+    const seen={};const merged=[];
+    d.forEach(x=>{if(seen[x.b]!==undefined){merged[seen[x.b]].f+=(x.f||0);}else{seen[x.b]=merged.length;merged.push(x);}});
+    d=merged;dirty=true;
+  }
   if(dirty||typeof LS.get(KEY_DOG,[])==="number")LS.set(KEY_DOG,d);
   return d;
 }
