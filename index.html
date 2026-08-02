@@ -15,6 +15,11 @@
 <meta name="twitter:title" content="ボキイヌ 2級 | 全47の出題パターンを、代表問題で制覇する。">
 <meta name="twitter:description" content="日商簿記2級CBT対策の無料アプリ(非公式)。模試4回分・仕訳ドリル58問・弱点分析。登録不要。">
 <meta name="twitter:image" content="https://ryuseisuda.github.io/boki2-cbt/og.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#152a52">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ボキイヌ">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=DotGothic16&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -373,6 +378,14 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
 .heroflex #homedog canvas{max-width:100%;height:auto;}
 @media(max-width:820px){.heroflex{flex-wrap:wrap;}.heroflex>div{flex:1 1 100%!important;}}
 .nicon,.micon,.sicon{display:inline-flex;align-items:center;margin-right:9px;vertical-align:-5px;}
+.fpop{position:fixed;bottom:88px;right:26px;background:#152a52;color:#fff;border-radius:12px;padding:6px 14px;font-weight:800;font-size:14px;z-index:135;animation:fpopUp 1.1s ease-out forwards;pointer-events:none;}
+@keyframes fpopUp{0%{transform:translateY(8px);opacity:0;}15%{opacity:1;}70%{opacity:1;}100%{transform:translateY(-18px);opacity:0;}}
+#nav button{position:relative;}
+.navbadge{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#e05656;color:#fff;border-radius:999px;min-width:19px;text-align:center;font-size:10.5px;padding:2px 6px;font-weight:800;line-height:1.3;}
+.qrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--bd);}
+.qrow:last-child{border-bottom:none;}
+.qbar{flex:1;background:var(--lt);border-radius:6px;height:10px;overflow:hidden;min-width:60px;}
+.qbar>div{height:100%;background:linear-gradient(90deg,#2b6cea,#7fa8e8);}
 .mtoast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#152a52;color:#fff;padding:12px 24px;border-radius:16px;z-index:140;display:flex;gap:10px;align-items:center;font-weight:700;box-shadow:0 4px 0 rgba(0,0,0,.35);animation:mtIn .3s ease-out;white-space:nowrap;}
 .mtoast.out{opacity:0;transition:.45s;}
 @keyframes mtIn{from{transform:translate(-50%,24px);opacity:0;}}
@@ -406,7 +419,7 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
 <footer id="ftr">
   <div><b>ボキイヌ 2級</b> ｜ 2026年度試験範囲対応 ｜ Ver 1.0</div>
   <div class="fnote">本サイトは個人が制作した<b>非公式</b>の学習ツールです。日本商工会議所・各地商工会議所・CBT試験運営会社とは一切関係ありません。「日商簿記」は日本商工会議所の登録商標です。</div>
-  <div class="fnote"><a onclick="showTos()">利用規約・免責事項・データの取扱い</a> ｜ <a href="https://github.com/ryuseisuda/boki2-cbt/issues" target="_blank" rel="noopener">誤りの報告・要望(GitHub Issues)</a></div>
+  <div class="fnote"><a onclick="showTos()">利用規約・免責事項・データの取扱い</a> ｜ <a href="https://github.com/ryuseisuda/boki2-cbt/issues" target="_blank" rel="noopener">誤りの報告・要望(GitHub Issues)</a> ｜ <a href="https://twitter.com/intent/follow?screen_name=Ehqb0HGGtR20790" target="_blank" rel="noopener">開発を応援する(Xフォロー)</a></div>
 </footer>
 <div id="acct-ovl" class="hidden" onclick="if(event.target===this)this.classList.add('hidden')">
 <div id="acct-box">
@@ -1024,19 +1037,35 @@ function setMode(m){ /* home|exam|other */
 }
 window.showTos=function(){document.getElementById("tos-ovl").classList.remove("hidden");};
 function setNav(v){try{stopWalks();}catch(e){}
+  try{updateBadges();}catch(e){}
   document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("act",b.dataset.v===v));
   try{if(window._lastScreen!==v){window._lastScreen=v;if(typeof track==="function")track("screen",{s:v});}}catch(e){}}
 /* ---------- 学習アクティビティ(連続日数など) ---------- */
 const KEY_A="b2_days";
 function daysKey(t){return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");}
+let combo=0;
+function bumpDay(key,n){const d=LS.get(KEY_A,{});const k=daysKey(new Date());const e=d[k]||{q:0,o:0};e[key]=(e[key]||0)+(n||1);d[k]=e;LS.set(KEY_A,d);}
+function foodPop(txt){
+  const el=document.createElement("div");el.className="fpop pixf";
+  el.innerHTML=`<span data-icon="food" data-s="1" style="margin-right:4px;vertical-align:-2px;display:inline-flex;"></span>${txt}`;
+  document.body.appendChild(el);try{mountIcons(el);}catch(e){}
+  setTimeout(()=>el.remove(),1100);
+}
 function recordActivity(n,o){
   const d=LS.get(KEY_A,{});const k=daysKey(new Date());const e=d[k]||{q:0,o:0};
   const first=(e.o||0)===0&&o>0;
   e.q+=n;e.o+=o;d[k]=e;LS.set(KEY_A,d);
+  if(n===1){
+    if(o>0){combo++;}else{combo=0;}
+  }
   if(o>0){
     let f=o;if(first)f+=5;
+    if(n===1&&combo>0&&combo%5===0){f+=3;setTimeout(()=>miniToast(`<span data-icon="fire" data-s="2"></span>${combo}連続正解! ごはん +3`),350);}
     LS.set("b2_food",LS.get("b2_food",0)+f);
-    if(first)setTimeout(()=>miniToast(`<span data-icon="food" data-s="2"></span>きょう最初の正解! ごはん +5`),600);
+    if(n===1)foodPop("+"+(first?o+5:(combo>0&&combo%5===0?o+3:o)));
+    if(first&&!(n===1))setTimeout(()=>miniToast(`<span data-icon="food" data-s="2"></span>きょう最初の正解! ごはん +5`),600);
+    if(first&&n===1)setTimeout(()=>miniToast(`<span data-icon="food" data-s="2"></span>きょう最初の正解! ごはん +5`),600);
+    if(LS.get("b2_tut",0)===2){LS.set("b2_tut",3);setTimeout(()=>miniToast(`<span data-icon="food" data-s="2"></span>ごはんゲット! ペットのページで たべさせよう`),1200);}
     const aw=awaySt();
     if(aw&&aw.st==="gone"){
       aw.cnt=(aw.cnt||0)+o;
@@ -1044,11 +1073,83 @@ function recordActivity(n,o){
       else LS.set("b2_away",aw);
     }
   }
+  try{updateBadges();}catch(e){}
 }
 function miniToast(html){
   const t=document.createElement("div");t.className="mtoast pixf";t.innerHTML=html;
   document.body.appendChild(t);try{mountIcons(t);}catch(e){}
   setTimeout(()=>{t.classList.add("out");setTimeout(()=>t.remove(),450);},2800);
+}
+/* ---------- デイリーミッション & バッジ ---------- */
+const QUESTS=[
+ {id:"q10",nm:"10問 正解する",icon:"pencil",target:10,val:e=>e.o||0,f:5},
+ {id:"q25",nm:"25問 正解する",icon:"zap",target:25,val:e=>e.o||0,f:12},
+ {id:"rev3",nm:"復習で3問 取りもどす",icon:"repeat",target:3,val:e=>e.r||0,f:6},
+ {id:"pat1",nm:"パターンを1つ 制覇する",icon:"map",target:1,val:e=>e.p||0,f:8},
+ {id:"mock1",nm:"模試を1回 完了する",icon:"cap",target:1,val:e=>e.m||0,f:15},
+ {id:"feed1",nm:"ペットに ごはんをあげる",icon:"food",target:1,val:e=>e.fd||0,f:3}
+];
+function questClaims(){
+  const k=daysKey(new Date());
+  let q=LS.get("b2_quest",null);
+  if(!q||q.date!==k){q={date:k,c:{}};LS.set("b2_quest",q);}
+  return q;
+}
+function todayEntry(){const d=LS.get(KEY_A,{});return d[daysKey(new Date())]||{q:0,o:0};}
+function claimableCount(){
+  const e=todayEntry(),qc=questClaims();
+  return QUESTS.filter(x=>x.val(e)>=x.target&&!qc.c[x.id]).length;
+}
+window.claimQuest=function(id){
+  const qd=QUESTS.find(x=>x.id===id);if(!qd)return;
+  const e=todayEntry(),qc=questClaims();
+  if(qc.c[id]||qd.val(e)<qd.target)return;
+  qc.c[id]=1;LS.set("b2_quest",qc);
+  LS.set(KEY_F,LS.get(KEY_F,0)+qd.f);
+  miniToast(`<span data-icon="food" data-s="2"></span>ミッション達成! ごはん +${qd.f}`);
+  if(QUESTS.every(x=>qc.c[x.id])){
+    LS.set(KEY_T,LS.get(KEY_T,0)+1);
+    setTimeout(()=>{confettiBurst();miniToast(`<span data-icon="ticket" data-s="2"></span>全ミッション コンプリート! ガチャ券 +1`);},900);
+  }
+  try{track("quest",{id});}catch(x){}
+  renderHome();
+};
+function questCardHTML(){
+  const e=todayEntry(),qc=questClaims();
+  const done=QUESTS.filter(x=>qc.c[x.id]).length;
+  const rows=QUESTS.map(x=>{
+    const v=Math.min(x.val(e),x.target),ok=x.val(e)>=x.target,cl=qc.c[x.id];
+    return `<div class="qrow">
+      <span class="sicon" data-icon="${x.icon}"></span>
+      <span style="flex:0 0 175px;font-size:13px;color:${cl?"var(--tx2)":"var(--navy)"};${cl?"text-decoration:line-through;":""}">${x.nm}</span>
+      <div class="qbar"><div style="width:${Math.round(v/x.target*100)}%"></div></div>
+      <span style="font-size:11.5px;color:var(--tx2);min-width:38px;text-align:right;">${v}/${x.target}</span>
+      ${cl?`<span style="color:var(--ok);font-weight:800;font-size:12px;min-width:64px;text-align:center;">受取済</span>`
+        :ok?`<button class="btn" style="font-size:11.5px;padding:6px 12px;min-width:64px;" onclick="claimQuest('${x.id}')">+${x.f} 受取</button>`
+        :`<span style="font-size:11.5px;color:var(--tx2);min-width:64px;text-align:center;">ごはん${x.f}</span>`}
+    </div>`;}).join("");
+  return `<div class="qpane pixf" style="margin-top:18px;">
+    <h2 style="border:none;padding:0;display:flex;align-items:center;justify-content:space-between;">きょうのミッション
+    <span style="font-size:12px;color:var(--tx2);">${done}/${QUESTS.length} 達成${done>=QUESTS.length?"":" ・ 全達成でガチャ券+1"}</span></h2>
+    ${rows}</div>`;
+}
+function updateBadges(){
+  const set=(v,txt)=>{
+    const b=document.querySelector('#nav button[data-v="'+v+'"]');if(!b)return;
+    let s=b.querySelector(".navbadge");
+    if(!txt){if(s)s.remove();return;}
+    if(!s){s=document.createElement("span");s.className="navbadge";b.appendChild(s);}
+    s.textContent=txt;
+  };
+  try{
+    const tk=LS.get(KEY_T,0);set("gacha",tk>0?String(tk):null);
+    const dogs=getDogs(),aw=awaySt();
+    let pet=null;
+    if(aw||LS.get("b2_hungry",0))pet="!";
+    else if(dogs.length&&LS.get(KEY_F,0)>0&&dogStage(dogs[getPartner()].f)<4)pet="●";
+    set("garden",pet);
+    const qc=claimableCount();set("home",qc>0?String(qc):null);
+  }catch(e){}
 }
 /* ---------- 家出システム ---------- */
 function awaySt(){return LS.get("b2_away",null);}
@@ -1130,7 +1231,7 @@ function checkLoginBonus(){
       ${ticket?`<span style="text-align:center;"><span data-icon="ticket" data-s="5"></span><b style="display:block;color:var(--navy);font-size:17px;">×1</b></span>`:""}
     </div>
     <p style="color:#8a84a3;font-size:12px;">あすは ごはん×${Math.min(lb.run+3,7)}${(lb.run+1)%7===0?" + ガチャ券":""}</p>
-    <button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove();if(window._awayNotice){window._awayNotice=false;showAwayNotice();}">うけとる</button>
+    <button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove();if(window._awayNotice){window._awayNotice=false;showAwayNotice();}else if(LS.get('b2_tut',0)===1){tutGacha();}">うけとる</button>
   </div>`;
   document.body.appendChild(ovl);try{mountIcons(ovl);}catch(e){}
   try{track("login_bonus",{run:lb.run});}catch(e){}
@@ -1260,10 +1361,12 @@ function renderHome(){
     <div onclick="renderGarden()" style="cursor:pointer;text-align:center;flex:0 1 48%;min-width:0;">
       <div id="homedog" style="display:flex;align-items:flex-end;justify-content:center;"></div>
       <div id="homedog-msg" class="prog pixf" style="margin-top:6px;"></div>
+      <div id="homedog-feed" class="pixf" style="margin-top:8px;"></div>
     </div>
     </div>
   </section>
-  <div class="trio" style="margin-top:26px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));">
+  ${questCardHTML()}
+  <div class="trio" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));">
     <div class="tcard light" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>パターン網羅マップ</h3><div class="arw">${po} / ${pt} 制覇　→</div></div>
     <div class="tcard white" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>仕訳ドリル</h3><div class="arw">${drillDoneCount()} / ${DRILLS.length} 問　→</div></div>
     <div class="tcard white" onclick="startReview()"><h3><span class="micon" data-icon="repeat"></span>間違いを消化</h3><div class="arw">${wrong.length}問 待機中　→</div></div>
@@ -1286,6 +1389,12 @@ function renderHome(){
       };
       setTimeout(fit,0);setTimeout(fit,300);
       window.addEventListener("resize",fit);
+      const fd=document.getElementById("homedog-feed");
+      const food=LS.get(KEY_F,0),st=dogStage(d.f);
+      if(fd&&st<4&&food>0){
+        fd.innerHTML=`<button class="btn" style="font-size:13px;padding:9px 22px;" onclick="event.stopPropagation();feedDog(1,'home')"><span class="sicon" data-icon="food" data-s="1"></span>たべさせる ×${food}</button>`;
+        mountIcons(fd);
+      }
     }
     const msg=document.getElementById("homedog-msg");
     if(msg){
@@ -1431,6 +1540,7 @@ function journalUserText(a){
   return `(借) ${s(a.dr)} / (貸) ${s(a.cr)}`;
 }
 function finishExam(auto){
+  try{bumpDay('m');}catch(e){}
   saveInputs();markTime();clearInterval(exState.timer);
   const ex=exState.ex,answers=exState.answers,times=exState.times;
   const secRes=[];const wrong=LS.get(KEY_W,[]);
@@ -2023,6 +2133,7 @@ function confettiBurst(){
   }
 }
 function awardTicket(pid,label){
+  try{bumpDay('p');}catch(e){}
   const cl=LS.get(KEY_CL,[]);
   if(cl.includes(pid))return false;
   cl.push(pid);LS.set(KEY_CL,cl);
@@ -2180,7 +2291,7 @@ window.showEvo=function(i){
     row.appendChild(cell);
   }
 };
-window.feedDog=function(n){
+window.feedDog=function(n,view){
   let food=LS.get(KEY_F,0);const dogs=getDogs(),pi=getPartner();
   if(!dogs.length||food<1)return;
   const d=dogs[pi],before=dogStage(d.f);
@@ -2195,7 +2306,12 @@ window.feedDog=function(n){
     setTimeout(()=>miniToast(`<span data-icon="food" data-s="2"></span>${escapeHtml(d.n)} と なかなおりした!`),400);
   }
   const after=dogStage(d.f);
-  renderGarden();
+  try{bumpDay('fd');}catch(e){}
+  if(LS.get("b2_tut",0)===3){
+    LS.set("b2_tut",4);LS.set(KEY_F,LS.get(KEY_F,0)+10);
+    setTimeout(()=>{confettiBurst();miniToast(`チュートリアル完了! ごはん +10 これから毎日いっしょにがんばろう`);},700);
+  }
+  if(view==="home")renderHome();else renderGarden();
   if(after>before){
     confettiBurst();
     const ovl=document.createElement("div");ovl.id="cele-ovl";
@@ -2265,6 +2381,8 @@ window.openInvite=async function(){
     <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
       <button class="btn" onclick="navigator.clipboard.writeText('${url}');this.textContent='コピーしました!';">リンクをコピー</button>
       <button class="btn gray" onclick="window.open('${tw}','_blank')">Xでシェア</button>
+      <button class="btn" style="background:#06c755;" onclick="window.open('https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('${url}'),'_blank')">LINEで送る</button>
+      ${navigator.share?`<button class="btn gray" onclick="navigator.share({title:'ボキイヌ 2級',text:'簿記2級の勉強、犬を育てながらやってる。一緒にやろう(無料)',url:'${url}'})">その他で共有</button>`:""}
     </div>
     <p class="prog" style="margin-top:10px;">これまでに ${r.invited||0}人 招待しました</p>`;
 };
@@ -2326,6 +2444,17 @@ window.nameNewDog=function(b){
   const dogs=getDogs();dogs.push({f:0,b:b,n:n});
   LS.set(KEY_DOG,dogs);LS.set("b2_partner",dogs.length-1);
   const o=document.getElementById("cele-ovl");if(o)o.remove();
+  if(LS.get("b2_tut",0)===1){
+    LS.set("b2_tut",2);
+    const ovl=document.createElement("div");ovl.id="cele-ovl";
+    ovl.innerHTML=`<div id="cele-box" class="pixf"><div id="tutdog" style="display:flex;justify-content:center;"></div>
+      <h2 style="color:var(--navy);font-size:19px;margin:8px 0;">${escapeHtml(n)} が おなかを すかせている!</h2>
+      <p style="color:var(--tx2);font-size:13px;">問題に正解すると ごはんがもらえるよ(1問=1個)</p>
+      <button class="btn cta" style="margin-top:12px;font-size:16px;" onclick="document.getElementById('cele-ovl').remove();renderQuizSetup();">1問 解いてみる　→</button></div>`;
+    document.body.appendChild(ovl);
+    ovl.querySelector("#tutdog").appendChild(dogCanvas(0,6,b));
+    return;
+  }
   renderGarden();
 };
 /* ---------- ランキング ---------- */
@@ -2472,8 +2601,14 @@ window.closeWlc=function(){
   const v=document.getElementById("wexd").value;
   if(v)LS.set("b2_exam",v);
   document.getElementById("wlc-ovl").classList.add("hidden");
+  LS.set("b2_tut",1);
+  LS.set(KEY_T,LS.get(KEY_T,0)+1);
   renderHome();
   setTimeout(checkLoginBonus,500);
+};
+window.tutGacha=function(){
+  renderGacha();
+  setTimeout(()=>miniToast(`<span data-icon="ticket" data-s="2"></span>ガチャ券をプレゼント! まずは相棒をむかえよう`),500);
 };
 /* ---------- サイト利用統計(匿名・Cookie不使用・自前計測) ---------- */
 const AN_URL="https://ijddujtdsvmbrwtboodt.supabase.co/rest/v1/site_events";
