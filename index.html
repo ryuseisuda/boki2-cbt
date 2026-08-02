@@ -1089,12 +1089,12 @@ function miniToast(html){
 }
 /* ---------- デイリーミッション & バッジ ---------- */
 const QUESTS=[
- {id:"q10",nm:"10問 正解する",icon:"pencil",target:10,val:e=>e.o||0,f:5},
- {id:"q25",nm:"25問 正解する",icon:"zap",target:25,val:e=>e.o||0,f:12},
- {id:"rev3",nm:"復習で3問 取りもどす",icon:"repeat",target:3,val:e=>e.r||0,f:6},
- {id:"pat1",nm:"パターンを1つ 制覇する",icon:"map",target:1,val:e=>e.p||0,f:8},
- {id:"mock1",nm:"模試を1回 完了する",icon:"cap",target:1,val:e=>e.m||0,f:15},
- {id:"feed1",nm:"ペットに ごはんをあげる",icon:"food",target:1,val:e=>e.fd||0,f:3}
+ {id:"feed1",nm:"ペットに ごはんをあげる",sn:"ごはんをあげる",icon:"food",target:1,val:e=>e.fd||0,f:3},
+ {id:"rev3",nm:"復習で3問 取りもどす",sn:"復習で3問 取りもどす",icon:"repeat",target:3,val:e=>e.r||0,f:6},
+ {id:"pat1",nm:"パターンを1つ 制覇する",sn:"パターンを1つ 制覇",icon:"map",target:1,val:e=>e.p||0,f:8},
+ {id:"q10",nm:"10問 正解する",sn:"10問 正解する",icon:"pencil",target:10,val:e=>e.o||0,f:5},
+ {id:"q25",nm:"25問 正解する",sn:"25問 正解する",icon:"zap",target:25,val:e=>e.o||0,f:12},
+ {id:"mock1",nm:"模試を1回 完了する",sn:"模試を1回 完了",icon:"cap",target:1,val:e=>e.m||0,f:15}
 ];
 function questClaims(){
   const k=daysKey(new Date());
@@ -1148,7 +1148,7 @@ function questCardHTML(){
         :`<span style="font-size:11.5px;color:var(--tx2);min-width:64px;text-align:center;">ごはん${x.f}</span>`}
     </div>`;}).join("");
   return `<div class="qpane pixf" style="margin-top:0;">
-    <h2 style="border:none;padding:0;display:flex;align-items:center;justify-content:space-between;">きょうのミッション
+    <h2 style="border:none;padding:0;display:flex;align-items:center;justify-content:space-between;">今日のミッション
     <span style="font-size:12px;color:var(--tx2);">${done}/${QUESTS.length} 達成${done>=QUESTS.length?"":" ・ 全達成でガチャ券+1"}</span></h2>
     ${rows}</div>`;
 }
@@ -1165,8 +1165,14 @@ function updateBadges(){
     set("garden",!!(aw||LS.get("b2_hungry",0)||(dogs.length&&LS.get(KEY_F,0)>0&&dogStage(dogs[getPartner()].f)<4)));
     set("home",claimableCount()>0);
   }catch(e){}
-  const qd=document.getElementById("qbtn-dot");
-  if(qd)qd.style.display=claimableCount()>0?"":"none";
+  try{
+    const qb=document.getElementById("qbtn");
+    if(qb){
+      const qc2=questClaims(),nx=QUESTS.find(x=>!qc2.c[x.id])||null;
+      qb.innerHTML=`<span class="sicon" data-icon="${nx?nx.icon:"trophy"}" data-s="1"></span>今日のミッション: ${nx?nx.sn:"全達成!"}<span id="qbtn-dot" class="qbtn-dot" style="${claimableCount()>0?"":"display:none;"}"></span>`;
+      mountIcons(qb);
+    }
+  }catch(e){}
 }
 /* ---------- 家出システム ---------- */
 function awaySt(){return LS.get("b2_away",null);}
@@ -1362,8 +1368,8 @@ function renderHome(){
   const ed=examDate();const t0=new Date();t0.setHours(0,0,0,0);
   const left=ed?Math.max(0,Math.round((ed-t0)/86400000)):null;
   const dogs=getDogs(),pi=getPartner();
-  const qDone=(()=>{try{const qc=questClaims();return QUESTS.filter(x=>qc.c[x.id]).length;}catch(e){return 0;}})();
   const qClaim=(()=>{try{return claimableCount();}catch(e){return 0;}})();
+  const qNext=(()=>{try{const qc=questClaims();return QUESTS.find(x=>!qc.c[x.id])||null;}catch(e){return null;}})();
   const hl=wrong.length>0?"rev":(h.length===0?"mock":(po<pt?"map":(drillDoneCount()<DRILLS.length?"drill":null)));
   const hlGo=hl==="rev"?"startReview()":hl==="mock"?"renderExams()":hl==="drill"?"renderDrillSetup()":"renderPatMap()";
   const center=`
@@ -1372,7 +1378,7 @@ function renderHome(){
     <div style="position:relative;z-index:1;flex:1 1 52%;min-width:320px;">
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
       <button class="btn cta" style="margin-top:14px;font-size:17px;padding:14px 34px;" onclick="${hlGo}">学習を始める　<span class="arrowa">→</span></button>
-      <div style="margin-top:12px;"><button class="qbtn pixf" onclick="openQuests()"><span class="sicon" data-icon="zap" data-s="1"></span>きょうのミッション ${qDone}/${QUESTS.length}<span id="qbtn-dot" class="qbtn-dot" style="${qClaim>0?"":"display:none;"}"></span></button></div>
+      <div style="margin-top:12px;"><button id="qbtn" class="qbtn pixf" onclick="openQuests()"><span class="sicon" data-icon="${qNext?qNext.icon:"trophy"}" data-s="1"></span>今日のミッション: ${qNext?qNext.sn:"全達成!"}<span id="qbtn-dot" class="qbtn-dot" style="${qClaim>0?"":"display:none;"}"></span></button></div>
       <div style="margin-top:14px;font-size:12.5px;">試験日: ${ed?`${ed.getFullYear()}/${ed.getMonth()+1}/${ed.getDate()}　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">変更</a>`:`未設定　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">設定する</a>`}</div>
       <div id="dcfg" class="hidden" style="margin-top:10px;background:rgba(255,255,255,.55);border-radius:12px;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <input type="date" id="exd" value="${ed?ed.toISOString().slice(0,10):""}" style="border:1px solid var(--bd);border-radius:8px;padding:7px 10px;font-family:inherit;">
