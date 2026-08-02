@@ -385,6 +385,10 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
 #quest-ovl{position:fixed;inset:0;background:rgba(28,23,51,.55);z-index:120;display:flex;align-items:center;justify-content:center;padding:20px;}
 #quest-box{max-width:560px;width:100%;max-height:86vh;overflow-y:auto;}
 .qbtn-dot{position:absolute;right:-3px;top:-3px;background:#e05656;border-radius:50%;width:11px;height:11px;border:2px solid #fff;}
+.qbtn{background:var(--card);color:var(--navy);border:2px solid var(--bd);border-radius:16px;padding:10px 22px;font-size:13.5px;font-weight:800;position:relative;box-shadow:0 4px 0 var(--bd);transition:.08s;cursor:pointer;}
+.qbtn:hover{border-color:var(--blue);}
+.qbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--bd);}
+body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
 .qrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--bd);}
 .qrow:last-child{border-bottom:none;}
 .qbar{flex:1;background:var(--lt);border-radius:6px;height:10px;overflow:hidden;min-width:60px;}
@@ -1361,13 +1365,14 @@ function renderHome(){
   const qDone=(()=>{try{const qc=questClaims();return QUESTS.filter(x=>qc.c[x.id]).length;}catch(e){return 0;}})();
   const qClaim=(()=>{try{return claimableCount();}catch(e){return 0;}})();
   const hl=wrong.length>0?"rev":(h.length===0?"mock":(po<pt?"map":(drillDoneCount()<DRILLS.length?"drill":null)));
+  const hlGo=hl==="rev"?"startReview()":hl==="mock"?"renderExams()":hl==="drill"?"renderDrillSetup()":"renderPatMap()";
   const center=`
   <section class="hero2" style="margin-top:0;padding:clamp(8px,1.4vw,18px) clamp(8px,1.6vw,20px);">
     <div class="heroflex">
     <div style="position:relative;z-index:1;flex:1 1 52%;min-width:320px;">
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
-      <button class="btn cta" style="margin-top:14px;font-size:17px;padding:14px 34px;" onclick="renderPatMap()">学習を始める　<span class="arrowa">→</span></button>
-      <div style="margin-top:12px;"><button class="btn gray" style="font-size:13.5px;padding:10px 24px;position:relative;" onclick="openQuests()"><span class="sicon" data-icon="zap" data-s="1"></span>きょうのミッション ${qDone}/${QUESTS.length}<span id="qbtn-dot" class="qbtn-dot" style="${qClaim>0?"":"display:none;"}"></span></button></div>
+      <button class="btn cta" style="margin-top:14px;font-size:17px;padding:14px 34px;" onclick="${hlGo}">学習を始める　<span class="arrowa">→</span></button>
+      <div style="margin-top:12px;"><button class="qbtn pixf" onclick="openQuests()"><span class="sicon" data-icon="zap" data-s="1"></span>きょうのミッション ${qDone}/${QUESTS.length}<span id="qbtn-dot" class="qbtn-dot" style="${qClaim>0?"":"display:none;"}"></span></button></div>
       <div style="margin-top:14px;font-size:12.5px;">試験日: ${ed?`${ed.getFullYear()}/${ed.getMonth()+1}/${ed.getDate()}　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">変更</a>`:`未設定　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">設定する</a>`}</div>
       <div id="dcfg" class="hidden" style="margin-top:10px;background:rgba(255,255,255,.55);border-radius:12px;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <input type="date" id="exd" value="${ed?ed.toISOString().slice(0,10):""}" style="border:1px solid var(--bd);border-radius:8px;padding:7px 10px;font-family:inherit;">
