@@ -415,6 +415,8 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;"><img id="acct-ava" class="hidden" referrerpolicy="no-referrer" style="width:44px;height:44px;border-radius:50%;"><div><b id="acct-name" style="color:var(--navy);font-size:16px;"></b><br><span id="acct-mail" style="font-size:12.5px;color:#8a84a3;"></span></div></div>
 <p style="font-size:13px;color:#6b6488;">学習記録は自動でクラウドに同期されています。別の端末で同じメールアドレスでログインすると続きから学習できます。</p>
 <button class="btn gray" onclick="doLogout()">ログアウト</button>
+<p id="acct-delmsg" style="font-size:12px;color:#8a84a3;margin-top:14px;">アカウントと、クラウド上の学習記録・ランキング情報をすべて削除できます(この端末内の記録は残ります)。</p>
+<button class="btn" style="background:#b91c1c;font-size:12.5px;padding:8px 18px;" onclick="deleteAccount()">アカウントを削除(退会)</button>
 </div>
 <div style="text-align:center;margin-top:14px;"><button class="btn" onclick="document.getElementById('acct-ovl').classList.add('hidden')">閉じる</button></div>
 </div>
@@ -449,19 +451,27 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
 <li>本サイトは予告なく内容の変更・中断・終了を行うことがあります。</li>
 <li>試験の出題範囲・配点・方式は変更されることがあります。必ず日本商工会議所の公式サイトで最新情報を確認してください。</li></ul>
 <h3>3. データの取扱い(プライバシー)</h3>
-<ul><li>未ログインの場合、学習記録(得点・正答率・連続日数など)は<b>お使いのブラウザ内(localStorage)にのみ</b>保存されます。</li>
-<li>ログイン機能(任意)を利用した場合、メールアドレスと学習記録が認証・同期のためデータベースサービス(Supabase)に保存されます。他の目的には使用しません。</li>
-<li>そのため、ブラウザの閲覧データを削除すると学習記録も消えます。また、別の端末・ブラウザとは同期されません。</li>
-<li>サイト改善のため、匿名の利用統計(画面の表示回数・模試の完了数など)を収集しています。Cookieは使用せず、個人を特定できる情報は含まれません。広告は使用していません(ホスティングのGitHub Pagesが技術的なアクセスログを記録する場合があります)。</li></ul>
-<h3>4. 禁止事項</h3>
+<ul><li><b>未ログインの場合</b>、学習記録(得点・正答率・連続日数・ペットの育成状態など)は<b>お使いのブラウザ内(localStorage)にのみ</b>保存されます。ブラウザの閲覧データを削除すると記録も消え、別の端末とは同期されません。</li>
+<li><b>ログイン(任意)</b>した場合、認証情報(メールアドレス、Googleログインの場合は氏名・プロフィール画像)と学習記録・ペットの育成状態が、認証と端末間同期のためデータベースサービス(Supabase)に保存されます。これらは同期・ランキング以外の目的には使用しません。</li>
+<li><b>ランキングに参加(ニックネームを登録)した場合</b>、次の情報が本サイトの全利用者に公開されます: ニックネーム、今週の問題数、連続日数、パターン制覇数、模試ベスト得点、ペットの名前・種類・育成状態。メールアドレスや氏名が公開されることはありません。ニックネームを空にすればランキングから非表示になります。</li>
+<li>サイト改善のため、匿名の利用統計(画面の表示回数・模試の完了数など)を収集しています。Cookieや外部の解析サービスは使用せず、個人を特定できる情報は含まれません。広告は使用していません(ホスティングのGitHub Pagesが技術的なアクセスログを記録する場合があります)。</li></ul>
+<h3>4. アカウントの削除</h3>
+<ul><li>ログイン後、アカウント画面の「アカウントを削除(退会)」から、アカウント・クラウド上の学習記録・ランキング情報をいつでも完全に削除できます。</li>
+<li>削除がうまくいかない場合や、その他のデータ削除のご依頼は <a href="https://github.com/ryuseisuda/boki2-cbt/issues" target="_blank" rel="noopener">GitHub Issues</a> からご連絡ください。</li></ul>
+<h3>5. ゲーム機能(ペット・ごはん・ガチャ・ランキング)について</h3>
+<ul><li>ごはん・ガチャ券・ペットなどのゲーム内要素はすべて無料で、金銭的価値はありません。</li>
+<li>バランス調整・不具合対応のため、付与量・獲得条件・所持データを予告なく変更・調整・リセットする場合があります。</li>
+<li>不正な方法でランキングの数値を操作したと運営者が判断した場合、該当データの削除等の対応を行うことがあります。</li></ul>
+<h3>6. 禁止事項</h3>
 <ul><li>問題・解説・その他コンテンツの無断転載、再配布、販売</li>
 <li>本サイトを自作と偽って公開する行為</li>
-<li>本サイトの運営を妨害する行為</li></ul>
-<h3>5. 著作権</h3>
-<ul><li>本サイトのコンテンツ(問題・解説・プログラム)の著作権は運営者に帰属します。個人の学習目的での利用は自由です。</li></ul>
-<h3>6. お問い合わせ</h3>
+<li>不正なデータの送信、ランキングの不正操作、その他本サイトの運営を妨害する行為</li>
+<li>公序良俗に反するニックネーム・ペット名の使用(運営者が変更・削除することがあります)</li></ul>
+<h3>7. 著作権</h3>
+<ul><li>本サイトのコンテンツ(問題・解説・プログラム・画像素材)の著作権は運営者に帰属します。ドット絵素材の一部はAI生成ツール(PixelLab・Retro Diffusion)を利用して運営者が作成したものです。個人の学習目的での利用は自由です。</li></ul>
+<h3>8. お問い合わせ</h3>
 <ul><li>誤りの報告・ご要望は <a href="https://github.com/ryuseisuda/boki2-cbt/issues" target="_blank" rel="noopener">GitHub Issues</a> までお寄せください。</li></ul>
-<p style="margin-top:14px;color:#8a84a3;">2026年7月11日 制定</p>
+<p style="margin-top:14px;color:#8a84a3;">2026年7月11日 制定 / 2026年8月2日 改定(アカウント・ランキング・ゲーム機能に関する定めを追加)</p>
 <div style="text-align:center;margin-top:16px;"><button class="btn" onclick="document.getElementById('tos-ovl').classList.add('hidden')">閉じる</button></div>
 </div>
 </div>
@@ -2153,7 +2163,7 @@ window.feedDog=function(n){
   const aw=awaySt();
   if(aw&&aw.st==="sulk"&&d.b===aw.b){
     localStorage.removeItem("b2_away");
-    setTimeout(()=>miniToast(`<span data-icon="food" data-s="2"></span>${d.n} と なかなおりした!`),400);
+    setTimeout(()=>miniToast(`<span data-icon="food" data-s="2"></span>${escapeHtml(d.n)} と なかなおりした!`),400);
   }
   const after=dogStage(d.f);
   renderGarden();
@@ -2423,6 +2433,25 @@ window.sendLink=async function(){
   msg.textContent=error?"送信できませんでした: "+error.message:"ログイン用リンクをメールに送りました。メール内のリンクを開くとログイン完了です(届くまで数分かかることがあります)。";
 };
 window.doLogout=async function(){try{await sb.auth.signOut();}catch(e){}sbUser=null;setAcctBtn();document.getElementById("acct-ovl").classList.add("hidden");renderHome();};
+window.deleteAccount=async function(){
+  if(!sb||!sbUser)return;
+  if(!confirm("アカウントを削除しますか？\nクラウド上の学習記録・ランキング情報・アカウント情報がすべて削除されます。この操作は取り消せません。"))return;
+  if(!confirm("最終確認: 本当に削除しますか？"))return;
+  const msg=document.getElementById("acct-delmsg");msg.textContent="削除しています…";
+  try{
+    const {data,error}=await sb.functions.invoke("delete_account",{method:"POST"});
+    if(error)throw error;
+    localStorage.removeItem("b2_nick");
+    try{await sb.auth.signOut();}catch(e){}
+    sbUser=null;setAcctBtn();
+    msg.textContent="";
+    document.getElementById("acct-ovl").classList.add("hidden");
+    alert("アカウントを削除しました。ご利用ありがとうございました。\n(この端末内の学習記録は残っています)");
+    renderHome();
+  }catch(e){
+    msg.textContent="削除に失敗しました: "+(e.message||e)+" 。GitHub Issuesからご連絡ください。";
+  }
+};
 initSb();
 renderHome();
 if(!LS.get("b2_seen",0))document.getElementById("wlc-ovl").classList.remove("hidden");
