@@ -409,7 +409,7 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
     <button class="hbtn danger hidden" id="btn-finish">試験終了</button>
     <button class="hbtn" id="btn-invite" onclick="openInvite()" style="background:var(--lt);color:var(--navy);display:flex;align-items:center;gap:6px;">友達に紹介<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(21,42,82,.10);border-radius:8px;padding:2px 7px;font-size:11.5px;"><span class="sicon" data-icon="ticket" data-s="1" style="margin-right:2px;"></span>+1</span></button>
     <button class="hbtn" id="btn-eod" onclick="showEOD()" style="background:var(--blue);color:#fff;display:flex;align-items:center;gap:6px;">進捗をXに投稿<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.22);border-radius:8px;padding:2px 7px;font-size:11.5px;"><span class="sicon" data-icon="food" data-s="1" style="margin-right:2px;"></span>+10</span></button>
-    <button class="hbtn" id="btn-acct" onclick="openAcct()" style="background:#efedf7;color:var(--navy);">ログイン</button>
+    <button class="hbtn" id="btn-acct" onclick="openAcct()" style="background:#efedf7;color:var(--navy);">記録を保存</button>
   </div>
 </div>
 <div id="nav">
@@ -454,18 +454,18 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
 </div>
 <div id="wlc-ovl" class="hidden">
 <div id="wlc-box">
-<h2>ようこそ、ボキイヌ 2級 へ</h2>
-<p>日商簿記2級(CBT方式)のための無料学習アプリです(非公式)。使い方は3ステップだけ。</p>
-<div class="wstep"><span class="wn">01</span><div><b>模試で現在地を知る</b><br>「模擬試験」を本番同様90分で1回。弱い大問がわかります。</div></div>
-<div class="wstep"><span class="wn">02</span><div><b>パターンを○で埋める</b><br>「ホーム → パターン網羅マップ」が本体。本試験の全出題パターンに代表問題が1問ずつ。全部○=どの回が出ても対応できる状態。</div></div>
-<div class="wstep"><span class="wn">03</span><div><b>間違いを消して仕上げ</b><br>間違えた仕訳は自動でリスト化。復習モードで消化し、模試80点で仕上がり。</div></div>
-<p style="margin-top:12px;font-size:12.5px;color:#8a84a3;">学習記録はこの端末のブラウザにだけ保存されます(サーバー送信なし)。</p>
+<h2>勉強するほど、犬が育つ。</h2>
+<p><b>日商簿記2級のCBT対策アプリ</b>です(非公式・無料)。続かない人のために作りました。</p>
+<div class="wstep"><span class="wn">✓</span><div><b>CBT実践形式の模試が4回分、無料</b><br>本番そっくりの画面で実力チェック。今後さらに追加予定。</div></div>
+<div class="wstep"><span class="wn">✓</span><div><b>全47の出題パターンを1問ずつ制覇</b><br>「今日なにをやるか」に迷わない。マップを○で埋めれば合格ラインへ。</div></div>
+<div class="wstep"><span class="wn">✓</span><div><b>勉強すると、あなたの犬が育つ</b><br>正解するとごはんがもらえて、相棒がどんどん進化します。</div></div>
+<p style="margin-top:12px;font-size:12.5px;color:#8a84a3;">登録不要で今すぐ始められます。記録を残したくなったら、あとから無料登録で端末をまたいで保存できます。</p>
 <div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
   <span style="font-size:13px;">試験日(任意):</span>
   <input type="date" id="wexd" style="border:1px solid var(--bd);border-radius:8px;padding:7px 10px;font-family:inherit;">
   <span style="font-size:12px;color:#8a84a3;">設定するとホームに残り日数が出ます</span>
 </div>
-<div style="text-align:center;margin-top:18px;"><button class="btn" onclick="closeWlc()">始める　→</button></div>
+<div style="text-align:center;margin-top:18px;"><button class="btn" onclick="closeWlc()">さっそく相棒をむかえる　→</button></div>
 </div>
 </div>
 <div id="tos-ovl" class="hidden" onclick="if(event.target===this)this.classList.add('hidden')">
@@ -1060,6 +1060,7 @@ function foodPop(txt){
   setTimeout(()=>el.remove(),1100);
 }
 function recordActivity(n,o){
+  try{if(n>0&&!LS.get("b2_ev_fq",0)){LS.set("b2_ev_fq",1);track("first_q");}}catch(x){}
   const d=LS.get(KEY_A,{});const k=daysKey(new Date());const e=d[k]||{q:0,o:0};
   const first=(e.o||0)===0&&o>0;
   e.q+=n;e.o+=o;d[k]=e;LS.set(KEY_A,d);
@@ -1373,12 +1374,20 @@ function renderHome(){
   const qNext=(()=>{try{const qc=questClaims();return QUESTS.find(x=>!qc.c[x.id])||null;}catch(e){return null;}})();
   const hl=wrong.length>0?"rev":(h.length===0?"mock":(po<pt?"map":(drillDoneCount()<DRILLS.length?"drill":null)));
   const hlGo=hl==="rev"?"startReview()":hl==="mock"?"renderExams()":hl==="drill"?"renderDrillSetup()":"renderPatMap()";
+  const totalQ=Object.values(LS.get(KEY_A,{})).reduce((s,e)=>s+(e.q||0),0);
+  const isNew=totalQ===0;
+  const newChecks=`<div style="margin-top:12px;font-size:13.5px;line-height:2;color:var(--navy);">
+    <div><b style="color:var(--ok);">✓</b> CBT実践形式の模試が4回分、無料</div>
+    <div><b style="color:var(--ok);">✓</b> 全47の出題パターンを1問ずつ制覇</div>
+    <div><b style="color:var(--ok);">✓</b> 登録不要・ブラウザで今すぐ</div>
+  </div>`;
   const center=`
   <section class="hero2" style="margin-top:0;padding:clamp(8px,1.4vw,18px) clamp(8px,1.6vw,20px);">
     <div class="heroflex">
     <div style="position:relative;z-index:1;flex:1 1 52%;min-width:320px;">
-      <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
-      <button class="btn cta" style="margin-top:14px;font-size:17px;padding:14px 34px;" onclick="${hlGo}">学習を始める　<span class="arrowa">→</span></button>
+      <h1 class="disp" style="margin:4px 0 10px;">${isNew?`勉強するほど、<br>犬が育つ。`:(ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`)}</h1>
+      ${isNew?`<div style="font-size:15px;color:var(--tx2);margin:2px 0 0;">日商簿記2級のCBT対策、ぜんぶ無料。</div>${newChecks}`:""}
+      <button class="btn cta" style="margin-top:14px;font-size:17px;padding:14px 34px;" onclick="${isNew?"renderQuizSetup()":hlGo}">${isNew?"30秒で1問解いてみる":"学習を始める"}　<span class="arrowa">→</span></button>
       <div style="margin-top:12px;"><button id="qbtn" class="qbtn pixf" onclick="openQuests()"><span class="sicon" data-icon="${qNext?qNext.icon:"trophy"}" data-s="1"></span>今日のミッション: ${qNext?qNext.sn:"全達成!"}<span id="qbtn-dot" class="qbtn-dot" style="${qClaim>0?"":"display:none;"}"></span></button></div>
       <div style="margin-top:14px;font-size:12.5px;">試験日: ${ed?`${ed.getFullYear()}/${ed.getMonth()+1}/${ed.getDate()}　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">変更</a>`:`未設定　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">設定する</a>`}</div>
       <div id="dcfg" class="hidden" style="margin-top:10px;background:rgba(255,255,255,.55);border-radius:12px;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -1399,9 +1408,21 @@ function renderHome(){
     <div class="tcard ${hl==="mock"?"light":"white"}" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>模擬試験</h3><div class="arw">${best==null?"未受験":"ベスト "+best+"点"}　→</div></div>
     <div class="tcard ${hl==="map"?"light":"white"}" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>パターン網羅マップ</h3><div class="arw">${po} / ${pt} 制覇　→</div></div>
     <div class="tcard ${hl==="drill"?"light":"white"}" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>仕訳ドリル</h3><div class="arw">${drillDoneCount()} / ${DRILLS.length} 問　→</div></div>
-  </div>`;
+  </div>
+  ${(!sbUser&&!LS.get("b2_savehide",0)&&(totalQ>=5||dogs.length>0))?`
+  <div class="qpane" id="savecard" style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+    <div style="flex:1;min-width:240px;">
+      <b style="color:var(--navy);font-size:15.5px;">ここまでの記録、消えないように保存しませんか?</b>
+      <div style="font-size:13px;color:var(--tx2);margin-top:4px;">無料登録(Googleで1タップ)で、端末をまたいで同期・ランキングに参加・${dogs.length?`${escapeHtml(dogs[pi].n)}を`:"犬を"}クラウドにお引っ越しできます。</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button class="btn" style="font-size:13.5px;padding:10px 22px;" onclick="track('signup_click');openAcct()">無料で記録を保存</button>
+      <a style="font-size:12px;color:var(--tx2);cursor:pointer;text-decoration:underline;" onclick="LS.set('b2_savehide',1);document.getElementById('savecard').remove()">あとで</a>
+    </div>
+  </div>`:""}`;
   main.innerHTML=page(center,"home");
   mountIcons(main);loadRailRank();
+  try{if(document.getElementById("savecard")&&!sessionStorage.getItem("b2_sv_seen")){sessionStorage.setItem("b2_sv_seen","1");track("signup_view");}}catch(e){}
   if(dogs.length){
     const d=dogs[pi];const hd=document.getElementById("homedog");
     if(hd){
@@ -1431,6 +1452,13 @@ function renderHome(){
       if(aw&&aw.st==="gone"&&rr)msg.textContent=`${rr.d.n} が旅に出ています…`;
       else if(aw&&aw.st==="sulk"&&rr)msg.textContent=`${rr.d.n} がすねている…`;
       else if(LS.get("b2_hungry",0))msg.textContent="おなかぺこぺこ…";
+    }
+  } else {
+    const hd=document.getElementById("homedog");
+    if(hd){
+      try{const c=dogCanvas(2,4,0);c.style.opacity=".92";hd.appendChild(c);}catch(e){}
+      const msg=document.getElementById("homedog-msg");
+      if(msg)msg.textContent="勉強すると育つ、あなたの相棒";
     }
   }
 }
@@ -2668,7 +2696,7 @@ function setAcctBtn(){
   if(sbUser){
     const m=sbUser.user_metadata||{};
     b.innerHTML=(m.avatar_url?`<img src="${m.avatar_url}" referrerpolicy="no-referrer" style="width:20px;height:20px;border-radius:50%;vertical-align:-5px;margin-right:7px;">`:"")+sbName();
-  }else b.textContent="ログイン";
+  }else b.textContent="記録を保存";
 }
 async function onLogin(user){
   sbUser=user;
@@ -2679,6 +2707,7 @@ async function onLogin(user){
   }catch(e){}
   try{pushProfile();}catch(e){}
   try{pullBonusTickets();tryClaimReferral();}catch(e){}
+  try{if(!LS.get("b2_ev_su",0)){LS.set("b2_ev_su",1);track("signup");}}catch(e){}
   setAcctBtn();
   if(!exState)renderHome();
 }
