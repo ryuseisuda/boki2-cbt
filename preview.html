@@ -388,16 +388,48 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
 .wbadge{display:inline-flex;align-items:center;gap:7px;background:#e05656;color:#fff;font-weight:800;font-size:12.5px;border-radius:999px;padding:6px 15px;box-shadow:0 3px 0 #a83c3c;}
 body.onb #nav{display:none!important;}
 body.onb .wrap,body.onb #ftr{margin-left:0!important;}
+body.onb #btn-invite,body.onb #btn-eod,body.onb .calcbtn{display:none!important;}
+#hdr .hbtn{white-space:nowrap;flex-shrink:0;}
+#hdr h1{white-space:nowrap;}
+@media(max-width:640px){
+  body{overflow-x:hidden;}
+  #hdr{padding:10px 12px;gap:8px;}
+  #hdr h1{font-size:14.5px;}
+  #hdr>div{gap:8px!important;min-width:0;}
+  #hdr .hbtn{padding:7px 12px;font-size:12px;}
+  #btn-invite{display:none;}
+  #btn-eod .sicon{display:none;}
+  #btn-eod span{padding:2px 5px!important;font-size:10.5px!important;}
+}
 .onbcol{max-width:600px;margin:0 auto;text-align:center;}
 .onbh1{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:clamp(30px,7vw,44px);line-height:1.28;color:var(--navy);margin:14px 0 4px;letter-spacing:.01em;}
-.mokushi{margin:18px auto 0;max-width:430px;background:var(--card);border:2.5px solid var(--blue);border-radius:16px;padding:14px 18px 12px;}
-.mokushi .mkt{font-size:13.5px;font-weight:800;color:var(--navy);display:flex;align-items:center;justify-content:center;gap:8px;}
-.mokushi .mkn{font-size:29px;color:var(--blue);font-weight:900;margin-top:2px;line-height:1.2;}
-.mokushi .mks{font-size:11.5px;color:var(--tx2);margin-top:3px;}
+.mokushi{margin:12px auto 0;max-width:430px;background:var(--card);border-radius:16px;padding:9px 16px 8px;}
+.mokushi .mkt{font-size:12.5px;font-weight:800;color:var(--navy);display:flex;align-items:center;justify-content:center;gap:7px;}
+.mokushi .mkn{font-size:19px;color:var(--blue);font-weight:900;margin-top:1px;line-height:1.2;}
+.mokushi .mks{font-size:11px;color:var(--tx2);margin-top:2px;}
 .minichips{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
 .minichips>span{display:inline-flex;align-items:center;gap:7px;background:var(--lt);border-radius:999px;padding:8px 15px;font-size:12.5px;font-weight:700;color:var(--navy);}
-.ctaflat{display:block;width:100%;max-width:430px;margin:20px auto 0;background:#e05656;color:#fff;border:none;border-radius:14px;padding:16px;font-size:17.5px;font-weight:900;font-family:inherit;cursor:pointer;}
+.ctaflat{display:block;width:100%;max-width:430px;margin:16px auto 0;background:#e83a3a;color:#fff;border:none;border-radius:14px;padding:17px;font-size:18px;font-weight:900;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(232,58,58,.35);animation:ctaBeat 2.6s ease-in-out infinite;}
+@keyframes ctaBeat{0%,52%,100%{transform:scale(1)}60%{transform:scale(1.035)}68%{transform:scale(1)}74%{transform:scale(1.022)}80%{transform:scale(1)}}
 .ctaflat:active{filter:brightness(.9);}
+/* 初回体験フロー */
+.ftimer{height:12px;background:rgba(120,130,160,.25);border-radius:999px;overflow:hidden;margin:2px 0 6px;}
+#ftbar{height:100%;width:100%;background:linear-gradient(90deg,#39c26d,#7edc9f);border-radius:999px;transition:width 1s linear;}
+#ftbar.hurry{background:linear-gradient(90deg,#e05656,#f08a5a);animation:ftpulse .45s infinite alternate;}
+@keyframes ftpulse{from{opacity:1}to{opacity:.5}}
+.ftehop{animation:ftehop .38s ease;}
+@keyframes ftehop{0%{transform:translateY(0)}40%{transform:translateY(-16px)}100%{transform:translateY(0)}}
+.fterw{display:flex;gap:12px;justify-content:center;align-items:center;margin:12px 0;}
+.fteitem{background:var(--lt);border-radius:14px;padding:12px 18px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;font-size:15px;}
+@keyframes ftein{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.fteitem{animation:ftein .5s ease both;}
+.fteitem:nth-child(2){animation-delay:.25s;}
+/* 進化メーター(餌やり共通) */
+.evometer{background:var(--lt);border-radius:8px;height:14px;overflow:hidden;}
+.evofill{height:100%;width:0%;background:linear-gradient(90deg,#f59e0b,#e05656);border-radius:8px;transition:width .75s cubic-bezier(.2,1.5,.4,1);}
+.evofill.chg{box-shadow:0 0 14px rgba(240,150,60,.95);}
+@keyframes gunn{0%{transform:scale(1)}16%{transform:scale(1.05)}30%{transform:scale(1.02)}46%{transform:scale(1.09)}60%{transform:scale(1.04)}80%{transform:scale(1.14)}100%{transform:scale(1)}}
+.gunn{animation:gunn .85s ease-out;transform-origin:50% 100%;}
 body.dark .mokushi{border-color:var(--blue);}
 .chip3{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--bd);border-radius:12px;padding:9px 14px;font-size:13.5px;font-weight:700;color:var(--navy);box-shadow:0 3px 0 var(--bd);}
 .chip3 .cnum{font-size:11px;color:#fff;border-radius:8px;padding:2px 7px;font-weight:800;flex:none;}
@@ -406,6 +438,19 @@ body.dark .mokushi{border-color:var(--blue);}
 .evorow{display:flex;align-items:flex-end;justify-content:center;gap:2px;margin-top:6px;}
 .evorow canvas{image-rendering:pixelated;}
 .evarw{color:var(--blue);font-weight:900;font-size:15px;padding-bottom:10px;}
+.evorow.big{gap:7px;margin:16px 0 4px;}
+.evorow.big canvas{max-width:29vw;height:auto!important;}
+.evorow.big .evarw{font-size:18px;padding-bottom:16px;}
+.evsec{position:relative;display:inline-flex;align-items:flex-end;}
+.evsec .q{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font-size:24px;font-weight:900;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.5);}
+/* 進化シネマ(ポケモン風) */
+.evwhite{filter:brightness(0) invert(1);}
+.evpulse{animation:evpulse .42s ease-in-out infinite alternate;transform-origin:50% 100%;}
+@keyframes evpulse{from{transform:scale(.86)}to{transform:scale(1.12)}}
+.evring{position:absolute;left:50%;top:52%;width:20px;height:20px;border:4px solid #fff;border-radius:50%;transform:translate(-50%,-50%);animation:evring .55s ease-out forwards;pointer-events:none;}
+@keyframes evring{from{opacity:.95;width:18px;height:18px;border-width:5px;}to{opacity:0;width:210px;height:210px;border-width:2px;}}
+#evflash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:130;}
+@keyframes evflash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
 body.dark .chip3{box-shadow:0 3px 0 #0a111f;}
 body.dark .bub{border-color:var(--lav);color:#dfe7f5;}
 body.dark .bub:after{border-top-color:var(--lav);}
@@ -489,7 +534,7 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
   <input type="date" id="wexd" style="border:1px solid var(--bd);border-radius:8px;padding:7px 10px;font-family:inherit;">
   <span style="font-size:12px;color:#8a84a3;">設定するとホームに残り日数が出ます</span>
 </div>
-<div style="text-align:center;margin-top:18px;"><button class="btn" onclick="closeWlc()">さっそく相棒をむかえる　→</button></div>
+<div style="text-align:center;margin-top:18px;"><button class="btn" onclick="closeWlc()">30秒で1問解いてみる　→</button></div>
 </div>
 </div>
 <div id="tos-ovl" class="hidden" onclick="if(event.target===this)this.classList.add('hidden')">
@@ -1406,22 +1451,20 @@ function renderHome(){
   <section class="hero2" style="margin-top:0;padding:clamp(12px,2.4vw,26px) clamp(10px,2vw,22px);">
     <div class="onbcol">
       <div class="wbadge"><span class="sicon" data-icon="paw" data-s="1"></span>ベータ公開中・ぜんぶ無料</div>
-      <h1 class="onbh1">犬と一緒に、<br><span style="color:var(--blue);">爆速で合格へ。</span></h1>
+      <h1 class="onbh1">犬を育てたら、<br><span style="color:var(--blue);">簿記2級に受かった。</span></h1>
       <div style="font-size:14.5px;color:var(--tx2);margin-top:4px;">日商簿記2級のCBT対策アプリ</div>
-      <div style="margin:18px 0 2px;"><span class="bub">いっしょに合格しよ!</span></div>
-      <div id="onbdog" style="display:flex;justify-content:center;margin-top:10px;"></div>
+      <div class="prog" style="margin-top:16px;font-size:13.5px;">勉強すると<b style="color:var(--blue);">進化</b>します</div>
+      <div id="onbevo" class="evorow big"></div>
       <div class="mokushi">
-        <div class="mkt"><span class="sicon" data-icon="cap" data-s="1"></span>CBT実践形式の模擬試験</div>
-        <div class="mkn">4回分 無料</div>
-        <div class="mks">本番そっくりの画面で解ける。今後さらに追加予定</div>
+        <div class="mkt"><span class="sicon" data-icon="cap" data-s="1"></span>本番のCBT画面を再現</div>
+        <div class="mkn">ネット試験模試 4回分無料</div>
+        <div class="mks">今後さらに追加予定</div>
       </div>
+      <button class="ctaflat" onclick="startFTE()">30秒で1問解いてみる　→</button>
       <div class="minichips">
         <span><span class="sicon" data-icon="map" data-s="1"></span>全47パターン網羅</span>
         <span><span class="sicon" data-icon="zap" data-s="1"></span>登録不要</span>
       </div>
-      <button class="ctaflat" onclick="renderQuizSetup()">30秒で1問解いてみる　→</button>
-      <div class="prog" style="margin-top:20px;">勉強すると <b style="color:var(--blue);">5段階</b> に進化します</div>
-      <div id="onbevo" class="evorow"></div>
     </div>
   </section>`;
   const center=isNew?onbCenter+`
@@ -1446,6 +1489,7 @@ function renderHome(){
     <div onclick="renderGarden()" style="cursor:pointer;text-align:center;flex:0 1 48%;min-width:0;">
       <div id="homedog" style="display:flex;align-items:flex-end;justify-content:center;"></div>
       <div id="homedog-msg" class="prog pixf" style="margin-top:6px;"></div>
+      <div id="homedog-meter"></div>
       <div id="homedog-feed" class="pixf" style="margin-top:8px;"></div>
     </div>
     </div>
@@ -1471,15 +1515,18 @@ function renderHome(){
   mountIcons(main);if(!isNew)loadRailRank();
   try{if(document.getElementById("savecard")&&!sessionStorage.getItem("b2_sv_seen")){sessionStorage.setItem("b2_sv_seen","1");track("signup_view");}}catch(e){}
   if(isNew){
-    const od=document.getElementById("onbdog");
-    if(od){try{const c=dogCanvas(2,6,0);c.style.width="min(290px,64vw)";c.style.height="auto";od.appendChild(c);}catch(e){}}
     const ev=document.getElementById("onbevo");
     if(ev){
-      const sc=[1.15,1.3,1.45,1.6,1.9];
-      for(let s=0;s<5;s++){
-        try{ev.appendChild(dogCanvas(s,sc[s],0));}catch(e){}
-        if(s<4){const a=document.createElement("span");a.className="evarw";a.textContent="›";ev.appendChild(a);}
-      }
+      try{
+        ev.appendChild(dogCanvas(2,3.8,0));
+        let a=document.createElement("span");a.className="evarw";a.textContent="›";ev.appendChild(a);
+        ev.appendChild(dogCanvas(3,4.4,0));
+        a=document.createElement("span");a.className="evarw";a.textContent="›";ev.appendChild(a);
+        const sec=document.createElement("span");sec.className="evsec";
+        sec.appendChild(dogCanvas(4,5,0,true));
+        const q=document.createElement("span");q.className="q";q.textContent="?";sec.appendChild(q);
+        ev.appendChild(sec);
+      }catch(e){}
     }
     return;
   }
@@ -1498,6 +1545,8 @@ function renderHome(){
       };
       setTimeout(fit,0);setTimeout(fit,300);
       window.addEventListener("resize",fit);
+      const hm=document.getElementById("homedog-meter");
+      if(hm)hm.innerHTML=evoMeterHTML(d,"home");
       const fd=document.getElementById("homedog-feed");
       const food=LS.get(KEY_F,0),st=dogStage(d.f);
       if(fd&&st<4&&food>0){
@@ -2297,10 +2346,7 @@ window.renderGarden=function(){
       <p style="color:#8a84a3;font-size:13px;margin:0;"><span style="background:${RARITY[DOG_BREEDS[d.b%DOG_BREEDS.length].r].c};color:#fff;border-radius:6px;padding:1px 8px;font-size:11px;font-weight:800;margin-right:6px;">${RARITY[DOG_BREEDS[d.b%DOG_BREEDS.length].r].n}</span>${DOG_BREEDS[d.b%DOG_BREEDS.length].nm}・${DOG_NAMES[st]}</p>
       <div style="color:#f59e0b;letter-spacing:3px;font-size:15px;">${"★".repeat(st+1)}${"☆".repeat(4-st)}</div>
       ${LS.get("b2_hungry",0)?`<p style="color:#5aa7e8;font-size:13px;margin:4px 0 0;">おなかぺこぺこ…</p>`:""}
-      <div style="max-width:300px;margin:12px auto;">
-        <div style="display:flex;justify-content:flex-end;font-size:12px;color:#8a84a3;"><span>${next?d.f+" / "+next:"MAX"}</span></div>
-        <div style="background:var(--lt);border-radius:6px;height:14px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#f59e0b,#e05656);"></div></div>
-      </div>
+      <div style="margin:4px 0 12px;">${evoMeterHTML(d,"garden")}</div>
       <button class="btn" style="font-size:17px;padding:13px 44px;" ${food<1||!next?"disabled":""} onclick="feedDog(1)"><span class="sicon" data-icon="food"></span>たべさせる</button>
     </div>`;
   }
@@ -2407,12 +2453,75 @@ window.showEvo=function(i){
     row.appendChild(cell);
   }
 };
+function evoPct(f){
+  const st=dogStage(f),prev=st===0?0:EVO[st-1],next=st<EVO.length?EVO[st]:null;
+  return next?Math.round((f-prev)/(next-prev)*100):100;
+}
+function evoMeterHTML(d,key){
+  const st=dogStage(d.f),next=st<EVO.length?EVO[st]:null;
+  return `<div style="max-width:300px;margin:8px auto 0;">
+    <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#8a84a3;"><span>つぎの進化まで</span><span id="evonum-${key}">${next?d.f+" / "+next:"MAX"}</span></div>
+    <div class="evometer"><div class="evofill" id="evofill-${key}" style="width:${evoPct(d.f)}%;"></div></div></div>`;
+}
+window._feedAnim=null;
+function runFeedAnim(key,dogSel){
+  const fa=window._feedAnim;if(!fa)return;window._feedAnim=null;
+  const bar=document.getElementById("evofill-"+key);
+  if(bar){
+    bar.style.transition="none";bar.style.width=fa.from+"%";void bar.offsetWidth;
+    bar.style.transition="";bar.classList.add("chg");
+    setTimeout(()=>{bar.style.width=fa.to+"%";},40);
+    setTimeout(()=>bar.classList.remove("chg"),950);
+  }
+  const c=document.querySelector(dogSel);
+  if(c){
+    c.classList.remove("gunn");void c.offsetWidth;c.classList.add("gunn");
+    const p=c.parentElement;
+    if(p){p.style.position="relative";try{spawnHearts(p,3);setTimeout(()=>spawnHearts(p,2),350);}catch(e){}}
+  }
+}
+/* ポケモン風 進化シネマ */
+function evoCinema(name,breed,newSt,btnLabel,btnFn){
+  let o=document.getElementById("cele-ovl");if(o)o.remove();
+  o=document.createElement("div");o.id="cele-ovl";
+  o.innerHTML=`<div id="cele-box" class="pixf" style="background:transparent;box-shadow:none;text-align:center;">
+    <div id="evst" style="position:relative;display:flex;justify-content:center;align-items:flex-end;min-height:190px;"></div>
+    <p id="evtx" style="color:#fff;font-weight:800;font-size:16.5px;margin-top:16px;text-shadow:0 2px 8px rgba(0,0,0,.5);">おや…!? ${escapeHtml(name)} の ようすが…!</p>
+    <div id="evbtn"></div></div>`;
+  document.body.appendChild(o);
+  const st=o.querySelector("#evst");
+  let c=dogCanvas(Math.max(0,newSt-1),7,breed);
+  c.classList.add("evwhite","evpulse");st.appendChild(c);
+  let rings=0;
+  const ri=setInterval(()=>{
+    const r=document.createElement("div");r.className="evring";st.appendChild(r);
+    setTimeout(()=>r.remove(),620);
+    if(++rings>=5)clearInterval(ri);
+  },340);
+  setTimeout(()=>{
+    const fl=document.createElement("div");fl.id="evflash";fl.style.animation="evflash .85s ease-out forwards";document.body.appendChild(fl);
+    setTimeout(()=>{
+      c.remove();c=dogCanvas(newSt,7,breed);c.classList.add("evwhite");st.appendChild(c);
+    },230);
+    setTimeout(()=>{
+      c.classList.remove("evwhite");c.classList.add("gunn");
+      try{confettiBurst()}catch(e){}
+      try{st.style.position="relative";spawnHearts(st,3);}catch(e){}
+      const tx=o.querySelector("#evtx");
+      if(tx)tx.innerHTML=`おめでとう!<br><span style="font-size:21px;">${escapeHtml(name)} は <b>${DOG_NAMES[newSt]}</b> に進化した!</span>`;
+      const bd=o.querySelector("#evbtn");
+      if(bd){bd.innerHTML=`<button class="btn cta" style="margin-top:16px;font-size:16px;min-width:210px;">${btnLabel}</button>`;bd.querySelector("button").onclick=btnFn;}
+      setTimeout(()=>{try{fl.remove()}catch(e){}},600);
+    },780);
+  },1800);
+}
 window.feedDog=function(n,view){
   let food=LS.get(KEY_F,0);const dogs=getDogs(),pi=getPartner();
   if(!dogs.length||food<1)return;
   const d=dogs[pi],before=dogStage(d.f);
   if(before>=EVO.length)return;
   const amt=Math.min(n,food);
+  const pctFrom=evoPct(d.f);
   food-=amt;d.f+=amt;
   LS.set(KEY_F,food);LS.set(KEY_DOG,dogs);
   if(LS.get("b2_hungry",0))LS.set("b2_hungry",0);
@@ -2427,14 +2536,15 @@ window.feedDog=function(n,view){
     LS.set("b2_tut",4);LS.set(KEY_F,LS.get(KEY_F,0)+10);
     setTimeout(()=>{confettiBurst();miniToast(`チュートリアル完了! ごはん +10 これから毎日いっしょにがんばろう`);},700);
   }
-  if(view==="home")renderHome();else renderGarden();
+  window._feedAnim={from:pctFrom,to:after>before?100:evoPct(d.f)};
+  const _fkey=view==="home"?"home":"garden";
+  if(view==="home"){renderHome();runFeedAnim("home","#homedog canvas");}
+  else{renderGarden();runFeedAnim("garden","#dogbox canvas");}
   if(after>before){
-    confettiBurst();
-    const ovl=document.createElement("div");ovl.id="cele-ovl";
-    ovl.innerHTML=`<div id="cele-box"><p style="color:#8a84a3;">おめでとう!</p><div id="evobox" style="margin:10px 0;"></div><h2 style="color:var(--navy);font-size:21px;"><span id="evonm"></span> は ${DOG_NAMES[after]} に進化した!</h2><button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove()">やったー!</button></div>`;
-    document.body.appendChild(ovl);
-    ovl.querySelector("#evobox").appendChild(dogCanvas(after,6,d.b));
-    ovl.querySelector("#evonm").textContent=d.n;
+    setTimeout(()=>{const b=document.getElementById("evofill-"+_fkey);if(b)b.style.width=evoPct(d.f)+"%";},1100);
+    setTimeout(()=>{
+      evoCinema(d.n,d.b,after,"やったー!",()=>{const x=document.getElementById("cele-ovl");if(x)x.remove();});
+    },650);
   }
 };
 window.ticketToFood=function(){
@@ -2572,6 +2682,182 @@ window.nameNewDog=function(b){
     return;
   }
   renderGarden();
+};
+/* ---------- 初回体験フロー(1問→ギフト→レア確定ガチャ→ごはん→進化) ---------- */
+const FTEQ={q:"商品をクレジットカード払いで販売した。債権を記録する勘定科目は?",c:["クレジット売掛金","売掛金","未収入金","受取手形"],x:"信販会社への債権は「クレジット売掛金」。通常の掛け販売(売掛金)と区別します。"};
+let fte=null;
+function fteBox(html){
+  let o=document.getElementById("cele-ovl");if(o)o.remove();
+  o=document.createElement("div");o.id="cele-ovl";
+  o.innerHTML=`<div id="cele-box" class="pixf" style="text-align:left;">${html}</div>`;
+  document.body.appendChild(o);mountIcons(o);return o;
+}
+window.startFTE=function(){
+  try{track("fte_start")}catch(e){}
+  const order=FTEQ.c.map((c,i)=>({c,i})).sort(()=>Math.random()-.5);
+  fte={order,sec:30,done:false};
+  fteBox(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-weight:900;color:var(--navy);">腕だめし 1問チャレンジ</span>
+      <a href="javascript:void(0)" onclick="document.getElementById('cele-ovl').remove()" style="font-size:12px;color:#8a84a3;">スキップ</a>
+    </div>
+    <div class="ftimer"><div id="ftbar"></div></div>
+    <p style="text-align:center;font-size:13px;color:var(--tx2);margin-bottom:10px;">のこり <b id="ftsec" style="color:var(--navy);">30</b> 秒</p>
+    <div class="qtext" style="font-size:15.5px;"><b>${FTEQ.q}</b></div>
+    <div id="fqc">${order.map((o,k)=>`<button class="qzc" onclick="fteAnswer(${k})">${o.c}</button>`).join("")}</div>
+    <div id="ftres"></div>`);
+  fte.iv=setInterval(()=>{
+    if(!fte||fte.done){if(fte)clearInterval(fte.iv);return;}
+    fte.sec--;
+    const s=document.getElementById("ftsec"),b=document.getElementById("ftbar");
+    if(!s||!b){clearInterval(fte.iv);return;}
+    s.textContent=Math.max(0,fte.sec);
+    b.style.width=Math.max(0,fte.sec/30*100)+"%";
+    if(fte.sec<=10)b.classList.add("hurry");
+    if(fte.sec<=0){clearInterval(fte.iv);fteTimeout();}
+  },1000);
+};
+window.fteAnswer=function(k){
+  if(!fte||fte.done)return;
+  fte.done=true;clearInterval(fte.iv);
+  const ok=fte.order[k].i===0;
+  try{recordActivity(1,ok?1:0);}catch(e){}
+  try{track("fte_answer",{ok})}catch(e){}
+  document.querySelectorAll("#fqc .qzc").forEach((b,i)=>{b.disabled=true;
+    if(fte.order[i].i===0)b.classList.add("ok");else if(i===k)b.classList.add("ng");});
+  if(ok)confettiBurst();
+  document.getElementById("ftres").innerHTML=`
+    <div style="margin-top:10px;font-weight:900;font-size:19px;" class="${ok?"correct":"wrong"}">${ok?"○ 正解! センスある!":"× おしい!"}</div>
+    <div class="exp">${FTEQ.x}</div>
+    <button class="btn cta" style="width:100%;margin-top:14px;font-size:16px;" onclick="fteGift()">ごほうびを うけとる →</button>`;
+};
+function fteTimeout(){
+  if(!fte||fte.done)return;fte.done=true;
+  try{track("fte_answer",{ok:false,timeout:true})}catch(e){}
+  document.querySelectorAll("#fqc .qzc").forEach((b,i)=>{b.disabled=true;if(fte.order[i].i===0)b.classList.add("ok");});
+  const r=document.getElementById("ftres");if(!r)return;
+  r.innerHTML=`
+    <div style="margin-top:10px;font-weight:900;font-size:19px;" class="wrong">時間切れ!</div>
+    <div class="exp">${FTEQ.x}</div>
+    <button class="btn cta" style="width:100%;margin-top:14px;font-size:16px;" onclick="fteGift()">はじめての挑戦記念を うけとる →</button>`;
+}
+window.fteGift=function(){
+  LS.set(KEY_T,LS.get(KEY_T,0)+1);
+  LS.set(KEY_F,LS.get(KEY_F,0)+3);
+  try{track("fte_gift")}catch(e){}
+  fteBox(`<div style="text-align:center;">
+    <div style="display:inline-block;animation:gshake .5s ease-in-out 3;"><span data-icon="gift" data-s="7"></span></div>
+    <h2 style="color:var(--navy);font-size:20px;margin:10px 0 2px;">はじめての挑戦 記念ギフト!</h2>
+    <div class="fterw">
+      <div class="fteitem"><span data-icon="ticket" data-s="2"></span>ガチャ券 ×1</div>
+      <div class="fteitem"><span data-icon="food" data-s="2"></span>ごはん ×3</div>
+    </div>
+    <p style="color:var(--tx2);font-size:13px;">ガチャ券で、いっしょに勉強する<b>相棒</b>をむかえよう</p>
+    <button class="btn cta" style="width:100%;margin-top:12px;font-size:16px;" onclick="fteGacha()">ガチャをまわす →</button>
+  </div>`);
+};
+window.fteGacha=function(){
+  const t=LS.get(KEY_T,0);if(t>0)LS.set(KEY_T,t-1);
+  /* 初回はレア(R)確定 */
+  const owned=ownedBreeds();
+  let cand=[];for(let b=0;b<DOG_BREEDS.length;b++)if(DOG_BREEDS[b].r===1&&!owned.has(b))cand.push(b);
+  if(!cand.length)for(let b=0;b<DOG_BREEDS.length;b++)if(!owned.has(b))cand.push(b);
+  const b=cand.length?cand[Math.floor(Math.random()*cand.length)]:6;
+  const rar=RARITY[DOG_BREEDS[b].r];
+  fteBox(`<div style="text-align:center;"><div style="display:inline-block;animation:gshake .5s ease-in-out 3;"><span data-icon="gift" data-s="7"></span></div><p style="color:#6b6488;margin-top:8px;">ガチャを回しています…</p></div>`);
+  setTimeout(()=>{
+    confettiBurst();
+    const dogs=getDogs();dogs.push({f:0,b:b,n:DOG_BREEDS[b].nm});
+    LS.set(KEY_DOG,dogs);LS.set("b2_partner",dogs.length-1);
+    try{track("fte_gacha")}catch(e){}
+    const o=fteBox(`<div style="text-align:center;">
+      <div id="fdog" style="display:flex;justify-content:center;"></div>
+      <div style="margin:6px 0;"><span style="display:inline-block;background:${rar.c};color:#fff;border-radius:8px;padding:2px 12px;font-size:14px;font-weight:800;">${rar.n}</span></div>
+      <h2 style="color:var(--navy);font-size:21px;margin:4px 0;">${DOG_BREEDS[b].nm} のちびわんが仲間になった!</h2>
+      <p style="color:var(--tx2);font-size:13px;">名前をつけてあげよう(あとで変更できます)</p>
+      <input id="ftname" maxlength="10" value="${DOG_BREEDS[b].nm}" style="border:1.5px solid var(--bd);border-radius:999px;padding:11px 18px;font-family:inherit;text-align:center;font-size:15px;width:70%;margin-top:8px;">
+      <button class="btn cta" style="width:100%;margin-top:12px;font-size:16px;" onclick="fteName()">この名前にする →</button>
+    </div>`);
+    o.querySelector("#fdog").appendChild(dogCanvas(0,7,b));
+    const inp=o.querySelector("#ftname");inp.focus();inp.select();
+    inp.onkeydown=e=>{if(e.key==="Enter")fteName();};
+  },1600);
+};
+window.fteName=function(){
+  const inp=document.getElementById("ftname");
+  const dogs=getDogs(),pi=getPartner(),d=dogs[pi];
+  if(d){d.n=((inp&&inp.value)||"").trim().slice(0,10)||DOG_BREEDS[d.b].nm;LS.set(KEY_DOG,dogs);}
+  try{track("fte_name")}catch(e){}
+  fteFeed();
+};
+window.fteFeed=function(){
+  const dogs=getDogs(),pi=getPartner(),d=dogs[pi];
+  if(!d){fteDone();return;}
+  const o=fteBox(`<div style="text-align:center;">
+    <div id="fdog" style="display:flex;justify-content:center;"></div>
+    <h2 style="color:var(--navy);font-size:19px;margin:8px 0 2px;">${escapeHtml(d.n)} に ごはんをあげよう</h2>
+    <p style="color:var(--tx2);font-size:13px;">ふだんは 1問正解 = ごはん1個</p>
+    <div id="ftmeter">${evoMeterHTML(d,"fte")}</div>
+    <button class="btn cta" id="ftfeedbtn" style="width:100%;margin-top:12px;font-size:16px;">ごはんをあげる (のこり 3)</button>
+  </div>`);
+  const wrap=o.querySelector("#fdog");wrap.appendChild(dogCanvas(0,7,d.b));
+  let left=3;
+  o.querySelector("#ftfeedbtn").onclick=function(){
+    if(left<=0)return;
+    left--;
+    const food=LS.get(KEY_F,0);if(food>0)LS.set(KEY_F,food-1);
+    const pctFrom=evoPct(d.f);
+    d.f=(d.f||0)+1;LS.set(KEY_DOG,dogs);
+    try{bumpDay('fd');}catch(e){}
+    window._feedAnim={from:pctFrom,to:dogStage(d.f)>0?100:evoPct(d.f)};
+    runFeedAnim("fte","#fdog canvas");
+    const num=document.getElementById("evonum-fte");if(num)num.textContent=Math.min(d.f,3)+" / 3";
+    wrap.classList.remove("ftehop");void wrap.offsetWidth;wrap.classList.add("ftehop");
+    this.textContent=left>0?`ごはんをあげる (のこり ${left})`:"…!";
+    if(left<=0){
+      setTimeout(()=>{
+        evoCinema(d.n,d.b,dogStage(d.f),"つぎへ　→",()=>fteExam());
+      },1050);
+    }
+  };
+};
+window.fteExam=function(){
+  LS.set("b2_tut",4);
+  try{track("fte_exam_view")}catch(e){}
+  const d=getDogs()[getPartner()],nm=d?escapeHtml(d.n):"相棒";
+  fteBox(`<div style="text-align:center;">
+    <h2 style="color:var(--navy);font-size:20px;margin-bottom:4px;">試験日は いつですか?</h2>
+    <p style="color:var(--tx2);font-size:13px;">設定すると、ホームに残り日数が出て<br>${nm} と いっしょにカウントダウンできます</p>
+    <input type="date" id="ftexd" style="border:1.5px solid var(--bd);border-radius:12px;padding:11px 16px;font-family:inherit;font-size:15px;margin-top:10px;">
+    <button class="btn cta" style="width:100%;margin-top:14px;font-size:16px;" onclick="fteExamSave()">設定する →</button>
+    <a href="javascript:void(0)" onclick="fteSignup()" style="display:inline-block;margin-top:12px;font-size:12.5px;color:#8a84a3;">まだ決めていない(スキップ)</a>
+  </div>`);
+};
+window.fteExamSave=function(){
+  const v=document.getElementById("ftexd").value;
+  if(v)LS.set("b2_exam",v);
+  try{track("fte_exam_set",{set:!!v})}catch(e){}
+  fteSignup();
+};
+window.fteSignup=function(){
+  try{if(!sessionStorage.getItem("b2_sv_seen")){sessionStorage.setItem("b2_sv_seen","1");track("signup_view");}track("fte_signup_view")}catch(e){}
+  const d=getDogs()[getPartner()],nm=d?escapeHtml(d.n):"相棒";
+  fteBox(`<div style="text-align:center;">
+    <h2 style="color:var(--navy);font-size:20px;margin-bottom:6px;">${nm} との記録、<br>消えないようにしておこう</h2>
+    <p style="color:var(--tx2);font-size:13.5px;line-height:1.75;">一番人気の<b>CBT模試(4回分 無料)</b>は本番同様90分。<br><b>パソコンでじっくり</b>やるのがおすすめです。<br>いま無料登録しておくと、PCでログインするだけで<br>${nm} と記録が そのまま引き継がれます。</p>
+    <button class="btn cta" style="width:100%;margin-top:14px;font-size:16px;" onclick="try{track('signup_click')}catch(e){};document.getElementById('cele-ovl').remove();openAcct()">Googleで登録して引き継ぐ(無料)</button>
+    <button class="btn gray" style="width:100%;margin-top:10px;" onclick="fteDone()">あとで(このまま始める)</button>
+  </div>`);
+};
+window.fteDone=function(){
+  LS.set("b2_tut",4);
+  try{track("fte_done")}catch(e){}
+  fteBox(`<div style="text-align:center;">
+    <h2 style="color:var(--navy);font-size:20px;margin-bottom:6px;">準備完了! 相棒と合格をめざそう</h2>
+    <p style="color:var(--tx2);font-size:13.5px;">一番人気は <b>本番そっくりのCBT模試</b>(4回分 無料)。<br>いまの実力チェックにどうぞ。</p>
+    <button class="btn cta" style="width:100%;margin-top:14px;font-size:16px;" onclick="document.getElementById('cele-ovl').remove();renderExams()">CBT模試をみてみる →</button>
+    <button class="btn gray" style="width:100%;margin-top:10px;" onclick="document.getElementById('cele-ovl').remove();renderHome()">ホームへ</button>
+  </div>`);
 };
 /* ---------- ランキング ---------- */
 function weekStart(){const d=new Date();d.setHours(0,0,0,0);const wd=(d.getDay()+6)%7;d.setDate(d.getDate()-wd);return daysKey(d);}
@@ -2717,10 +3003,8 @@ window.closeWlc=function(){
   const v=document.getElementById("wexd").value;
   if(v)LS.set("b2_exam",v);
   document.getElementById("wlc-ovl").classList.add("hidden");
-  LS.set("b2_tut",1);
-  LS.set(KEY_T,LS.get(KEY_T,0)+1);
   renderHome();
-  setTimeout(checkLoginBonus,500);
+  if(LS.get("b2_tut",0)<4){setTimeout(()=>startFTE(),250);}
 };
 window.tutGacha=function(){
   renderGacha();
@@ -2824,7 +3108,7 @@ window.deleteAccount=async function(){
 };
 initSb();
 renderHome();
-if(!LS.get("b2_seen",0))document.getElementById("wlc-ovl").classList.remove("hidden");
+if(!LS.get("b2_seen",0))LS.set("b2_seen",1);
 else setTimeout(checkLoginBonus,700);
 </script>
 </body>
