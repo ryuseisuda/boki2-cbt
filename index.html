@@ -385,6 +385,17 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
 #quest-ovl{position:fixed;inset:0;background:rgba(28,23,51,.55);z-index:120;display:flex;align-items:center;justify-content:center;padding:20px;}
 #quest-box{max-width:560px;width:100%;max-height:86vh;overflow-y:auto;}
 .qbtn-dot{position:absolute;right:-3px;top:-3px;background:#e05656;border-radius:50%;width:11px;height:11px;border:2px solid #fff;}
+.wbadge{display:inline-flex;align-items:center;gap:7px;background:#e05656;color:#fff;font-weight:800;font-size:12.5px;border-radius:999px;padding:6px 15px;box-shadow:0 3px 0 #a83c3c;}
+.chip3{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--bd);border-radius:12px;padding:9px 14px;font-size:13.5px;font-weight:700;color:var(--navy);box-shadow:0 3px 0 var(--bd);}
+.chip3 .cnum{font-size:11px;color:#fff;border-radius:8px;padding:2px 7px;font-weight:800;flex:none;}
+.bub{display:inline-block;background:var(--card);border:2.5px solid var(--navy);border-radius:14px;padding:7px 16px;font-size:14px;font-weight:800;color:var(--navy);position:relative;}
+.bub:after{content:"";position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);border:9px solid transparent;border-top-color:var(--navy);border-bottom:0;}
+.evorow{display:flex;align-items:flex-end;justify-content:center;gap:2px;margin-top:6px;}
+.evorow canvas{image-rendering:pixelated;}
+.evarw{color:var(--blue);font-weight:900;font-size:15px;padding-bottom:10px;}
+body.dark .chip3{box-shadow:0 3px 0 #0a111f;}
+body.dark .bub{border-color:var(--lav);color:#dfe7f5;}
+body.dark .bub:after{border-top-color:var(--lav);}
 .qbtn{background:var(--card);color:var(--navy);border:2px solid var(--bd);border-radius:16px;padding:10px 22px;font-size:13.5px;font-weight:800;position:relative;box-shadow:0 4px 0 var(--bd);transition:.08s;cursor:pointer;}
 .qbtn:hover{border-color:var(--blue);}
 .qbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--bd);}
@@ -1375,18 +1386,19 @@ function renderHome(){
   const hl=wrong.length>0?"rev":(h.length===0?"mock":(po<pt?"map":(drillDoneCount()<DRILLS.length?"drill":null)));
   const hlGo=hl==="rev"?"startReview()":hl==="mock"?"renderExams()":hl==="drill"?"renderDrillSetup()":"renderPatMap()";
   const totalQ=Object.values(LS.get(KEY_A,{})).reduce((s,e)=>s+(e.q||0),0);
-  const isNew=totalQ===0;
-  const newChecks=`<div style="margin-top:12px;font-size:13.5px;line-height:2;color:var(--navy);">
-    <div><b style="color:var(--ok);">✓</b> CBT実践形式の模試が4回分、無料</div>
-    <div><b style="color:var(--ok);">✓</b> 全47の出題パターンを1問ずつ制覇</div>
-    <div><b style="color:var(--ok);">✓</b> 登録不要・ブラウザで今すぐ</div>
+  const isNew=totalQ===0||location.search.indexOf("onbpreview")>=0;
+  const newChecks=`<div style="display:flex;flex-direction:column;gap:9px;margin-top:16px;max-width:400px;">
+    <div class="chip3"><span class="cnum" style="background:var(--blue);">模試</span><span class="sicon" data-icon="cap" data-s="1"></span>CBT実践形式の模試が <b style="color:var(--blue);">4回分 無料</b></div>
+    <div class="chip3"><span class="cnum" style="background:var(--ok);">網羅</span><span class="sicon" data-icon="map" data-s="1"></span>全 <b style="color:var(--ok);">47パターン</b> を1問ずつ制覇</div>
+    <div class="chip3"><span class="cnum" style="background:var(--warn);">即開始</span><span class="sicon" data-icon="zap" data-s="1"></span>登録不要・ブラウザで <b style="color:var(--warn);">今すぐ</b></div>
   </div>`;
   const center=`
   <section class="hero2" style="margin-top:0;padding:clamp(8px,1.4vw,18px) clamp(8px,1.6vw,20px);">
     <div class="heroflex">
     <div style="position:relative;z-index:1;flex:1 1 52%;min-width:320px;">
-      <h1 class="disp" style="margin:4px 0 10px;">${isNew?`勉強するほど、<br>犬が育つ。`:(ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`)}</h1>
-      ${isNew?`<div style="font-size:15px;color:var(--tx2);margin:2px 0 0;">日商簿記2級のCBT対策、ぜんぶ無料。</div>${newChecks}`:""}
+      ${isNew?`<div class="wbadge pixf" style="margin-bottom:12px;"><span class="sicon" data-icon="paw" data-s="1"></span>ベータ公開中・ぜんぶ無料</div>`:""}
+      <h1 class="disp" style="margin:4px 0 10px;">${isNew?`勉強するほど、<br><span style="color:var(--blue);">犬が育つ。</span>`:(ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`)}</h1>
+      ${isNew?`<div style="font-size:15px;color:var(--tx2);margin:2px 0 0;">日商簿記2級のCBT対策アプリ。続かない人のために作りました。</div>${newChecks}`:""}
       <button class="btn cta" style="margin-top:14px;font-size:17px;padding:14px 34px;" onclick="${isNew?"renderQuizSetup()":hlGo}">${isNew?"30秒で1問解いてみる":"学習を始める"}　<span class="arrowa">→</span></button>
       <div style="margin-top:12px;"><button id="qbtn" class="qbtn pixf" onclick="openQuests()"><span class="sicon" data-icon="${qNext?qNext.icon:"trophy"}" data-s="1"></span>今日のミッション: ${qNext?qNext.sn:"全達成!"}<span id="qbtn-dot" class="qbtn-dot" style="${qClaim>0?"":"display:none;"}"></span></button></div>
       <div style="margin-top:14px;font-size:12.5px;">試験日: ${ed?`${ed.getFullYear()}/${ed.getMonth()+1}/${ed.getDate()}　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">変更</a>`:`未設定　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">設定する</a>`}</div>
@@ -1423,7 +1435,7 @@ function renderHome(){
   main.innerHTML=page(center,"home");
   mountIcons(main);loadRailRank();
   try{if(document.getElementById("savecard")&&!sessionStorage.getItem("b2_sv_seen")){sessionStorage.setItem("b2_sv_seen","1");track("signup_view");}}catch(e){}
-  if(dogs.length){
+  if(dogs.length&&location.search.indexOf("onbpreview")<0){
     const d=dogs[pi];const hd=document.getElementById("homedog");
     if(hd){
       hd.appendChild(bigDogEl(d,4.2));
@@ -1456,9 +1468,20 @@ function renderHome(){
   } else {
     const hd=document.getElementById("homedog");
     if(hd){
-      try{const c=dogCanvas(2,4,0);c.style.opacity=".92";hd.appendChild(c);}catch(e){}
+      hd.insertAdjacentHTML("beforebegin",`<div style="margin-bottom:10px;"><span class="bub pixf">いっしょに合格しよ!</span></div>`);
+      try{hd.appendChild(dogCanvas(2,4,0));}catch(e){}
       const msg=document.getElementById("homedog-msg");
-      if(msg)msg.textContent="勉強すると育つ、あなたの相棒";
+      if(msg)msg.innerHTML=`勉強すると <b style="color:var(--blue);">5段階</b> に進化します`;
+      const fd=document.getElementById("homedog-feed");
+      if(fd){
+        const row=document.createElement("div");row.className="evorow";
+        const sc=[1.1,1.25,1.4,1.55,1.85];
+        for(let s=0;s<5;s++){
+          try{row.appendChild(dogCanvas(s,sc[s],0));}catch(e){}
+          if(s<4){const a=document.createElement("span");a.className="evarw";a.textContent="›";row.appendChild(a);}
+        }
+        fd.appendChild(row);
+      }
     }
   }
 }
