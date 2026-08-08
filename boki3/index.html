@@ -1145,6 +1145,7 @@ function renderHome(){
       <div class="minichips">
         <span><span class="sicon" data-icon="map" data-s="1"></span>仕訳パターン網羅</span>
         <span><span class="sicon" data-icon="zap" data-s="1"></span>登録不要</span>
+        <span><span class="sicon" data-icon="paw" data-s="1"></span>無理せず続く</span>
       </div>
       <div class="lpsec">
         <h2 class="lph">本番さながらの<span style="color:var(--blue);">ネット試験</span>模試</h2>
@@ -1198,15 +1199,15 @@ function renderHome(){
     <div class="tcard ${hl==="map"?"light":"white"}" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>パターン網羅マップ</h3><div class="arw">${po} / ${pt} 制覇　→</div></div>
     <div class="tcard ${hl==="drill"?"light":"white"}" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>仕訳ドリル</h3><div class="arw">${drillDoneCount()} / ${DRILLS.length} 問　→</div></div>
   </div>
-  ${(!sbUser&&!LS.get("b2_savehide",0)&&(totalQ>=5||dogs.length>0))?`
+  ${(!sbUser&&(Date.now()-LS.get("b2_savehide",0)>86400000)&&(totalQ>=5||dogs.length>0))?`
   <div class="qpane" id="savecard" style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
     <div style="flex:1;min-width:240px;">
-      <b style="color:var(--navy);font-size:15.5px;">ここまでの記録、消えないように保存しませんか?</b>
-      <div style="font-size:13px;color:var(--tx2);margin-top:4px;">無料登録(Googleで1タップ)で、端末をまたいで同期・ランキングに参加・${dogs.length?`${escapeHtml(dogs[pi].n)}を`:"犬を"}クラウドにお引っ越しできます。</div>
+      <b style="color:var(--navy);font-size:15.5px;">${dogs.length?`${escapeHtml(dogs[pi].n)}と君`:"君"}の学習記録が消えないように保存しよう</b>
+      <div style="font-size:13px;color:var(--tx2);margin-top:4px;">記録はこの端末のブラウザにしか無いので、<b>閲覧データの削除などで消えてしまいます</b>。無料登録(Googleで1タップ)で: <b>ガチャ券+1</b> ・ <b>模試が2回分→4回分に倍増</b> ・ <b>今週のランキングで対決</b>。犬と一緒に、無理せず続けよう。</div>
     </div>
     <div style="display:flex;gap:10px;align-items:center;">
-      <button class="btn" style="font-size:13.5px;padding:10px 22px;" onclick="track('signup_click');openAcct()">無料で記録を保存</button>
-      <a style="font-size:12px;color:var(--tx2);cursor:pointer;text-decoration:underline;" onclick="LS.set('b2_savehide',1);document.getElementById('savecard').remove()">あとで</a>
+      <button class="btn" style="font-size:13.5px;padding:10px 22px;" onclick="track('signup_click',{src:'savecard'});openAcct()">無料で保存して特典GET</button>
+      <a style="font-size:12px;color:var(--tx2);cursor:pointer;text-decoration:underline;" onclick="track('signup_later');LS.set('b2_savehide',Date.now());document.getElementById('savecard').remove()">あとで</a>
     </div>
   </div>`:""}`;
   main.innerHTML=isNew?pageRaw(center,""):page(center,"home");
@@ -1278,6 +1279,7 @@ function renderExams(){
   const card=ex=>{
     const att=h.filter(a=>a.examId===ex.id);
     const best=att.length?Math.max(...att.map(a=>a.total)):null;
+    if(ex.lock&&!sbUser)return `<div class="tcard light" style="opacity:.85;" onclick="track('signup_click',{src:'examlock'});openAcct()"><h3>🔒 ${ex.title}</h3><div class="arw">無料登録で解放　→</div></div>`;
     return `<div class="tcard ${att.length?"white":"light"}" onclick="startExam('${ex.id}')"><h3>${ex.title}</h3><div class="arw">${att.length?`受験${att.length}回 / 最高 ${best}点`:"未受験"}　→</div></div>`;};
   const c2=EXAMS.map(card).join("");
   const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">模擬試験</h2><p>本番と同じ構成・制限時間(60分)。</p></div>
@@ -1301,6 +1303,7 @@ function patProgress(){
 /* ---------- 試験 ---------- */
 function startExam(id){
   const ex=EXAMS.find(e=>e.id===id);
+  if(ex.lock&&!sbUser){try{track('signup_click',{src:'examlock'})}catch(e){};openAcct();return;}
   const answers={};
   ex.sections.forEach(sec=>{
     const parts=sec.type==="mixed"?sec.parts:[sec];
@@ -2360,19 +2363,22 @@ window.rollGacha=function(){
     ovl.querySelector("#cele-box").innerHTML=`<div id="gdog" style="display:flex;justify-content:center;"></div>
       <div style="margin:6px 0;">${badge}</div>
       <h2 style="color:var(--navy);font-size:21px;margin:4px 0;">${DOG_BREEDS[b].nm} のちびわんが仲間になった!</h2>
-      <p style="color:#6b6488;">名前をつけてあげよう</p>
+      <p style="color:#6b6488;">名前をつけてあげよう(必須)</p>
       <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
-        <input id="dogname-in" maxlength="10" value="${DOG_BREEDS[b].nm}" style="border:1px solid var(--bd);border-radius:999px;padding:10px 16px;font-family:inherit;text-align:center;">
-        <button class="btn" onclick="nameNewDog(${b})">けってい</button>
+        <input id="dogname-in" maxlength="10" value="" placeholder="なまえを入力" style="border:1px solid var(--bd);border-radius:999px;padding:10px 16px;font-family:inherit;text-align:center;">
+        <button class="btn" id="dogname-btn" style="opacity:.5;" disabled onclick="nameNewDog(${b})">けってい</button>
       </div>`;
     ovl.querySelector("#gdog").appendChild(dogCanvas(0,7,b));
-    const inp=ovl.querySelector("#dogname-in");inp.focus();inp.select();
-    inp.onkeydown=e=>{if(e.key==="Enter")nameNewDog(b);};
+    const inp=ovl.querySelector("#dogname-in");inp.focus();
+    const nbtn=ovl.querySelector("#dogname-btn");
+    inp.oninput=()=>{const ok=inp.value.trim().length>0;nbtn.disabled=!ok;nbtn.style.opacity=ok?"1":".5";};
+    inp.onkeydown=e=>{if(e.key==="Enter"&&inp.value.trim())nameNewDog(b);};
   },1600);
 };
 window.nameNewDog=function(b){
   const inp=document.getElementById("dogname-in");
-  const n=((inp&&inp.value)||"").trim().slice(0,10)||DOG_BREEDS[b].nm;
+  const n=((inp&&inp.value)||"").trim().slice(0,10);
+  if(!n)return;
   const dogs=getDogs();dogs.push({f:0,b:b,n:n});
   LS.set(KEY_DOG,dogs);LS.set("b2_partner",dogs.length-1);
   const o=document.getElementById("cele-ovl");if(o)o.remove();
@@ -2486,22 +2492,27 @@ window.fteGacha=function(){
       <div style="margin:6px 0;"><span style="display:inline-block;background:${rar.c};color:#fff;border-radius:8px;padding:2px 12px;font-size:14px;font-weight:800;">${rar.n}</span></div>
       <h2 style="color:var(--navy);font-size:21px;margin:4px 0;">${DOG_BREEDS[b].nm} のちびわんが仲間になった!</h2>
       <p style="color:var(--tx2);font-size:13px;">名前をつけてあげよう(あとで変更できます)</p>
-      <input id="ftname" maxlength="10" value="${DOG_BREEDS[b].nm}" style="border:1.5px solid var(--bd);border-radius:999px;padding:11px 18px;font-family:inherit;text-align:center;font-size:15px;width:70%;margin-top:8px;">
-      <button class="btn cta" style="width:100%;margin-top:12px;font-size:16px;" onclick="fteName()">この名前にする →</button>
+      <input id="ftname" maxlength="10" value="" placeholder="なまえを入力(必須)" style="border:1.5px solid var(--bd);border-radius:999px;padding:11px 18px;font-family:inherit;text-align:center;font-size:15px;width:70%;margin-top:8px;">
+      <button class="btn cta" id="ftnamebtn" style="width:100%;margin-top:12px;font-size:16px;opacity:.5;" disabled onclick="fteName()">この名前にする →</button>
     </div>`);
     o.querySelector("#fdog").appendChild(dogCanvas(0,7,b));
-    const inp=o.querySelector("#ftname");inp.focus();inp.select();
-    inp.onkeydown=e=>{if(e.key==="Enter")fteName();};
+    const inp=o.querySelector("#ftname");inp.focus();
+    const btn=o.querySelector("#ftnamebtn");
+    inp.oninput=()=>{const ok=inp.value.trim().length>0;btn.disabled=!ok;btn.style.opacity=ok?"1":".5";};
+    inp.onkeydown=e=>{if(e.key==="Enter"&&inp.value.trim())fteName();};
   },1600);
 };
 window.fteName=function(){
   const inp=document.getElementById("ftname");
+  const v=((inp&&inp.value)||"").trim().slice(0,10);
+  if(!v)return;
   const dogs=getDogs(),pi=getPartner(),d=dogs[pi];
-  if(d){d.n=((inp&&inp.value)||"").trim().slice(0,10)||DOG_BREEDS[d.b].nm;LS.set(KEY_DOG,dogs);}
+  if(d){d.n=v;LS.set(KEY_DOG,dogs);}
   try{track("fte_name")}catch(e){}
   fteFeed();
 };
 window.fteFeed=function(){
+  try{track("fte_feed_view")}catch(e){}
   const dogs=getDogs(),pi=getPartner(),d=dogs[pi];
   if(!d){fteDone();return;}
   const o=fteBox(`<div style="text-align:center;">
@@ -2520,12 +2531,14 @@ window.fteFeed=function(){
     const pctFrom=evoPct(d.f);
     d.f=(d.f||0)+1;LS.set(KEY_DOG,dogs);
     try{bumpDay('fd');}catch(e){}
+    try{track("fte_feed",{n:3-left})}catch(e){}
     window._feedAnim={from:pctFrom,to:dogStage(d.f)>0?100:evoPct(d.f)};
     runFeedAnim("fte","#fdog canvas");
     const num=document.getElementById("evonum-fte");if(num)num.textContent=Math.min(d.f,3)+" / 3";
     wrap.classList.remove("ftehop");void wrap.offsetWidth;wrap.classList.add("ftehop");
     this.textContent=left>0?`ごはんをあげる (のこり ${left})`:"…!";
     if(left<=0){
+      try{track("fte_evolve")}catch(e){}
       setTimeout(()=>{
         evoCinema(d.n,d.b,dogStage(d.f),"つぎへ　→",()=>fteExam());
       },1050);
@@ -2554,10 +2567,16 @@ window.fteSignup=function(){
   try{if(!sessionStorage.getItem("b2_sv_seen")){sessionStorage.setItem("b2_sv_seen","1");track("signup_view");}track("fte_signup_view")}catch(e){}
   const d=getDogs()[getPartner()],nm=d?escapeHtml(d.n):"相棒";
   fteBox(`<div style="text-align:center;">
-    <h2 style="color:var(--navy);font-size:20px;margin-bottom:6px;">${nm} との記録、<br>消えないようにしておこう</h2>
-    <p style="color:var(--tx2);font-size:13.5px;line-height:1.75;">一番人気の<b>CBT模試(無料)</b>は本番同様90分。<br><b>パソコンでじっくり</b>やるのがおすすめです。<br>いま無料登録しておくと、PCでログインするだけで<br>${nm} と記録が そのまま引き継がれます。</p>
-    <button class="btn cta" style="width:100%;margin-top:14px;font-size:16px;" onclick="try{track('signup_click')}catch(e){};document.getElementById('cele-ovl').remove();openAcct()">Googleで登録して引き継ぐ(無料)</button>
-    <button class="btn gray" style="width:100%;margin-top:10px;" onclick="fteDone()">あとで(このまま始める)</button>
+    <h2 style="color:var(--navy);font-size:20px;margin-bottom:6px;">${nm}と君の学習記録が<br>消えないように保存しよう</h2>
+    <p style="color:var(--tx2);font-size:13px;line-height:1.7;">記録はこの端末のブラウザにしか無いので、<br><b>閲覧データの削除などで消えてしまいます</b>。</p>
+    <div style="text-align:left;max-width:280px;margin:12px auto 0;font-size:13.5px;color:var(--navy);line-height:2;">
+      <div>🎟 <b>ガチャ券+1</b> をプレゼント</div>
+      <div>📝 模試が <b>2回分→4回分に倍増</b></div>
+      <div>🏆 <b>今週のランキング</b>でみんなと対決</div>
+    </div>
+    <p style="color:var(--tx2);font-size:12.5px;margin-top:10px;">${nm}と一緒に、無理せず続けよう。</p>
+    <button class="btn cta" style="width:100%;margin-top:12px;font-size:16px;" onclick="try{track('signup_click',{src:'fte'})}catch(e){};document.getElementById('cele-ovl').remove();openAcct()">Googleで無料登録して特典GET</button>
+    <button class="btn gray" style="width:100%;margin-top:10px;" onclick="try{track('fte_signup_later')}catch(e){};fteDone()">あとで(このまま始める)</button>
   </div>`);
 };
 window.fteDone=function(){
@@ -2763,6 +2782,7 @@ async function onLogin(user){
   try{pushProfile();}catch(e){}
   try{pullBonusTickets();tryClaimReferral();}catch(e){}
   try{if(!LS.get("b2_ev_su",0)){LS.set("b2_ev_su",1);track("signup");}}catch(e){}
+  try{if(!LS.get("b2_regbonus",0)){LS.set("b2_regbonus",1);LS.set(KEY_T,LS.get(KEY_T,0)+1);setTimeout(()=>miniToast(`<span data-icon="ticket" data-s="2"></span>登録ありがとう! ガチャ券+1 と模試第3・4回が解放されました`),800);}}catch(e){}
   setAcctBtn();
   if(!exState)renderHome();
 }
