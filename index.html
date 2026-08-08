@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ボキイヌ 2級 | 無料のCBT模擬試験・全出題パターン網羅アプリ(非公式)</title>
+<title>ボキイヌ 2級(ベータ版) | 無料のCBT模擬試験・全出題パターン網羅アプリ(非公式)</title>
 <meta name="description" content="日商簿記2級CBT対策の無料学習アプリ(非公式)。本試験の全47出題パターンを代表問題で網羅。模擬試験4回分・仕訳ドリル58問・間違い自動復習・弱点分析。登録不要、ブラウザだけで動きます。">
-<meta property="og:title" content="ボキイヌ 2級 | 全47の出題パターンを、代表問題で制覇する。">
+<meta property="og:title" content="ボキイヌ 2級(ベータ版) | 全47の出題パターンを、代表問題で制覇する。">
 <meta property="og:description" content="日商簿記2級CBT対策の無料アプリ(非公式)。模擬試験4回分・仕訳ドリル58問・間違い自動復習・弱点分析。登録不要。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ryuseisuda.github.io/boki2-cbt/">
@@ -550,7 +550,7 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
 <p>本サイト「ボキイヌ 2級」(以下「本サイト」)をご利用いただく前に、以下をお読みください。本サイトを利用した時点で、本規約に同意したものとみなします。</p>
 <h3>1. サービスの性質</h3>
 <ul><li>本サイトは、個人が制作・運営する<b>非公式</b>の学習ツールです。</li>
-<li><b>ベータ期間について</b>: 本サイトは現在ベータ版として提供しており、<b>2026年9月30日までのベータ期間中はすべての機能を無料</b>でご利用いただけます。ベータ期間終了後の提供内容・機能構成・料金は現時点で未定です。変更を行う場合は、事前に本サイト上でお知らせします。</li>
+<li><b>ベータ期間について</b>: 本サイトは現在ベータ版として提供しており、<b>2026年9月30日までのベータ期間中はすべての機能を無料</b>でご利用いただけます。ベータ期間終了後の提供内容・機能構成・料金は変更される場合があり、<b>模擬試験など一部機能は正式版での有料化を予定</b>しています。変更を行う場合は、事前に本サイト上でお知らせします。</li>
 <li>日本商工会議所・各地商工会議所・CBT試験運営会社(株式会社CBT-Solutions等)とは一切関係ありません。「日商簿記」は日本商工会議所の登録商標です。</li>
 <li>収録されている問題・解説はすべて運営者が作成したオリジナルであり、実際の検定試験問題の複製ではありません。</li></ul>
 <h3>2. 免責事項</h3>
@@ -1510,7 +1510,7 @@ function renderHome(){
       <div class="mokushi">
         <div class="mkt"><span class="sicon" data-icon="cap" data-s="1"></span>本番のCBT画面を再現</div>
         <div class="mkn">ネット試験模試 4回分無料</div>
-        <div class="mks">今後さらに追加予定</div>
+        <div class="mks">今だけ無料(ベータ期間限定)・今後さらに追加予定</div>
       </div>
       <button class="ctaflat" onclick="startFTE()">30秒で1問解いてみる　→</button>
       <div class="minichips">
@@ -1653,7 +1653,7 @@ function renderExams(){
     if(ex.lock&&!sbUser)return `<div class="tcard light" style="opacity:.85;" onclick="track('signup_click',{src:'examlock'});openAcct()"><h3>🔒 ${ex.title}</h3><div class="arw">無料登録で解放　→</div></div>`;
     return `<div class="tcard ${att.length?"white":"light"}" onclick="startExam('${ex.id}')"><h3>${ex.title}</h3><div class="arw">${att.length?`受験${att.length}回 / 最高 ${best}点`:"未受験"}　→</div></div>`;};
   const c2=EXAMS.filter(e=>e.lv!==3).map(card).join("");
-  const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">模擬試験</h2><p>本番と同じ構成・制限時間(90分)。</p></div>
+  const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">模擬試験</h2><p>本番と同じ構成・制限時間(90分)。<b style="color:#e05656;">模試はベータ期間限定で無料開放中</b>(正式版では一部有料化を予定)。</p></div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${c2}</div>
   <div class="qpane" style="margin-top:22px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;cursor:pointer;" onclick="window.open('https://ryuseisuda.github.io/boki2-cbt/boki3/','_blank')">
     <div style="flex:1;min-width:220px;"><b style="color:var(--navy);font-size:15.5px;">ボキイヌ 3級 <span style="font-size:11px;background:var(--blue);color:#fff;border-radius:8px;padding:2px 8px;">NEW</span></b>
