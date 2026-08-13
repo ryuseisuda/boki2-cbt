@@ -2058,7 +2058,7 @@ window.startPat=function(gi,ii){
   const lock=(p&&Array.isArray(p.ok)&&p.ok.length===q.boxes.length&&p.ok.some(v=>v)&&!p.ok.every(v=>v))?p.ok:null;
   patRender(q,lock);
 };
-let patLock=null;
+let pqCur=null,patLock=null;
 window.patRender=patRender;
 function patRender(q,lock){
   pqCur=q;patLock=lock;
