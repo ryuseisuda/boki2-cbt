@@ -1680,6 +1680,7 @@ function resolvePat(item){
   return{id:refId(item),title:item.label,intro:(part.inst?part.inst+"\n":"")+(part.intro||""),boxes:part.boxes,exp:part.exp||sec.exp};
 }
 window.startPat=function(gi,ii){
+  window._patPos={gi,ii};
   const item=PATMAP[gi].items[ii];
   if(item.k==="tag"){startDrill([...DRILLS.filter(d=>d.tag===item.tag)].sort(()=>Math.random()-.5),"drill");return;}
   const q=resolvePat(item);
@@ -1752,11 +1753,22 @@ function gradePat(q){
     all.onclick=()=>patRender(q,null);
     btn.parentNode.insertBefore(all,btn.nextSibling);
   }else{
-    btn.textContent="マップへ戻る";
-    btn.onclick=()=>renderPatMap();
+    btn.textContent="次のパターンへ　→";
+    btn.onclick=()=>nextPat();
   }
   window.scrollTo(0,document.body.scrollHeight);
 }
+window.nextPat=function(){
+  initPatMap();
+  const pos=window._patPos||{gi:0,ii:-1};
+  const flat=[];PATMAP.forEach((g,gi)=>g.items.forEach((it,ii)=>flat.push({gi,ii,it})));
+  const cur=flat.findIndex(x=>x.gi===pos.gi&&x.ii===pos.ii);
+  for(let k=1;k<=flat.length;k++){
+    const c=flat[(cur+k+flat.length)%flat.length];
+    if(patStat(c.it).s!=="○"){startPat(c.gi,c.ii);return;}
+  }
+  renderPatMap();
+};
 
 /* ---------- 一問一答(電卓不要) ---------- */
 const KEY_Z="b3_qz";
@@ -2246,14 +2258,15 @@ window.feedDog=function(n,view){
     setTimeout(()=>{confettiBurst();miniToast(`チュートリアル完了! ごはん +10 これから毎日いっしょにがんばろう`);},700);
   }
   window._feedAnim={from:pctFrom,to:after>before?100:evoPct(d.f)};
-  const _fkey=view==="home"?"home":"garden";
-  if(view==="home"){renderHome();runFeedAnim("home","#homedog canvas");}
-  else{renderGarden();runFeedAnim("garden","#dogbox canvas");}
   if(after>before){
-    setTimeout(()=>{const b=document.getElementById("evofill-"+_fkey);if(b)b.style.width=evoPct(d.f)+"%";},1100);
+    /* 進化: いまの画面(旧姿)のままメーターだけ満タンに → シネマ → 閉じたら再描画 */
+    runFeedAnim(view==="home"?"home":"garden",view==="home"?"#homedog canvas":"#dogbox canvas");
     setTimeout(()=>{
-      evoCinema(d.n,d.b,after,"やったー!",()=>{const x=document.getElementById("cele-ovl");if(x)x.remove();});
+      evoCinema(d.n,d.b,after,"やったー!",()=>{const x=document.getElementById("cele-ovl");if(x)x.remove();if(view==="home")renderHome();else renderGarden();});
     },650);
+  }else{
+    if(view==="home"){renderHome();runFeedAnim("home","#homedog canvas");}
+    else{renderGarden();runFeedAnim("garden","#dogbox canvas");}
   }
 };
 window.ticketToFood=function(){
