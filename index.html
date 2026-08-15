@@ -460,6 +460,16 @@ body.dark #tutguide .tg-lay.new{background:#453d1e;}
 body.dark #tutguide .tg-lay.out{background:#4a1d1d;}
 body.dark #tutguide .tg-lay.out .q{color:#fca5a5;}
 body.dark #tutguide .tg-lay.half{background:#452e1e;}
+#tutguide .tg-loc{display:flex;gap:4px;flex-wrap:wrap;margin:2px 0 12px;}
+#tutguide .tg-loc span{font-size:10.5px;font-weight:800;color:var(--tx2);background:var(--lt);border-radius:999px;padding:3px 10px;opacity:.55;}
+#tutguide .tg-loc span.cur{background:var(--navy);color:#fff;opacity:1;}
+#tutguide .tg-loc span.done{opacity:1;color:#16a34a;}
+#tutguide .tg-why{margin:10px 0 4px;border:1.5px dashed var(--bd);border-radius:11px;padding:8px 12px;}
+#tutguide .tg-why summary{cursor:pointer;font-size:12.5px;font-weight:800;color:var(--blue);list-style:none;}
+#tutguide .tg-why summary::-webkit-details-marker{display:none;}
+#tutguide .tg-why div{font-size:13px;line-height:1.9;color:var(--tx);margin-top:6px;}
+#tutguide .tg-ex{margin:10px 0;background:#e9f7f1;border-radius:11px;padding:10px 13px;font-size:13px;line-height:1.9;color:var(--tx);}
+body.dark #tutguide .tg-ex{background:#173a2e;}
 #tutguide .tg-hint{color:#b45309;font-size:12.5px;margin-top:6px;font-weight:700;}
 #tutguide .tg-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;font-size:11.5px;color:var(--tx2);}
 .tutrow-hl{background:#fff3bf!important;}
@@ -2286,29 +2296,29 @@ window.nextPat=function(){
 /* ---------- ガイド付きチュートリアル(スポットライト) ---------- */
 const _swm=(dr,cr)=>`<table class="tg-swm"><tr><th>借方</th><th>貸方</th></tr><tr><td>${dr}</td><td>${cr}</td></tr></table>`;
 const PATTUT={
-"ref_m3_2_0":{steps:[
-{hlText:"売上原価対立法",look:"問題文の「<b>売上原価対立法</b>」",think:"名前はむずかしいけど、やることは<b>2つだけ</b>。<br>まず、商品を<b>仕入れたとき</b>。いつものやり方(三分法)とくらべてみよう:",cmp:[["仕入れた<br>とき",_swm("<b>仕入</b>","買掛金"),_swm("<b>商品</b>","買掛金")]],act:"ちがいは1つだけ。「仕入」ではなく<b>「商品」</b>と書く。<br>「商品という<b>持ち物が増えた</b>」と考えるんだ。"},
-{hl:0,look:"同じく「<b>売上原価対立法</b>」",think:"つぎに、商品を<b>売ったとき</b>。記録が<b>2セット</b>になる:<br>① 「<b>売れた!</b>」の記録(いつもと同じ)<br>② 「<b>商品が出ていった</b>」の記録(これが追加)",cmp:[["売った<br>とき",_swm("売掛金","売上")+`<div class="tg-only">これだけ</div>`,_swm("売掛金","売上")+`<div class="tg-plus">+</div>`+_swm("<b>売上原価</b>","<b>商品</b>")]],act:"②の金額は、売った値段ではなく<b>仕入れたときの値段(=原価)</b>を使う。<br>ここがこの問題いちばんのポイント!"},
-{hlText:"先入先出法",look:"問題文の「<b>先入先出法</b>」",think:"商品を売ったとき「<b>どの商品から出ていったことにする?</b>」を決めるルール。<br>先入先出法=「<b>先に仕入れたものから、先に出す</b>」。<br>在庫は「◯個 @◯円」の<b>段</b>にしてメモするとミスしない。<br>(@は「1個あたりの値段」という意味だよ)",inv:[["100個 @¥200","20,000円","先月からの持ちこし",""]],act:"いまの在庫はこの1段だけ。ここから<b>「仕入れたら段を追加」「売ったら古い段から減らす」</b>をくり返すよ!"},
-{row:2,box:0,look:"表の<b>5日の行</b>「仕入 300個 @¥210」",sw:[["商品","63,000","買掛金","63,000"]],think:"300個×210円=63,000円分の商品が増えた。<br>この方式では<b>「商品」</b>で記録するんだったね。<br>在庫メモに新しい段を追加:",inv:[["100個 @¥200","20,000円","",""],["300個 @¥210","63,000円","追加!","new"]],act:"<b>①</b>は「この時点で、商品が<b>全部でいくら分</b>あるか」。<br>2つの段をお金にして足そう: <b>100個×200円 + 300個×210円</b>",hint:"20,000+63,000だよ。",ans:83000},
-{row:3,box:1,look:"表の<b>12日の行</b>「売上 250個 @¥350(売価)」",think:"記録その① 「<b>売れた!</b>」。<br>売価とは「<b>お客さんに売った値段</b>」のこと。250個を1個350円で売った。",sw:[["売掛金","87,500","売上","87,500"]],act:"<b>②</b>に <b>売った個数(250個)×売価(350円)</b> を入れよう",hint:"250×350。ゼロの数に気をつけて!",ans:87500},
-{row:3,box:2,look:"同じ<b>12日の行</b>(こんどは原価のほう)",think:"記録その② 「<b>商品が出ていった</b>」。<br>出ていった250個を、<b>仕入れたときの値段</b>で計算する。<br>先入先出法だから、<b>古い段から順に</b>出す:",inv:[["100個 @¥200","20,000円","→ 100個ぜんぶ出る","out"],["300個 @¥210","","→ 足りない150個はここから(31,500円)/ 150個残る","half"]],sw:[["売上原価","51,500","商品","51,500"]],act:"<b>③</b>に <b>100個×200円 + 150個×210円</b> を入れよう",hint:"20,000+31,500だよ。",ans:51500},
-{row:4,look:"表の<b>18日の行</b>「仕入 200個 @¥220」",sw:[["商品","44,000","買掛金","44,000"]],think:"また商品が増えた。在庫メモを整理しよう。<br>12日に売ったあと残っていたのは「150個@210円」だけ。<br>そこに新しい段を追加:",inv:[["150個 @¥210","31,500円","12日に売った残り",""],["200個 @¥220","44,000円","追加!","new"]],act:"この2段をおぼえたら次へ!"},
-{row:5,box:3,look:"表の<b>25日の行</b>「売上 250個」",think:"また250個売れた。<b>古い段から順に</b>出すよ:",inv:[["150個 @¥210","31,500円","→ 150個ぜんぶ出る","out"],["200個 @¥220","","→ 足りない100個はここから(22,000円)/ 100個残る","half"]],act:"<b>④</b>に <b>150個×210円 + 100個×220円</b> を入れよう",hint:"31,500+22,000だよ。",ans:53500},
-{box:4,look:"<b>⑤ 月間の売上高</b>の欄",think:"売上高とは「<b>売った値段の合計</b>」。<br>今月売ったのは 12日250個+25日250個=<b>500個</b>。どれも1個350円。",act:"<b>⑤</b>に <b>500個×350円</b> を入れよう",hint:"500×350。",ans:175000},
-{box:5,look:"<b>⑥ 月間の売上原価</b>の欄",think:"売上原価とは「<b>売れた商品を、仕入れたときの値段で合計したもの</b>」。<br>12日の分(③)と25日の分(④)を足すだけ。",act:"<b>⑥</b>に <b>51,500+53,500</b> を入れよう",hint:"③+④だよ。",ans:105000},
-{box:6,look:"<b>⑦ 売上総利益</b>の欄",think:"売上総利益とは「<b>もうけ</b>」のこと。<br>売った値段の合計(⑤)から、仕入れた値段の合計(⑥)を引けば、もうけが出る。",act:"<b>⑦</b>に <b>175,000−105,000</b> を入れよう",hint:"⑤−⑥だよ。",ans:70000},
-{box:7,look:"<b>⑧ 月末商品の数量</b>の欄",think:"月末に残っている商品は<b>何個</b>?<br>25日に売ったあと、在庫メモに残っている段は「@220円の段」だけ。<br>200個仕入れて、100個出ていったから…",inv:[["? 個 @¥220","","200個仕入れて100個出た","new"]],act:"<b>⑧</b>に <b>200−100</b> の答え(個数)を入れよう",hint:"200−100だよ。",ans:100},
-{box:8,look:"<b>⑨ 月末商品棚卸高</b>の欄",think:"棚卸高(たなおろしだか)とは「<b>残っている商品を、お金になおしたもの</b>」。",inv:[["100個 @¥220","= ? 円","最後に残った段","new"]],act:"<b>⑨</b>に <b>100個×220円</b> を入れよう",hint:"100×220。",ans:22000},
-{box:9,look:"<b>⑩ 当月仕入高</b>の欄",think:"仕入高とは「<b>今月仕入れた金額の合計</b>」。<br>仕入れたのは <b>5日(63,000円)と18日(44,000円)</b> の2回だけ。",act:"<b>⑩</b>に <b>63,000+44,000</b> を入れよう",hint:"5日と18日の合計。",ans:107000},
-{say:"全問クリア!🎉 おぼえることは、たった2つ。<br><b>① 売ったら「売れた記録」+「商品が出ていった記録」の2セット</b><br><b>② 在庫は「◯個@◯円」の段でメモして、古い段から出す</b><br>数字が変わっても、同じ手順で解ける。仕上げに<b>自力で解いて制覇○</b>を取りに行こう!",last:true}
+"ref_m3_2_0":{ph:["ルールを知る","取引を仕訳","月間のまとめ","卒業"],steps:[
+{p:0,hlText:"売上原価対立法",look:"問題文の「<b>売上原価対立法</b>」",think:"名前はむずかしいけど、やることは<b>2つだけ</b>。<br>まず、商品を<b>仕入れたとき</b>。いつものやり方(三分法)とくらべてみよう:",cmp:[["仕入れた<br>とき",_swm("<b>仕入</b>","買掛金"),_swm("<b>商品</b>","買掛金")]],act:"ちがいは1つだけ。「仕入」ではなく<b>「商品」</b>と書く。<br>「商品という<b>持ち物が増えた</b>」と考えるんだ。"},
+{p:0,hl:0,look:"同じく「<b>売上原価対立法</b>」",why:"なぜ原価もセットで記録するの?<br>→ 売るたびに「売上−原価=<b>もうけ</b>」がすぐ分かるようにするため。いつもの三分法だと、もうけは決算のときまで分からないんだ。",think:"つぎに、商品を<b>売ったとき</b>。記録が<b>2セット</b>になる:<br>① 「<b>売れた!</b>」の記録(いつもと同じ)<br>② 「<b>商品が出ていった</b>」の記録(これが追加)",cmp:[["売った<br>とき",_swm("売掛金","売上")+`<div class="tg-only">これだけ</div>`,_swm("売掛金","売上")+`<div class="tg-plus">+</div>`+_swm("<b>売上原価</b>","<b>商品</b>")]],act:"②の金額は、売った値段ではなく<b>仕入れたときの値段(=原価)</b>を使う。<br>ここがこの問題いちばんのポイント!"},
+{p:0,hlText:"先入先出法",look:"問題文の「<b>先入先出法</b>」",think:"商品を売ったとき「<b>どの商品から出ていったことにする?</b>」を決めるルール。<br>先入先出法=「<b>先に仕入れたものから、先に出す</b>」。<br>在庫は「◯個 @◯円」の<b>段</b>にしてメモするとミスしない。<br>(@は「1個あたりの値段」という意味だよ)",ex:"きのう<b>80円のパンを2個</b>、きょう<b>90円のパンを3個</b>仕入れた。<br>1個売れたら、出ていくのは? → <b>きのうの80円のパン</b>。これが先入先出法!",inv:[["100個 @¥200","20,000円","先月からの持ちこし",""]],act:"いまの在庫はこの1段だけ。ここから<b>「仕入れたら段を追加」「売ったら古い段から減らす」</b>をくり返すよ!"},
+{p:1,row:2,box:0,look:"表の<b>5日の行</b>「仕入 300個 @¥210」",sw:[["商品","63,000","買掛金","63,000"]],think:"300個×210円=63,000円分の商品が増えた。<br>この方式では<b>「商品」</b>で記録するんだったね。<br>在庫メモに新しい段を追加:",inv:[["100個 @¥200","20,000円","",""],["300個 @¥210","63,000円","追加!","new"]],act:"<b>①</b>は「この時点で、商品が<b>全部でいくら分</b>あるか」。<br>2つの段をお金にして足そう: <b>100個×200円 + 300個×210円</b>",hint:"20,000+63,000だよ。",ans:83000},
+{p:1,row:3,box:1,look:"表の<b>12日の行</b>「売上 250個 @¥350(売価)」",think:"記録その① 「<b>売れた!</b>」。<br>売価とは「<b>お客さんに売った値段</b>」のこと。250個を1個350円で売った。",sw:[["売掛金","87,500","売上","87,500"]],act:"<b>②</b>に <b>売った個数(250個)×売価(350円)</b> を入れよう",hint:"250×350。ゼロの数に気をつけて!",ans:87500},
+{p:1,row:3,box:2,look:"同じ<b>12日の行</b>(こんどは原価のほう)",why:"なぜ古い段から出すの?<br>→ 問題文が「先入先出法」と指定しているから。ルールが「総平均法(平均の値段で計算)」なら、答えも変わるよ。",think:"記録その② 「<b>商品が出ていった</b>」。<br>出ていった250個を、<b>仕入れたときの値段</b>で計算する。<br>先入先出法だから、<b>古い段から順に</b>出す:",inv:[["100個 @¥200","20,000円","→ 100個ぜんぶ出る","out"],["300個 @¥210","","→ 足りない150個はここから(31,500円)/ 150個残る","half"]],sw:[["売上原価","51,500","商品","51,500"]],act:"<b>③</b>に <b>100個×200円 + 150個×210円</b> を入れよう",hint:"20,000+31,500だよ。",ans:51500},
+{p:1,row:4,look:"表の<b>18日の行</b>「仕入 200個 @¥220」",sw:[["商品","44,000","買掛金","44,000"]],think:"また商品が増えた。在庫メモを整理しよう。<br>12日に売ったあと残っていたのは「150個@210円」だけ。<br>そこに新しい段を追加:",inv:[["150個 @¥210","31,500円","12日に売った残り",""],["200個 @¥220","44,000円","追加!","new"]],act:"この2段をおぼえたら次へ!"},
+{p:1,row:5,box:3,look:"表の<b>25日の行</b>「売上 250個」",think:"また250個売れた。<b>古い段から順に</b>出すよ:",inv:[["150個 @¥210","31,500円","→ 150個ぜんぶ出る","out"],["200個 @¥220","","→ 足りない100個はここから(22,000円)/ 100個残る","half"]],act:"<b>④</b>に <b>150個×210円 + 100個×220円</b> を入れよう",hint:"31,500+22,000だよ。",ans:53500},
+{p:2,box:4,look:"<b>⑤ 月間の売上高</b>の欄",think:"売上高とは「<b>売った値段の合計</b>」。<br>今月売ったのは 12日250個+25日250個=<b>500個</b>。どれも1個350円。",act:"<b>⑤</b>に <b>500個×350円</b> を入れよう",hint:"500×350。",ans:175000},
+{p:2,box:5,look:"<b>⑥ 月間の売上原価</b>の欄",think:"売上原価とは「<b>売れた商品を、仕入れたときの値段で合計したもの</b>」。<br>12日の分(③)と25日の分(④)を足すだけ。",act:"<b>⑥</b>に <b>51,500+53,500</b> を入れよう",hint:"③+④だよ。",ans:105000},
+{p:2,box:6,look:"<b>⑦ 売上総利益</b>の欄",think:"売上総利益とは「<b>もうけ</b>」のこと。<br>売った値段の合計(⑤)から、仕入れた値段の合計(⑥)を引けば、もうけが出る。",act:"<b>⑦</b>に <b>175,000−105,000</b> を入れよう",hint:"⑤−⑥だよ。",ans:70000},
+{p:2,box:7,look:"<b>⑧ 月末商品の数量</b>の欄",think:"月末に残っている商品は<b>何個</b>?<br>25日に売ったあと、在庫メモに残っている段は「@220円の段」だけ。<br>200個仕入れて、100個出ていったから…",inv:[["? 個 @¥220","","200個仕入れて100個出た","new"]],act:"<b>⑧</b>に <b>200−100</b> の答え(個数)を入れよう",hint:"200−100だよ。",ans:100},
+{p:2,box:8,look:"<b>⑨ 月末商品棚卸高</b>の欄",think:"棚卸高(たなおろしだか)とは「<b>残っている商品を、お金になおしたもの</b>」。",inv:[["100個 @¥220","= ? 円","最後に残った段","new"]],act:"<b>⑨</b>に <b>100個×220円</b> を入れよう",hint:"100×220。",ans:22000},
+{p:2,box:9,look:"<b>⑩ 当月仕入高</b>の欄",think:"仕入高とは「<b>今月仕入れた金額の合計</b>」。<br>仕入れたのは <b>5日(63,000円)と18日(44,000円)</b> の2回だけ。",act:"<b>⑩</b>に <b>63,000+44,000</b> を入れよう",hint:"5日と18日の合計。",ans:107000},
+{p:3,say:"全問クリア!🎉 おぼえることは、たった2つ。<br><b>① 売ったら「売れた記録」+「商品が出ていった記録」の2セット</b><br><b>② 在庫は「◯個@◯円」の段でメモして、古い段から出す</b><br>数字が変わっても、同じ手順で解ける。仕上げに<b>自力で解いて制覇○</b>を取りに行こう!",last:true}
 ]}};
 let tut=null;
 window.startPatTut=function(){
   const q=pqCur;if(!q||!PATTUT[q.id])return;
   try{track("tut_start",{id:q.id})}catch(e){}
   patRender(q,null);
-  tut={q,sc:PATTUT[q.id].steps,i:-1,att:0};
+  tut={q,sc:PATTUT[q.id].steps,i:-1,att:0,ph:PATTUT[q.id].ph||null};
   const gb=main.querySelector("#pq-grade");if(gb)gb.parentNode.style.display="none";
   main.querySelectorAll("input[data-pq],select[data-pqf]").forEach(el=>el.disabled=true);
   const qt=main.querySelector(".qtext");
@@ -2364,14 +2374,18 @@ function tutGuide(st){
     :`<span class="tg-sw">${st.sw}</span>`):"";
   const cmpT=st.cmp?`<table class="tg-cmp"><tr><th></th><th>いつも(三分法)</th><th>今回(売上原価対立法)</th></tr>${st.cmp.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="hl">${r[2]}</td></tr>`).join("")}</table>`:"";
   const invT=st.inv?`<div class="tg-invwrap"><div class="tg-invlabel">📦 在庫メモ</div>${st.inv.map(l=>`<div class="tg-lay ${l[3]||""}"><span class="q">${l[0]}</span>${l[1]?`<span class="a">${l[1]}</span>`:""}${l[2]?`<span class="nt">${l[2]}</span>`:""}</div>`).join("")}</div>`:"";
+  const locT=(tut.ph&&st.p!==undefined)?`<div class="tg-loc">${tut.ph.map((nm,k)=>`<span class="${k===st.p?"cur":k<st.p?"done":""}">${k<st.p?"✓ ":""}${nm}</span>`).join("")}</div>`:"";
   const body=st.say?`<div class="tg-say">${st.say}</div>`
     :`${st.look?`<div class="tg-row"><span class="tg-tag">👀 見る</span>${st.look}</div>`:""}
      ${st.think?`<div class="tg-row"><span class="tg-tag">🧠 考える</span>${st.think}</div>`:""}
+     ${st.ex?`<div class="tg-ex"><span class="tg-tag" style="background:#0e7a5f;">🧮 ミニ例</span>${st.ex}</div>`:""}
      ${cmpT}
      ${invT}
      ${swT?`<div class="tg-row"><span class="tg-tag">📝 仕訳</span>${swT}</div>`:""}
-     ${st.act?`<div class="tg-row tg-act" id="tgact"${st.ans!==undefined?' style="display:none;"':''}><span class="tg-tag" style="background:#b45309;">✍️ やる</span>${st.act}</div>`:""}`;
+     ${st.act?`<div class="tg-row tg-act" id="tgact"${st.ans!==undefined?' style="display:none;"':''}><span class="tg-tag" style="background:#b45309;">✍️ やる</span>${st.act}</div>`:""}
+     ${st.why?`<details class="tg-why"><summary>🤔 なぜ? が気になったら</summary><div>${st.why}</div></details>`:""}`;
   g.innerHTML=`<div class="tg-meta"><span style="display:flex;align-items:center;gap:7px;"><span id="tgdog" style="display:inline-flex;"></span>${nm}先生のガイド　${tut.i+1} / ${tut.sc.length}</span><a style="cursor:pointer;text-decoration:underline;" onclick="tutExit()">やめる</a></div>
+    ${locT}
     <div>${body}<div class="tg-hint" id="tghint"></div></div>
     <div style="margin-top:10px;text-align:right;">
       ${st.box!==undefined?`<button class="btn" style="padding:9px 24px;font-size:13.5px;" onclick="tutCheck()">答え合わせ</button>`
