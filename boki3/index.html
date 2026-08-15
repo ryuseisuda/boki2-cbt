@@ -414,6 +414,20 @@ body.dark .lph{color:#e8eef9;}
 .lpp{font-size:13px;color:var(--tx2);margin-top:6px;}
 .lpimg{width:100%;max-width:560px;border-radius:14px;border:1px solid var(--bd);margin-top:12px;box-shadow:0 10px 30px rgba(21,42,82,.14);}
 .lpdogcard{background:var(--card);border-radius:16px;max-width:340px;margin:14px auto 0;padding:18px;}
+/* パターン・チュートリアル(スポットライト) */
+#tutspot{position:fixed;z-index:150;pointer-events:none;border-radius:12px;box-shadow:0 0 0 9999px rgba(15,10,40,.62);transition:all .35s ease;}
+#tutguide{position:fixed;z-index:151;background:var(--card);border-radius:16px;padding:13px 15px;box-shadow:0 12px 40px rgba(0,0,0,.4);transition:top .35s ease,left .35s ease;}
+#tutguide .tg-say{font-size:13.5px;line-height:1.8;color:var(--tx);}
+#tutguide .tg-say b{color:var(--blue);}
+#tutguide .tg-sw{background:var(--lt);border-radius:8px;padding:3px 9px;font-size:12px;margin:3px 4px 3px 0;display:inline-block;font-weight:700;color:var(--navy);}
+body.dark #tutguide .tg-sw{color:#dfe7f5;}
+#tutguide .tg-hint{color:#b45309;font-size:12.5px;margin-top:6px;font-weight:700;}
+#tutguide .tg-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;font-size:11.5px;color:var(--tx2);}
+.tutrow-hl{background:#fff3bf!important;}
+body.dark .tutrow-hl{background:#4a4420!important;}
+.tuthl{background:#ffe08a;border-radius:4px;padding:0 3px;color:#1c2230;font-weight:800;}
+.tutshake{animation:tutshake .3s;}
+@keyframes tutshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .minichips{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
 .minichips>span{display:inline-flex;align-items:center;gap:7px;background:var(--lt);border-radius:999px;padding:8px 15px;font-size:12.5px;font-weight:700;color:var(--navy);}
 .ctaflat{display:block;width:100%;max-width:430px;margin:16px auto 0;background:#e83a3a;color:#fff;border:none;border-radius:14px;padding:17px;font-size:18px;font-weight:900;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(232,58,58,.35);animation:ctaBeat 2.6s ease-in-out infinite;}
@@ -1694,6 +1708,7 @@ function patRender(q,lock){
   pqCur=q;patLock=lock;
   const remain=lock?lock.filter(v=>!v).length:q.boxes.length;
   main.innerHTML=`<div class="qpane"><h2>${q.title}</h2>
+  ${(typeof PATTUT!=="undefined"&&PATTUT[q.id]&&!lock)?`<button class="btn" style="margin:2px 0 10px;font-size:13px;padding:9px 18px;background:var(--blue);" onclick="startPatTut()">🐶 犬と一緒に解き方を学ぶ(はじめての人向け)</button>`:""}
   ${lock?`<div class="note">前回正解した欄はロック済み(○)。<b>残り ${remain} 問だけ</b>解けばOKです。 <a style="text-decoration:underline;cursor:pointer;" onclick="patRender(pqCur,null)">最初から全部解き直す</a></div>`:""}
   <div class="qtext">${q.intro}</div>
   ${q.boxes.map((b,i)=>{
@@ -1768,6 +1783,124 @@ window.nextPat=function(){
     if(patStat(c.it).s!=="○"){startPat(c.gi,c.ii);return;}
   }
   renderPatMap();
+};
+/* ---------- ガイド付きチュートリアル(スポットライト) ---------- */
+const PATTUT={
+"ref_m3_2_0":{steps:[
+{hlText:"売上原価対立法",say:"この問題の主役は<b>売上原価対立法</b>!商品を売った瞬間に仕訳を<b>2本</b>切る方法だよ。<br><span class='tg-sw'>(借)売掛金 / (貸)売上 …売価で</span><span class='tg-sw'>(借)売上原価 / (貸)商品 …原価で</span><br>つまり「売るたびに、出ていった商品の<b>原価がいくらか</b>」を計算するのがこの問題の本体なんだ。"},
+{hlText:"先入先出法",say:"払出単価は<b>先入先出法</b>。<b>古く仕入れたものから順に出す</b>ルールだよ。在庫を「@200が100個」「@210が300個」みたいに<b>層(レイヤー)</b>で管理するのがコツ!いまの在庫は1日の繰越分 <b>100個@¥200</b> だけだね。"},
+{row:2,box:0,say:"5日に<b>300個を@¥210</b>で仕入れた。仕訳は<br><span class='tg-sw'>(借)商品 63,000 / (貸)買掛金 63,000</span><br>在庫の層は「100個@200」+「300個@210」の2段になった。<b>① この時点の商品有高(金額)</b>を計算して、光っている欄に入れてみよう!",hint:"100×200=20,000円、300×210=63,000円。合計すると?",ans:83000},
+{row:3,box:1,say:"12日、<b>250個</b>を<b>@¥350(売価)</b>で販売!仕訳の1本目は<b>売価</b>で:<br><span class='tg-sw'>(借)売掛金 87,500 / (貸)売上 87,500</span><br><b>② 売上高=250個×¥350</b> を入れよう。",hint:"250×350。ゼロの数に注意!",ans:87500},
+{row:3,box:2,say:"仕訳の2本目が<b>先入先出の見せ場</b>!古い層から順に250個を出すよ。まず<b>@200の層を100個ぜんぶ</b>→まだ150個足りないから<b>@210の層から150個</b>。<br><span class='tg-sw'>(借)売上原価 ? / (貸)商品 ?</span><br><b>③ 100×200+150×210</b> を計算して入れよう。",hint:"20,000+31,500だよ。",ans:51500},
+{row:4,say:"18日に<b>200個@¥220</b>を仕入れ。<br><span class='tg-sw'>(借)商品 44,000 / (貸)買掛金 44,000</span><br>12日に売った後は@210が150個残っていたから、層は「150個@210」+「200個@220」になったよ。"},
+{row:5,box:3,say:"25日も<b>250個</b>販売。古い層から: <b>@210を150個</b>→残り<b>100個は@220</b>の層から。<b>④ 150×210+100×220</b> を入れよう。",hint:"31,500+22,000だよ。",ans:53500},
+{box:4,say:"<b>⑤ 月間の売上高</b>。売ったのは12日250個+25日250個=<b>500個、ぜんぶ@¥350</b>だね。",hint:"500×350。",ans:175000},
+{box:5,say:"<b>⑥ 月間の売上原価</b>=③と④の合計だよ。",hint:"51,500+53,500。",ans:105000},
+{box:6,say:"<b>⑦ 売上総利益</b>=売上高−売上原価。<b>⑤−⑥</b>を計算!",hint:"175,000−105,000。",ans:70000},
+{box:7,say:"<b>⑧ 月末に残っている商品の数量</b>。25日に売った後、残っている層は<b>@220の層だけ</b>。何個残ってる?",hint:"18日に200個仕入れて、25日に100個出したから…",ans:100},
+{box:8,say:"<b>⑨ 月末商品棚卸高</b>=残った層の金額。<b>100個×@¥220</b>だよ。",hint:"100×220。",ans:22000},
+{box:9,say:"ラスト!<b>⑩ 当月仕入高</b>=5日と18日の仕入の合計。<span class='tg-sw'>63,000+44,000</span>",hint:"5日63,000円+18日44,000円。",ans:107000},
+{say:"全問クリア!🎉 これが商品有高帳×売上原価対立法のフルコースだよ。<b>「在庫は層で管理→古い層から出す」</b>さえ覚えれば、数字が変わっても解ける。仕上げに<b>自力で解いて制覇○</b>を取りに行こう!",last:true}
+]}};
+let tut=null;
+window.startPatTut=function(){
+  const q=pqCur;if(!q||!PATTUT[q.id])return;
+  try{track("tut_start",{id:q.id})}catch(e){}
+  patRender(q,null);
+  tut={q,sc:PATTUT[q.id].steps,i:-1,att:0};
+  const gb=main.querySelector("#pq-grade");if(gb)gb.parentNode.style.display="none";
+  main.querySelectorAll("input[data-pq],select[data-pqf]").forEach(el=>el.disabled=true);
+  const qt=main.querySelector(".qtext");
+  tut.sc.forEach((st,k)=>{if(st.hlText)qt.innerHTML=qt.innerHTML.replace(st.hlText,`<span class="tuthl" id="tuttx${k}">${st.hlText}</span>`);});
+  const sp=document.createElement("div");sp.id="tutspot";document.body.appendChild(sp);
+  const g=document.createElement("div");g.id="tutguide";document.body.appendChild(g);
+  window.addEventListener("scroll",tutPos,true);window.addEventListener("resize",tutPos);
+  tutNext();
+};
+function tutTarget(st,k){
+  if(st.box!==undefined){const inp=main.querySelector(`input[data-pq="${st.box}"]`);return inp?inp.closest(".boxrow"):null;}
+  if(st.hlText)return document.getElementById("tuttx"+k);
+  if(st.row!==undefined)return main.querySelectorAll(".qtext table tr")[st.row];
+  return main.querySelector(".qtext");
+}
+window.tutPos=function(){
+  if(!tut)return;
+  const st=tut.sc[tut.i];if(!st)return;
+  const el=tutTarget(st,tut.i);
+  const sp=document.getElementById("tutspot"),g=document.getElementById("tutguide");
+  if(!el||!sp||!g)return;
+  const r=el.getBoundingClientRect();
+  sp.style.left=(r.left-8)+"px";sp.style.top=(r.top-8)+"px";
+  sp.style.width=(r.width+16)+"px";sp.style.height=(r.height+16)+"px";
+  const gw=Math.min(480,window.innerWidth-24);
+  g.style.width=gw+"px";
+  const gh=g.offsetHeight||180;
+  let top=r.bottom+18;
+  if(top+gh>window.innerHeight-8)top=Math.max(8,r.top-gh-18);
+  g.style.top=top+"px";
+  g.style.left=Math.max(12,Math.min(window.innerWidth-gw-12,r.left))+"px";
+};
+window.tutNext=function(){
+  if(!tut)return;
+  tut.i++;tut.att=0;
+  if(tut.i>=tut.sc.length){tutExit(1);return;}
+  const st=tut.sc[tut.i];
+  main.querySelectorAll(".tutrow-hl").forEach(e=>e.classList.remove("tutrow-hl"));
+  if(st.row!==undefined){const tr=main.querySelectorAll(".qtext table tr")[st.row];if(tr)tr.classList.add("tutrow-hl");}
+  if(st.box!==undefined){const inp=main.querySelector(`input[data-pq="${st.box}"]`);if(inp){inp.disabled=false;inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();tutCheck();}};setTimeout(()=>inp.focus(),450);}}
+  tutGuide(st);
+  const el=tutTarget(st,tut.i);
+  if(el&&el.scrollIntoView)try{el.scrollIntoView({block:"center",behavior:"smooth"});}catch(e){}
+  setTimeout(tutPos,60);setTimeout(tutPos,420);
+};
+function tutGuide(st){
+  const g=document.getElementById("tutguide");if(!g)return;
+  const d=getDogs()[getPartner()];
+  const nm=d?escapeHtml(d.n):"ボキイヌ";
+  g.innerHTML=`<div class="tg-meta"><span>🐶 ${nm}先生のガイド　${tut.i+1} / ${tut.sc.length}</span><a style="cursor:pointer;text-decoration:underline;" onclick="tutExit()">やめる</a></div>
+    <div style="display:flex;gap:10px;align-items:flex-start;">
+      <div id="tgdog" style="flex-shrink:0;padding-top:2px;"></div>
+      <div style="flex:1;min-width:0;"><div class="tg-say">${st.say}</div><div class="tg-hint" id="tghint"></div></div>
+    </div>
+    <div style="margin-top:10px;text-align:right;">
+      ${st.box!==undefined?`<button class="btn" style="padding:9px 24px;font-size:13.5px;" onclick="tutCheck()">答え合わせ</button>`
+      :st.last?`<button class="btn" style="padding:9px 16px;font-size:13.5px;" onclick="tutRetry()">自力で解いて制覇する　→</button> <button class="btn gray" style="padding:9px 12px;font-size:13.5px;" onclick="tutExit(2)">マップへ</button>`
+      :`<button class="btn" style="padding:9px 28px;font-size:13.5px;" onclick="tutNext()">次へ　→</button>`}
+    </div>`;
+  try{g.querySelector("#tgdog").appendChild(dogCanvas(d?dogStage(d.f||0):0,2.2,d?d.b:0));}catch(e){}
+  tutPos();
+}
+window.tutCheck=function(){
+  if(!tut)return;
+  const st=tut.sc[tut.i];
+  const inp=main.querySelector(`input[data-pq="${st.box}"]`);
+  const u=parseNum(inp.value);
+  if(u===st.ans){
+    inp.value=fmt(st.ans);inp.disabled=true;inp.style.background="#dcfce7";
+    try{confettiBurst()}catch(e){}
+    setTimeout(tutNext,550);
+  }else{
+    tut.att++;
+    inp.classList.remove("tutshake");void inp.offsetWidth;inp.classList.add("tutshake");
+    const h=document.getElementById("tghint");
+    if(tut.att===1){if(h)h.textContent="ヒント: "+st.hint;}
+    else{if(h)h.innerHTML=`答えは <b>${fmt(st.ans)}</b> だよ。この形、次はきっと解ける!`;inp.value=fmt(st.ans);inp.disabled=true;inp.style.background="#fef9c3";setTimeout(tutNext,1600);}
+    tutPos();
+  }
+};
+window.tutRetry=function(){const q=tut.q;tutCleanup();try{track("tut_done",{id:q.id})}catch(e){}patRender(q,null);};
+function tutCleanup(){
+  window.removeEventListener("scroll",tutPos,true);window.removeEventListener("resize",tutPos);
+  ["tutspot","tutguide"].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();});
+  tut=null;
+}
+window.tutExit=function(mode){
+  const t=tut;const q=t&&t.q;
+  if(t&&mode!==1&&mode!==2){try{track("tut_quit",{id:q.id,step:t.i})}catch(e){}}
+  if(t&&mode===1){try{track("tut_done",{id:q.id})}catch(e){}}
+  tutCleanup();
+  if(mode===2){renderPatMap();return;}
+  if(q)patRender(q,null);
 };
 
 /* ---------- 一問一答(電卓不要) ---------- */
