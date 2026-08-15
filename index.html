@@ -417,6 +417,11 @@ body.dark .lph{color:#e8eef9;}
 /* パターン・チュートリアル(スポットライト) */
 #tutspot{position:fixed;z-index:150;pointer-events:none;border-radius:12px;box-shadow:0 0 0 9999px rgba(15,10,40,.62);transition:all .35s ease;}
 #tutguide{position:fixed;z-index:151;left:12px;right:12px;bottom:12px;margin:0 auto;max-width:720px;background:var(--card);border-radius:18px;padding:18px 24px 16px;box-shadow:0 -6px 40px rgba(0,0,0,.4);max-height:78vh;overflow-y:auto;}
+@media(min-width:900px){
+  #tutguide{left:auto;right:0;top:0;bottom:0;margin:0;max-width:none;width:420px;border-radius:0;max-height:none;padding:24px 24px 20px;box-shadow:-8px 0 40px rgba(0,0,0,.25);border-left:1px solid var(--bd);}
+  body.tuton #main{margin-right:430px;}
+  body.tuton #tutspot{z-index:149;}
+}
 #tutguide .tg-row{margin:12px 0;font-size:14px;line-height:1.9;color:var(--tx);}
 #tutguide .tg-tag{display:inline-block;background:var(--navy);color:#fff;border-radius:8px;padding:2px 11px;font-size:12px;font-weight:800;margin-right:9px;vertical-align:1px;white-space:nowrap;}
 #tutguide .tg-act{background:#fff8e1;border-radius:11px;padding:11px 14px;}
@@ -513,6 +518,15 @@ body.dark .bub:after{border-top-color:var(--lav);}
 .qbtn:hover{border-color:var(--blue);}
 .qbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--bd);}
 body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
+.qbtn2{display:flex;align-items:center;gap:12px;width:100%;max-width:380px;text-align:left;background:linear-gradient(135deg,#ffb03a,#ff7847);color:#fff;border:none;border-radius:16px;padding:12px 16px;font-family:inherit;font-weight:800;position:relative;cursor:pointer;box-shadow:0 5px 0 #c75b28,0 8px 18px rgba(255,120,71,.35);transition:.08s;animation:qb2pulse 2.2s ease-in-out infinite;}
+.qbtn2:active{transform:translateY(4px);box-shadow:0 1px 0 #c75b28;}
+.qbtn2 .q2-ic{flex-shrink:0;background:rgba(255,255,255,.25);border-radius:12px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;}
+.qbtn2 .q2-t{font-size:14.5px;letter-spacing:.02em;}
+.qbtn2 .q2-sub{display:block;font-size:11.5px;font-weight:700;opacity:.95;margin-top:2px;}
+.qbtn2 .q2-go{margin-left:auto;font-size:18px;flex-shrink:0;}
+.qbtn2 .qbtn-dot{position:absolute;top:-5px;right:-5px;}
+@keyframes qb2pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.025);}}
+@media(prefers-reduced-motion:reduce){.qbtn2{animation:none;}}
 .qrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--bd);}
 .qrow:last-child{border-bottom:none;}
 .qbar{flex:1;background:var(--lt);border-radius:6px;height:10px;overflow:hidden;min-width:60px;}
@@ -1339,12 +1353,18 @@ function updateBadges(){
   }catch(e){}
   try{
     const qb=document.getElementById("qbtn");
-    if(qb){
-      const qc2=questClaims(),nx=QUESTS.find(x=>!qc2.c[x.id])||null;
-      qb.innerHTML=`<span class="sicon" data-icon="${nx?nx.icon:"trophy"}" data-s="1"></span>今日のミッション: ${nx?nx.sn:"全達成!"}<span id="qbtn-dot" class="qbtn-dot" style="${claimableCount()>0?"":"display:none;"}"></span>`;
-      mountIcons(qb);
-    }
+    if(qb){qb.innerHTML=qbtnHTML();mountIcons(qb);}
   }catch(e){}
+}
+function qbtnHTML(){
+  const qc=questClaims(),e=todayEntry();
+  const nx=QUESTS.find(x=>!qc.c[x.id])||null;
+  const done=QUESTS.filter(x=>qc.c[x.id]).length;
+  const cl=claimableCount();
+  const sub=cl>0?`報酬 ${cl}件 受け取れるよ!`:nx?`「${nx.sn}」でごはん+${nx.f}`:"全達成! おつかれさま";
+  return `<span class="q2-ic"><span class="sicon" data-icon="${nx?nx.icon:"trophy"}" data-s="1"></span></span>
+    <span style="min-width:0;"><span class="q2-t">今日のミッション <span style="font-size:12px;opacity:.9;">${done}/${QUESTS.length}</span></span><span class="q2-sub">${sub}</span></span>
+    <span class="q2-go">→</span><span id="qbtn-dot" class="qbtn-dot" style="${cl>0?"":"display:none;"}"></span>`;
 }
 /* ---------- 家出システム ---------- */
 function awaySt(){return LS.get("b2_away",null);}
@@ -1596,7 +1616,7 @@ function renderHome(){
     <div style="position:relative;z-index:1;flex:1 1 52%;min-width:320px;">
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
       <button class="btn cta" style="margin-top:14px;font-size:17px;padding:14px 34px;" onclick="${hlGo}">学習を始める　<span class="arrowa">→</span></button>
-      <div style="margin-top:12px;"><button id="qbtn" class="qbtn pixf" onclick="openQuests()"><span class="sicon" data-icon="${qNext?qNext.icon:"trophy"}" data-s="1"></span>今日のミッション: ${qNext?qNext.sn:"全達成!"}<span id="qbtn-dot" class="qbtn-dot" style="${qClaim>0?"":"display:none;"}"></span></button></div>
+      <div style="margin-top:12px;"><button id="qbtn" class="qbtn2 pixf" onclick="openQuests()">${qbtnHTML()}</button></div>
       <div style="margin-top:14px;font-size:12.5px;">試験日: ${ed?`${ed.getFullYear()}/${ed.getMonth()+1}/${ed.getDate()}　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">変更</a>`:`未設定　<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">設定する</a>`}</div>
       <div id="dcfg" class="hidden" style="margin-top:10px;background:rgba(255,255,255,.55);border-radius:12px;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <input type="date" id="exd" value="${ed?ed.toISOString().slice(0,10):""}" style="border:1px solid var(--bd);border-radius:8px;padding:7px 10px;font-family:inherit;">
@@ -1701,13 +1721,9 @@ function renderExams(){
     if(ex.lock&&!sbUser)return `<div class="tcard light" style="opacity:.85;" onclick="track('signup_click',{src:'examlock'});openAcct()"><h3>🔒 ${ex.title}</h3><div class="arw">無料登録で解放　→</div></div>`;
     return `<div class="tcard ${att.length?"white":"light"}" onclick="startExam('${ex.id}')"><h3>${ex.title}</h3><div class="arw">${att.length?`受験${att.length}回 / 最高 ${best}点`:"未受験"}　→</div></div>`;};
   const c2=EXAMS.filter(e=>e.lv!==3).map(card).join("");
+  const promo3="";
   const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">模擬試験</h2><p>本番と同じ構成・制限時間(90分)。<b style="color:#e05656;">模試はベータ期間限定で無料開放中</b>(正式版では一部有料化を予定)。</p></div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${c2}</div>
-  <div class="qpane" style="margin-top:22px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;cursor:pointer;" onclick="window.open('https://ryuseisuda.github.io/boki2-cbt/boki3/','_blank')">
-    <div style="flex:1;min-width:220px;"><b style="color:var(--navy);font-size:15.5px;">ボキイヌ 3級 <span style="font-size:11px;background:var(--blue);color:#fff;border-radius:8px;padding:2px 8px;">NEW</span></b>
-    <div style="font-size:13px;color:var(--tx2);margin-top:4px;">3級のネット試験模試・仕訳ドリルはこちら。育てている犬はそのまま引き継がれます。</div></div>
-    <span class="arw" style="color:var(--blue);font-weight:800;">3級版をひらく　→</span>
-  </div>`;
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${c2}</div>${promo3}`;
   main.innerHTML=page(center,"exams");
 }
 window.renderStudy=renderStudy;window.renderExams=renderExams;
@@ -2221,6 +2237,7 @@ window.startPatTut=function(){
   tut.sc.forEach((st,k)=>{if(st.hlText)qt.innerHTML=qt.innerHTML.replace(st.hlText,`<span class="tuthl" id="tuttx${k}">${st.hlText}</span>`);});
   const sp=document.createElement("div");sp.id="tutspot";document.body.appendChild(sp);
   const g=document.createElement("div");g.id="tutguide";document.body.appendChild(g);
+  document.body.classList.add("tuton");
   window.addEventListener("scroll",tutPos,true);window.addEventListener("resize",tutPos);
   tutNext();
 };
@@ -2240,10 +2257,12 @@ window.tutPos=function(){
   const r=el.getBoundingClientRect();
   sp.style.left=(r.left-8)+"px";sp.style.top=(r.top-8)+"px";
   sp.style.width=(r.width+16)+"px";sp.style.height=(r.height+16)+"px";
-  /* ガイド(下部固定)に隠れないよう追いスクロール */
-  const g=document.getElementById("tutguide");
-  if(g){const limit=window.innerHeight-g.offsetHeight-30;
-    if(r.bottom>limit&&!tut._scrolling){tut._scrolling=true;window.scrollBy({top:r.bottom-limit,behavior:"smooth"});setTimeout(()=>{if(tut)tut._scrolling=false;},400);}}
+  /* モバイル(下部カード)時のみ、ガイドに隠れないよう追いスクロール */
+  if(window.innerWidth<900){
+    const g=document.getElementById("tutguide");
+    if(g){const limit=window.innerHeight-g.offsetHeight-30;
+      if(r.bottom>limit&&!tut._scrolling){tut._scrolling=true;window.scrollBy({top:r.bottom-limit,behavior:"smooth"});setTimeout(()=>{if(tut)tut._scrolling=false;},400);}}
+  }
 };
 window.tutNext=function(){
   if(!tut)return;
@@ -2311,6 +2330,7 @@ window.tutRetry=function(){const q=tut.q;tutCleanup();try{track("tut_done",{id:q
 function tutCleanup(){
   window.removeEventListener("scroll",tutPos,true);window.removeEventListener("resize",tutPos);
   ["tutspot","tutguide"].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();});
+  document.body.classList.remove("tuton");
   tut=null;
 }
 window.tutExit=function(mode){
