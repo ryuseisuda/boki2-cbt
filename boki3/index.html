@@ -416,7 +416,11 @@ body.dark .lph{color:#e8eef9;}
 .lpdogcard{background:var(--card);border-radius:16px;max-width:340px;margin:14px auto 0;padding:18px;}
 /* パターン・チュートリアル(スポットライト) */
 #tutspot{position:fixed;z-index:150;pointer-events:none;border-radius:12px;box-shadow:0 0 0 9999px rgba(15,10,40,.62);transition:all .35s ease;}
-#tutguide{position:fixed;z-index:151;background:var(--card);border-radius:16px;padding:13px 15px;box-shadow:0 12px 40px rgba(0,0,0,.4);transition:top .35s ease,left .35s ease;}
+#tutguide{position:fixed;z-index:151;left:12px;right:12px;bottom:12px;margin:0 auto;max-width:560px;background:var(--card);border-radius:16px;padding:13px 15px;box-shadow:0 -6px 40px rgba(0,0,0,.4);}
+#tutguide .tg-row{margin:5px 0;font-size:13px;line-height:1.7;color:var(--tx);}
+#tutguide .tg-tag{display:inline-block;background:var(--navy);color:#fff;border-radius:7px;padding:1px 8px;font-size:11px;font-weight:800;margin-right:7px;vertical-align:1px;white-space:nowrap;}
+#tutguide .tg-act{background:#fff8e1;border-radius:9px;padding:7px 9px;}
+body.dark #tutguide .tg-act{background:#453d1e;}
 #tutguide .tg-say{font-size:13.5px;line-height:1.8;color:var(--tx);}
 #tutguide .tg-say b{color:var(--blue);}
 #tutguide .tg-sw{background:var(--lt);border-radius:8px;padding:3px 9px;font-size:12px;margin:3px 4px 3px 0;display:inline-block;font-weight:700;color:var(--navy);}
@@ -1787,20 +1791,20 @@ window.nextPat=function(){
 /* ---------- ガイド付きチュートリアル(スポットライト) ---------- */
 const PATTUT={
 "ref_m3_2_0":{steps:[
-{hlText:"売上原価対立法",say:"この問題の主役は<b>売上原価対立法</b>!商品を売った瞬間に仕訳を<b>2本</b>切る方法だよ。<br><span class='tg-sw'>(借)売掛金 / (貸)売上 …売価で</span><span class='tg-sw'>(借)売上原価 / (貸)商品 …原価で</span><br>つまり「売るたびに、出ていった商品の<b>原価がいくらか</b>」を計算するのがこの問題の本体なんだ。"},
-{hlText:"先入先出法",say:"払出単価は<b>先入先出法</b>。<b>古く仕入れたものから順に出す</b>ルールだよ。在庫を「@200が100個」「@210が300個」みたいに<b>層(レイヤー)</b>で管理するのがコツ!いまの在庫は1日の繰越分 <b>100個@¥200</b> だけだね。"},
-{row:2,box:0,say:"5日に<b>300個を@¥210</b>で仕入れた。仕訳は<br><span class='tg-sw'>(借)商品 63,000 / (貸)買掛金 63,000</span><br>在庫の層は「100個@200」+「300個@210」の2段になった。<b>① この時点の商品有高(金額)</b>を計算して、光っている欄に入れてみよう!",hint:"100×200=20,000円、300×210=63,000円。合計すると?",ans:83000},
-{row:3,box:1,say:"12日、<b>250個</b>を<b>@¥350(売価)</b>で販売!仕訳の1本目は<b>売価</b>で:<br><span class='tg-sw'>(借)売掛金 87,500 / (貸)売上 87,500</span><br><b>② 売上高=250個×¥350</b> を入れよう。",hint:"250×350。ゼロの数に注意!",ans:87500},
-{row:3,box:2,say:"仕訳の2本目が<b>先入先出の見せ場</b>!古い層から順に250個を出すよ。まず<b>@200の層を100個ぜんぶ</b>→まだ150個足りないから<b>@210の層から150個</b>。<br><span class='tg-sw'>(借)売上原価 ? / (貸)商品 ?</span><br><b>③ 100×200+150×210</b> を計算して入れよう。",hint:"20,000+31,500だよ。",ans:51500},
-{row:4,say:"18日に<b>200個@¥220</b>を仕入れ。<br><span class='tg-sw'>(借)商品 44,000 / (貸)買掛金 44,000</span><br>12日に売った後は@210が150個残っていたから、層は「150個@210」+「200個@220」になったよ。"},
-{row:5,box:3,say:"25日も<b>250個</b>販売。古い層から: <b>@210を150個</b>→残り<b>100個は@220</b>の層から。<b>④ 150×210+100×220</b> を入れよう。",hint:"31,500+22,000だよ。",ans:53500},
-{box:4,say:"<b>⑤ 月間の売上高</b>。売ったのは12日250個+25日250個=<b>500個、ぜんぶ@¥350</b>だね。",hint:"500×350。",ans:175000},
-{box:5,say:"<b>⑥ 月間の売上原価</b>=③と④の合計だよ。",hint:"51,500+53,500。",ans:105000},
-{box:6,say:"<b>⑦ 売上総利益</b>=売上高−売上原価。<b>⑤−⑥</b>を計算!",hint:"175,000−105,000。",ans:70000},
-{box:7,say:"<b>⑧ 月末に残っている商品の数量</b>。25日に売った後、残っている層は<b>@220の層だけ</b>。何個残ってる?",hint:"18日に200個仕入れて、25日に100個出したから…",ans:100},
-{box:8,say:"<b>⑨ 月末商品棚卸高</b>=残った層の金額。<b>100個×@¥220</b>だよ。",hint:"100×220。",ans:22000},
-{box:9,say:"ラスト!<b>⑩ 当月仕入高</b>=5日と18日の仕入の合計。<span class='tg-sw'>63,000+44,000</span>",hint:"5日63,000円+18日44,000円。",ans:107000},
-{say:"全問クリア!🎉 これが商品有高帳×売上原価対立法のフルコースだよ。<b>「在庫は層で管理→古い層から出す」</b>さえ覚えれば、数字が変わっても解ける。仕上げに<b>自力で解いて制覇○</b>を取りに行こう!",last:true}
+{hlText:"売上原価対立法",look:"問題文の「<b>売上原価対立法</b>」",think:"商品を売ったら<b>2つ記録する</b>方式。<br>1. <b>売った値段</b>で「売上」を記録<br>2. その商品を<b>仕入れた値段(=原価)</b>で「売上原価」を記録",sw:"(借)売掛金/(貸)売上　と　(借)売上原価/(貸)商品"},
+{hlText:"先入先出法",look:"問題文の「<b>先入先出法</b>」",think:"商品を出すときは<b>古く仕入れた分から先に出す</b>ルール。<br>在庫はメモで<b>「◯個@◯円」の段</b>にして管理するとミスらない。",act:"いまの在庫メモ:「<b>100個@200</b>」(1日の繰越分)。これだけ覚えて次へ!"},
+{row:2,box:0,look:"表の<b>5日の行</b>「仕入 300個 @¥210」",sw:"(借)商品 63,000/(貸)買掛金 63,000",think:"在庫メモが2段になった:<br>「100個@200」+「<b>300個@210</b>」",act:"<b>①</b>に2段の合計金額 = <b>100×200 + 300×210</b> を入れる",hint:"20,000+63,000だよ。",ans:83000},
+{row:3,box:1,look:"表の<b>12日の行</b>「売上 250個 @¥350(売価)」",think:"記録その1: <b>売った値段</b>。250個×350円。",sw:"(借)売掛金 87,500/(貸)売上 87,500",act:"<b>②</b>に <b>250×350</b> を入れる",hint:"250×350。ゼロの数に注意!",ans:87500},
+{row:3,box:2,look:"同じ<b>12日の行</b>(こんどは原価)",think:"記録その2: <b>出ていった商品の原価</b>。古い段から250個出す:<br>・@200の段から<b>100個ぜんぶ</b>(=20,000円)<br>・足りない<b>150個は@210の段</b>から(=31,500円)",sw:"(借)売上原価 51,500/(貸)商品 51,500",act:"<b>③</b>に <b>100×200 + 150×210</b> を入れる",hint:"20,000+31,500だよ。",ans:51500},
+{row:4,look:"表の<b>18日の行</b>「仕入 200個 @¥220」",sw:"(借)商品 44,000/(貸)買掛金 44,000",think:"在庫メモを更新: 12日に売った後は「150個@210」だけ残ってた。<br>そこに新しい段が追加 → 「<b>150個@210</b>」+「<b>200個@220</b>」",act:"メモを覚えたら次へ!"},
+{row:5,box:3,look:"表の<b>25日の行</b>「売上 250個」",think:"また古い段から250個出す:<br>・@210の段から<b>150個ぜんぶ</b>(=31,500円)<br>・足りない<b>100個は@220の段</b>から(=22,000円)",act:"<b>④</b>に <b>150×210 + 100×220</b> を入れる",hint:"31,500+22,000だよ。",ans:53500},
+{box:4,look:"<b>⑤ 月間の売上高</b>の欄",think:"売ったのは12日250個+25日250個=<b>500個</b>。ぜんぶ<b>@¥350</b>。",act:"<b>⑤</b>に <b>500×350</b> を入れる",hint:"500×350。",ans:175000},
+{box:5,look:"<b>⑥ 月間の売上原価</b>の欄",think:"12日の分(③)と25日の分(④)を足すだけ。",act:"<b>⑥</b>に <b>51,500+53,500</b> を入れる",hint:"③+④だよ。",ans:105000},
+{box:6,look:"<b>⑦ 売上総利益</b>の欄",think:"もうけ = 売った値段の合計 − 原価の合計。つまり<b>⑤−⑥</b>。",act:"<b>⑦</b>に <b>175,000−105,000</b> を入れる",hint:"⑤−⑥だよ。",ans:70000},
+{box:7,look:"<b>⑧ 月末商品の数量</b>の欄",think:"25日に売った後、在庫メモに残っている段は「<b>@220の段だけ</b>」。<br>200個仕入れて100個出したから…",act:"<b>⑧</b>に残りの<b>個数</b>を入れる",hint:"200−100だよ。",ans:100},
+{box:8,look:"<b>⑨ 月末商品棚卸高</b>の欄",think:"残った段の金額 = <b>100個×@220</b>。",act:"<b>⑨</b>に <b>100×220</b> を入れる",hint:"100×220。",ans:22000},
+{box:9,look:"<b>⑩ 当月仕入高</b>の欄",think:"当月の仕入は<b>5日(63,000円)と18日(44,000円)</b>の2回だけ。",act:"<b>⑩</b>に <b>63,000+44,000</b> を入れる",hint:"5日+18日の合計。",ans:107000},
+{say:"全問クリア!🎉 覚えることはひとつだけ:<br><b>「在庫は◯個@◯円の段でメモ → 売ったら古い段から出す」</b><br>数字が変わっても同じ手順で解けるよ。仕上げに<b>自力で解いて制覇○</b>を取りに行こう!",last:true}
 ]}};
 let tut=null;
 window.startPatTut=function(){
@@ -1827,18 +1831,15 @@ window.tutPos=function(){
   if(!tut)return;
   const st=tut.sc[tut.i];if(!st)return;
   const el=tutTarget(st,tut.i);
-  const sp=document.getElementById("tutspot"),g=document.getElementById("tutguide");
-  if(!el||!sp||!g)return;
+  const sp=document.getElementById("tutspot");
+  if(!el||!sp)return;
   const r=el.getBoundingClientRect();
   sp.style.left=(r.left-8)+"px";sp.style.top=(r.top-8)+"px";
   sp.style.width=(r.width+16)+"px";sp.style.height=(r.height+16)+"px";
-  const gw=Math.min(480,window.innerWidth-24);
-  g.style.width=gw+"px";
-  const gh=g.offsetHeight||180;
-  let top=r.bottom+18;
-  if(top+gh>window.innerHeight-8)top=Math.max(8,r.top-gh-18);
-  g.style.top=top+"px";
-  g.style.left=Math.max(12,Math.min(window.innerWidth-gw-12,r.left))+"px";
+  /* ガイド(下部固定)に隠れないよう追いスクロール */
+  const g=document.getElementById("tutguide");
+  if(g){const limit=window.innerHeight-g.offsetHeight-30;
+    if(r.bottom>limit&&!tut._scrolling){tut._scrolling=true;window.scrollBy({top:r.bottom-limit,behavior:"smooth"});setTimeout(()=>{if(tut)tut._scrolling=false;},400);}}
 };
 window.tutNext=function(){
   if(!tut)return;
@@ -1857,10 +1858,15 @@ function tutGuide(st){
   const g=document.getElementById("tutguide");if(!g)return;
   const d=getDogs()[getPartner()];
   const nm=d?escapeHtml(d.n):"ボキイヌ";
+  const body=st.say?`<div class="tg-say">${st.say}</div>`
+    :`${st.look?`<div class="tg-row"><span class="tg-tag">👀 見る</span>${st.look}</div>`:""}
+     ${st.think?`<div class="tg-row"><span class="tg-tag">🧠 考える</span>${st.think}</div>`:""}
+     ${st.sw?`<div class="tg-row"><span class="tg-tag">📝 仕訳</span><span class="tg-sw">${st.sw}</span></div>`:""}
+     ${st.act?`<div class="tg-row tg-act"><span class="tg-tag" style="background:#b45309;">✍️ やる</span>${st.act}</div>`:""}`;
   g.innerHTML=`<div class="tg-meta"><span>🐶 ${nm}先生のガイド　${tut.i+1} / ${tut.sc.length}</span><a style="cursor:pointer;text-decoration:underline;" onclick="tutExit()">やめる</a></div>
     <div style="display:flex;gap:10px;align-items:flex-start;">
       <div id="tgdog" style="flex-shrink:0;padding-top:2px;"></div>
-      <div style="flex:1;min-width:0;"><div class="tg-say">${st.say}</div><div class="tg-hint" id="tghint"></div></div>
+      <div style="flex:1;min-width:0;">${body}<div class="tg-hint" id="tghint"></div></div>
     </div>
     <div style="margin-top:10px;text-align:right;">
       ${st.box!==undefined?`<button class="btn" style="padding:9px 24px;font-size:13.5px;" onclick="tutCheck()">答え合わせ</button>`
