@@ -1097,11 +1097,30 @@ function autoFeed(fromEl){
   updHUD();
   const after=dogStage(d.f);
   if(after>before){
-    setTimeout(()=>{try{evoCinema(d.n,d.b,after,"つづける",()=>{});}catch(e){miniToast(`<span data-icon="dog" data-s="2"></span>${escapeHtml(d.n)} が しんかした!`);}},400);
     try{track("evolve",{st:after});}catch(e){}
+    /* 出題中は演出を挟まず、区切りまで待つ */
+    if(inBattle()){window._evoQ={n:d.n,b:d.b,st:after};miniToast(`<span data-icon="dog" data-s="2"></span>${escapeHtml(d.n)} が しんかした! あとで見せるね`);}
+    else setTimeout(()=>flushEvo(),400);
   }
 }
 window.autoFeed=autoFeed;
+function inBattle(){
+  try{if(acc)return true;}catch(e){}
+  try{if(drill&&drill.qs&&drill.idx<drill.qs.length)return true;}catch(e){}
+  try{if(exState)return true;}catch(e){}
+  try{if(tut)return true;}catch(e){}
+  return false;
+}
+window.inBattle=inBattle;
+/* たまった進化演出を流す(なければ false) */
+function flushEvo(cb){
+  const q=window._evoQ;window._evoQ=null;
+  if(!q){if(cb)cb();return false;}
+  try{evoCinema(q.n,q.b,q.st,"つづける",cb||(()=>{}));}
+  catch(e){miniToast(`<span data-icon="dog" data-s="2"></span>${escapeHtml(q.n)} が しんかした!`);if(cb)cb();}
+  return true;
+}
+window.flushEvo=flushEvo;
 /* ---- チケット付与 ---- */
 function addTicket(n,fromEl){
   if(!(n>0))return;
@@ -1891,6 +1910,7 @@ function finishExam(auto){
   window._exRes=ci>0?grantBattle("mock",Math.max(0,1-used/lim),null,{mult:ci}):null;
   exState=null;setMode("home");resetHdr();
   renderResult(ex,secRes,total,detail,auto);
+  setTimeout(()=>flushEvo(),600);
 }
 const mmss=s=>Math.floor(s/60)+"分"+(s%60)+"秒";
 function renderResult(ex,secRes,total,detail,auto){
@@ -2039,6 +2059,7 @@ function accEnd(){
   </div></div>`;
   acc=null;
   window.scrollTo(0,0);
+  setTimeout(()=>flushEvo(),500);
 }
 
 let drill=null;
@@ -2321,6 +2342,7 @@ function gradePat(q){
   }
   if(wrong===0)awardTicket(q.id,q.title);
   $("#pqres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${pct>=80?"correct":"wrong"}">${got} / ${q.boxes.length} 正解 (${pct}%)${wrong===0?" — このパターン完全制覇!":(pct>=80?" — 制覇! あと少しで満点":"")}</div>${res?`<div class="xpsum">${rankBadge(res)}</div>`:""}<div class="exp">【解説】\n${q.exp}</div>`;
+  setTimeout(()=>flushEvo(),800);
   const btn=$("#pq-grade");
   if(wrong>0){
     btn.textContent=`間違えた${wrong}問だけやり直す`;
@@ -2770,6 +2792,7 @@ function tutMarkGuided(q){
 }
 window.tutExit=function(mode){
   const t=tut;const q=t&&t.q;
+  setTimeout(()=>flushEvo(),700);
   if(t&&mode!==1&&mode!==2){try{track("tut_quit",{id:q.id,step:t.i})}catch(e){}}
   if(t&&mode===1){try{track("tut_done",{id:q.id})}catch(e){}}
   if(t&&(mode===1||mode===2))tutMarkGuided(q);
