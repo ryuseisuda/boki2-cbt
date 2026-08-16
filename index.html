@@ -757,13 +757,23 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
 .ftpick:active{transform:translateY(1px);}
 .hchips{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 10px;}
 /* 今日のミッション(アイコンだけ) */
-.qrow{margin-top:16px;}
-.qrow-btn{position:relative;display:inline-flex;flex-direction:column;gap:7px;align-items:flex-start;background:#fff;border:2px solid var(--bd);
-  box-shadow:0 3px 0 var(--bd);border-radius:16px;padding:10px 14px;cursor:pointer;font-family:inherit;}
-.qrow-h{display:flex;align-items:baseline;gap:8px;}
-.qrow-h b{font-size:13.5px;color:var(--navy);}
-.qrow-h .prog{font-size:11.5px;}
-.qrow-cells{display:flex;gap:10px;align-items:center;}
+.qrow{margin-top:14px;}
+.qrow-btn{position:relative;display:inline-flex;flex-direction:column;gap:5px;align-items:flex-start;background:#fff;border:2px solid var(--bd);
+  box-shadow:0 3px 0 var(--bd);border-radius:14px;padding:8px 12px;cursor:pointer;font-family:inherit;transition:.12s;}
+/* 受け取れる報酬があるときだけオレンジで主張する */
+.qrow-btn.ready{background:var(--golds);border-color:var(--gold);box-shadow:0 3px 0 var(--goldd);}
+.qrow-btn.ready .qrow-h b{color:var(--goldd);}
+.qrow-btn.ready .qrow-h .prog{color:var(--goldd);font-weight:800;}
+.qrow-h{display:flex;align-items:baseline;gap:7px;}
+.qrow-h b{font-size:12.5px;color:var(--navy);}
+.qrow-h .prog{font-size:11px;}
+.qrow-cells{display:flex;gap:9px;align-items:center;}
+/* 主役のボタン。クエストよりはっきり大きく */
+.btn.gobig{margin-top:16px;font-size:21px;padding:20px 52px;border-radius:20px;letter-spacing:.04em;}
+@media(max-width:640px){
+  .btn.gobig{font-size:18px;padding:16px 34px;width:100%;}
+  .qrow-btn{width:100%;}
+}
 .qrow-btn:active{transform:translateY(3px);box-shadow:0 0 0 var(--bd);}
 .qcell{display:flex;flex-direction:column;align-items:center;gap:4px;width:30px;opacity:.5;}
 .qcell.done,.qcell.ready{opacity:1;}
@@ -2472,7 +2482,7 @@ function qrowHTML(){
         ${done?'<i class="qtick">✓</i>':ready?'<i class="qdot"></i>':`<i class="qbar"><b style="width:${Math.round(val/q.target*100)}%"></b></i>`}
       </span>`;}).join("");
     const done=QUESTS.filter(q=>qc.c[q.id]).length;
-    return `<button class="qrow-btn" onclick="openQuests()">
+    return `<button class="qrow-btn ${cl>0?"ready":""}" onclick="openQuests()">
       <span class="qrow-h"><b>今日のクエスト</b><span class="prog">${cl>0?`報酬 ${cl}件`:`${done} / ${QUESTS.length}`}</span></span>
       <span class="qrow-cells">${cells}</span>
       ${cl>0?'<span class="qrow-dot"></span>':""}</button>`;
@@ -2809,7 +2819,7 @@ function renderHome(){
           <span class="hchip" id="rankchip" title="今週のランキング" onclick="event.stopPropagation();renderRank()" style="cursor:pointer;">🏆 —</span>
         </div>`;}catch(e){return ""}})()}
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
-      <button class="btn go cta" style="margin-top:14px;font-size:18px;padding:16px 40px;" onclick="openStudy()">学習を始める　<span class="arrowa">→</span></button>
+      <button class="btn go cta gobig" onclick="openStudy()">学習を始める　<span class="arrowa">→</span></button>
       <div class="qrow" id="qrow">${qrowHTML()}</div>
     </div>
     <div onclick="renderGarden()" style="cursor:pointer;text-align:center;flex:0 1 48%;min-width:0;">
