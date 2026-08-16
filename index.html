@@ -206,22 +206,35 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 #loadv .lt i:nth-child(3){animation-delay:.4s;}
 @keyframes blink{0%,60%{opacity:.25;}30%{opacity:1;}}
 #loadv .sub{color:rgba(255,255,255,.5);font-size:12px;}
-/* ===== 戦闘バー ===== */
-.btwrap{max-width:520px;margin:0 auto 16px;}
-.btmeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:12px;color:var(--tx2);}
-.btlives i{font-style:normal;font-size:17px;color:#e2e8f0;margin-right:1px;transition:color .3s,transform .3s;}
+/* ===== 戦闘バー(問題カードの外・画面上部に固定) ===== */
+#btbar{position:fixed;left:0;right:0;top:var(--hdrh,56px);z-index:60;background:rgba(255,255,255,.97);
+  border-bottom:1px solid var(--bd);box-shadow:0 4px 14px rgba(15,23,42,.07);backdrop-filter:blur(6px);}
+body.dark #btbar{background:rgba(24,28,42,.97);}
+#btbar .btbar-in{max-width:760px;margin:0 auto;padding:8px 16px 10px;display:flex;align-items:flex-end;gap:12px;}
+.btside{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;}
+.btlives{line-height:1;white-space:nowrap;}
+.btlives i{font-style:normal;font-size:14px;color:#e2e8f0;margin:0 .5px;transition:color .3s;}
 .btlives i.on{color:#ef4444;}
-.btfoenm{font-weight:700;}
-.btfoenm b{color:#b45309;}
-.bttrack{position:relative;height:44px;}
-.btbar{position:absolute;left:0;right:0;bottom:3px;height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;}
-.btbar>i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#38bdf8,#3b82f6);border-radius:999px;}
-.btdog,.btfoe{position:absolute;bottom:9px;display:inline-flex;align-items:flex-end;line-height:0;}
-.btdog{left:2px;z-index:2;}
-.btfoe{left:calc(100% - 34px);z-index:1;}
+.btdog{display:inline-flex;align-items:flex-end;line-height:0;}
+.bttrack{position:relative;flex:1;height:46px;}
+/* 下地=経験値ゾーン(右ほど早解き=高経験値)。btbarf が右から覆って残り時間を表す */
+.btbar-l{position:absolute;left:0;right:0;bottom:2px;height:10px;border-radius:999px;overflow:hidden;
+  background:linear-gradient(90deg,#94a3b8 0%,#94a3b8 20%,#0e7a5f 20%,#0e7a5f 40%,#2563eb 40%,#2563eb 60%,#8b5cf6 60%,#8b5cf6 80%,#f59e0b 80%,#f59e0b 100%);}
+.btbar-l>i{position:absolute;right:0;top:0;bottom:0;width:0%;background:#e2e8f0;border-left:2px solid #fff;}
+body.dark .btbar-l>i{background:#334155;border-left-color:#94a3b8;}
+.btbar-l::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.75) 0,rgba(255,255,255,.75) 1px,transparent 1px,transparent 20%);}
+.xpzone{position:absolute;left:0;right:0;top:0;height:13px;display:flex;justify-content:space-between;
+  font-size:9.5px;font-weight:800;color:var(--tx2);letter-spacing:.02em;pointer-events:none;}
+.rkbar{display:inline-flex;gap:2px;margin-left:7px;vertical-align:middle;}
+.rkbar i{display:block;width:9px;height:9px;border-radius:2px;background:#e2e8f0;}
+.skpop.bad{background:rgba(190,18,60,.94);}
+@keyframes munch{0%,100%{transform:translateY(0) scale(1);}30%{transform:translateY(-4px) scale(1.12);}60%{transform:translateY(0) scale(.96);}}
+.btdog.munch{animation:munch .45s ease-out;}
+.btfoe{position:absolute;bottom:7px;left:calc(100% - 30px);line-height:0;}
 .btfoe canvas{animation:foebob .55s ease-in-out infinite;}
 @keyframes foebob{0%,100%{transform:translateY(0) scaleY(1);}50%{transform:translateY(-3px) scaleY(.93);}}
-@keyframes dogatk{0%{transform:translateX(0);}30%{transform:translateX(16px) scaleX(1.08);}100%{transform:translateX(0);}}
+@keyframes dogatk{0%{transform:translateX(0);}30%{transform:translateX(14px) scaleX(1.08);}100%{transform:translateX(0);}}
 .btdog.atk{animation:dogatk .38s cubic-bezier(.3,1.6,.5,1);}
 @keyframes foeatk{0%{transform:translateX(0);}35%{transform:translateX(-18px);}100%{transform:translateX(0);}}
 .btfoe.atk{animation:foeatk .34s ease-out;}
@@ -231,6 +244,20 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 .btdog.hurt{animation:doghurt .42s steps(1);}
 @keyframes btshake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(3px);}}
 .bttrack.shake{animation:btshake .4s;}
+.bttrack.frozen{filter:hue-rotate(150deg) brightness(1.1);}
+.btsk{font-size:11px;font-weight:800;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;border-radius:999px;padding:2px 8px;white-space:nowrap;flex-shrink:0;}
+.btskbtn{font-size:11px;font-weight:800;color:#0369a1;background:#e0f2fe;border:1.5px solid #7dd3fc;border-radius:999px;padding:3px 10px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+.btskbtn:disabled{opacity:.4;cursor:default;}
+/* 戦闘中は本文を下げてバーと重ならないようにする */
+body.bton .wrap{padding-top:calc(var(--btbarh,58px) + 8px);}
+/* 特技と時間切れの吹き出しもバー側に出す */
+.skpop{position:absolute;left:50%;top:11px;transform:translateX(-50%);background:rgba(15,23,42,.92);color:#fff;font-size:12px;font-weight:800;padding:4px 12px;border-radius:999px;white-space:nowrap;z-index:5;animation:skp 1.6s ease-out forwards;pointer-events:none;}
+@keyframes skp{0%{opacity:0;transform:translate(-50%,8px) scale(.8);}18%{opacity:1;transform:translate(-50%,-6px) scale(1.05);}30%{transform:translate(-50%,-2px) scale(1);}80%{opacity:1;}100%{opacity:0;transform:translate(-50%,-16px);}}
+@media(max-width:900px){
+  #btbar .btbar-in{padding:6px 12px 8px;gap:9px;}
+  .bttrack{height:42px;}
+  body.bton .wrap{padding-top:calc(var(--btbarh,54px) + 6px);}
+}
 /* 敗走 */
 #btlose{position:fixed;inset:0;z-index:10000;background:rgba(8,6,14,.86);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadein .3s;}
 #btlose .box{background:linear-gradient(165deg,#2a1420,#3b1030);border:2px solid #be123c;border-radius:22px;padding:30px 34px;text-align:center;color:#fff;max-width:340px;}
@@ -252,6 +279,9 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 .dgate-st{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--tx2);}
 .dgate-st b{color:var(--navy);}
 .dgate-warn{margin-top:10px;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:8px 11px;font-size:12.5px;font-weight:700;}
+.lockarea{text-align:center;padding:38px 20px;background:var(--lt);border-radius:16px;margin-top:14px;}
+.lockarea .lockic{font-size:40px;line-height:1;}
+.lockarea b{display:block;color:var(--navy);font-size:16px;margin:10px 0 4px;}
 .dgate-lock{margin-top:10px;background:#f1f5f9;color:#475569;border-radius:10px;padding:8px 11px;font-size:12.5px;font-weight:700;}
 /* ===== スタミナ ===== */
 #hud .hud-st{color:#fde68a;}
@@ -270,6 +300,45 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 #gatev .gi{font-size:44px;line-height:1;}
 #gatev h3{color:var(--navy);font-size:18px;margin:8px 0 6px;}
 #gatev p{font-size:13.5px;color:var(--tx2);margin:0 0 14px;line-height:1.7;}
+#bagv{position:fixed;inset:0;z-index:9998;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;padding:16px;}
+#bagv .box{background:#fff;border-radius:22px;padding:24px;max-width:420px;width:100%;max-height:82vh;overflow:auto;}
+/* 合格予測 */
+.fcwrap{text-align:center;}
+.fcnum{display:flex;align-items:baseline;justify-content:center;gap:10px;}
+.fcnum span{font-size:12.5px;color:var(--tx2);font-weight:700;}
+.fcnum b{font-size:44px;color:var(--navy);line-height:1;font-family:'DotGothic16','Zen Kaku Gothic New',sans-serif;}
+.fcnum small{font-size:16px;margin-left:2px;}
+.fcbar{position:relative;height:14px;background:#e2e8f0;border-radius:999px;margin:12px 0 4px;overflow:visible;}
+.fcbar>div{height:100%;background:linear-gradient(90deg,#38bdf8,#22c55e);border-radius:999px;transition:width .6s;}
+.fcbar>i{position:absolute;top:-4px;width:2px;height:22px;background:#ef4444;}
+.fcbar>i::after{content:"合格70";position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:10px;color:#ef4444;font-weight:800;font-style:normal;white-space:nowrap;}
+.fctxt{font-size:13.5px;color:var(--tx2);line-height:1.8;margin-top:12px;}
+.fcrec{margin-top:14px;background:var(--lt);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:7px;align-items:center;}
+.fcrec>span:first-child{font-size:12px;font-weight:800;color:var(--navy);}
+/* ゴールドパス */
+#goldv{position:fixed;inset:0;z-index:9998;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px;}
+#goldv .box{background:#fff;border-radius:22px;padding:26px;max-width:460px;width:100%;max-height:84vh;overflow:auto;text-align:center;}
+#goldv .gcrown{font-size:44px;line-height:1;}
+#goldv h2{border:none;padding:0;margin:6px 0 8px;color:var(--navy);}
+.gtable{width:100%;border-collapse:collapse;margin-top:12px;font-size:12.5px;}
+.gtable th,.gtable td{border:1px solid var(--bd);padding:7px 9px;text-align:left;}
+.gtable th{background:var(--lt);font-size:12px;}
+.gtable th:last-child{background:#fff8e6;color:#92400e;}
+.gtable td:last-child{background:#fffdf5;}
+.gtag{font-size:11px;background:#fff8e6;color:#92400e;border:1px solid #fcd34d;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:2px;}
+.gpromo{display:flex;align-items:center;gap:14px;cursor:pointer;background:linear-gradient(135deg,#fffdf5,#fff8e6);border:1.5px solid #fcd34d;}
+.gpromo b{color:#92400e;font-size:15px;}
+.gpromo .arw{color:#b45309;font-weight:800;white-space:nowrap;}
+.lockwrap{position:relative;}
+.lockblur{filter:blur(5px);opacity:.5;pointer-events:none;user-select:none;max-height:190px;overflow:hidden;}
+.lockover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;}
+.lockover>div:first-child{font-size:28px;}
+.lockover b{color:var(--navy);font-size:14px;}
+.rwd .rwdno{font-size:11.5px;font-weight:800;border-radius:999px;padding:2px 10px;white-space:nowrap;}
+.rwd .g1{background:#fef3c7;color:#92400e;}
+.rwd .g2{background:#e5e7eb;color:#374151;}
+.rwd .g3{background:#fce7d6;color:#9a3412;}
+.bonusb{font-size:10.5px;font-weight:800;color:#b45309;background:#fff8e6;border:1px solid #fcd34d;border-radius:6px;padding:1px 6px;margin-left:4px;}
 .cprog{display:flex;align-items:center;gap:12px;margin:10px 0 4px;}
 .cprog-bar{flex:1;height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden;}
 .cprog-bar>div{height:100%;background:linear-gradient(90deg,#22c55e,#4ade80);border-radius:999px;transition:width .5s;}
@@ -708,13 +777,13 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
     <div id="timer" class="hidden">90:00</div>
     <button class="hbtn danger hidden" id="btn-finish">試験終了</button>
     <button class="hbtn" id="btn-invite" onclick="openInvite()" style="background:var(--lt);color:var(--navy);display:flex;align-items:center;gap:6px;">友達に紹介<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(21,42,82,.10);border-radius:8px;padding:2px 7px;font-size:11.5px;"><span class="sicon" data-icon="ticket" data-s="1" style="margin-right:2px;"></span>+1</span></button>
-    <button class="hbtn" id="btn-eod" onclick="showEOD()" style="background:var(--blue);color:#fff;display:flex;align-items:center;gap:6px;">進捗をXに投稿<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.22);border-radius:8px;padding:2px 7px;font-size:11.5px;"><span class="sicon" data-icon="food" data-s="1" style="margin-right:2px;"></span>+10</span></button>
+    <button class="hbtn" id="btn-eod" onclick="showEOD()" style="background:var(--blue);color:#fff;display:flex;align-items:center;gap:6px;">進捗をXに投稿<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.22);border-radius:8px;padding:2px 7px;font-size:11.5px;"><span class="sicon" data-icon="ticket" data-s="1" style="margin-right:2px;"></span>+1</span></button>
     <button class="hbtn" id="btn-acct" onclick="openAcct()" style="background:#efedf7;color:var(--navy);">記録を保存</button>
   </div>
 </div>
 <div id="nav">
   <button data-v="home"><span class="nicon" data-icon="home"></span>ホーム</button>
-  <button data-v="exams"><span class="nicon" data-icon="cap"></span>決戦</button>
+  <button data-v="exams"><span class="nicon" data-icon="cap"></span>模試</button>
   <button data-v="dash"><span class="nicon" data-icon="chart"></span>分析</button>
   <button data-v="garden"><span class="nicon" data-icon="dog"></span>ペット</button>
   <button data-v="gacha"><span class="nicon" data-icon="capsule"></span>ガチャ</button>
@@ -821,7 +890,7 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
 </div>
 <script>
 "use strict";
-/* ================= 仕訳問題(討伐マップ/経験値ダンジョン用) ================= */
+/* ================= 仕訳問題(パターン網羅マップ/復習ダンジョン用) ================= */
 const DRILLS=[
 {id:"d01",tag:"商品売買",q:"商品¥300,000をクレジットカード払いの条件で販売した。信販会社への手数料は販売代金の2%であり、販売時に計上する。",opts:["クレジット売掛金","売掛金","支払手数料","売上","受取手数料","現金"],dr:[["クレジット売掛金",294000],["支払手数料",6000]],cr:[["売上",300000]],exp:"手数料 300,000×2%=6,000 を差し引いた残額をクレジット売掛金とする。"},
 {id:"d02",tag:"手形・電子記録債権",q:"得意先に対する売掛金¥500,000について、電子記録債権の発生記録の通知を受けた。",opts:["電子記録債権","電子記録債務","売掛金","買掛金","受取手形"],dr:[["電子記録債権",500000]],cr:[["売掛金",500000]],exp:"売掛金が電子記録債権に置き換わる。"},
@@ -1294,9 +1363,6 @@ const QZ=[
 ];
 /* ================= パターン網羅: 新規問題 ================= */
 const PQS=[
-{id:"pq_shiwake",intro:"次の取引について、仕訳に入る金額を答えなさい。\n【取引】建物¥3,000,000と土地¥2,000,000を購入し、代金は小切手を振り出して支払った。あわせて、仲介手数料¥250,000(本体金額の比で建物と土地に按分する)と、土地の登記費用¥50,000を現金で支払った。付随費用はそれぞれの取得原価に含める。",
-boxes:[{label:"① 建物の取得原価",ans:3150000},{label:"② 土地の取得原価",ans:2150000},{label:"③ 当座預金の減少額",ans:5000000},{label:"④ 現金の減少額",ans:300000},{label:"⑤ 借方合計",ans:5300000},{label:"⑥ 貸方合計",ans:5300000}],
-exp:"手数料250,000を本体の比3:2で按分: 建物150,000・土地100,000。登記費用50,000は土地へ。\n建物=3,150,000/土地=2,150,000。小切手=本体5,000,000、現金=300,000。\n借方合計5,300,000=貸方合計5,300,000で一致。"},
 {id:"pq_renketsu",intro:"P社は×1年3月31日にS社の発行済株式の80%を¥480,000で取得し支配を獲得した。支配獲得時のS社純資産は資本金¥400,000・利益剰余金¥150,000である。×1年度(×1年4月1日〜×2年3月31日)のS社当期純利益は¥50,000、S社が支払った配当は¥20,000。のれんは10年間で定額償却する。",
 boxes:[{label:"① 支配獲得時ののれん",ans:40000},{label:"② 支配獲得時の非支配株主持分",ans:110000},{label:"③ ×1年度ののれん償却額",ans:4000},{label:"④ 非支配株主に帰属する当期純利益",ans:10000},{label:"⑤ 連結上取り消される受取配当金(P社受取分)",ans:16000},{label:"⑥ ×2年3月31日の非支配株主持分",ans:116000}],
 exp:"のれん=480,000−(400,000+150,000)×80%=40,000。非支配株主持分=550,000×20%=110,000。\nのれん償却=40,000÷10年=4,000。非支配に帰属する純利益=50,000×20%=10,000。\n受取配当金の修正=20,000×80%=16,000(非支配分4,000は非支配株主持分の減少)。\n期末非支配株主持分=110,000+10,000−4,000=116,000。"},
@@ -1327,28 +1393,22 @@ exp:"売上=900×600=540,000。変動費=900×(300+20)=288,000 → 貢献利益2
 ];
 /* ================= パターンマップ定義 ================= */
 const TIER_TAG={"商品売買":1,"手形・電子記録債権":1,"固定資産":2,"引当金":2,"有価証券":2,"税金":2,"外貨建取引":2,"リース":2,"純資産":2,"債権":2,"決算振替":2,"工簿:費目別":1,"工簿:製造間接費":2,"工簿:製品":2,"工簿:本社工場":3};
-/* ===== ダンジョン(討伐マップのエリア) ===== */
+/* ===== ダンジョン(パターン網羅マップのエリア) ===== */
 const TIERS=[null,
-{n:"草原",sub:"初級",icon:"🌿",foe:"スライム",atk:1,
- d:"全大問をひとまわり、約20問。まずここを踏破して「1コース終えた」感覚をつかもう。",
- col:"#16a34a",bg:"linear-gradient(135deg,#dcfce7,#bbf7d0)"},
-{n:"樹海",sub:"中級",icon:"🌲",foe:"アイススライム",atk:2,
- d:"草原 + 頻出パターン。ここを踏破できれば合格ラインに乗ります。",
- col:"#2563eb",bg:"linear-gradient(135deg,#dbeafe,#bfdbfe)"},
-{n:"遺跡",sub:"上級",icon:"🏛",foe:"デススライム",atk:3,
- d:"全パターン制覇。本番で初見の問題はもう出ない、満点も狙えるレベル。",
- col:"#be123c",bg:"linear-gradient(135deg,#ffe4e6,#fecdd3)"}];
+{n:"初級",sub:"初級",icon:"",foe:"スライム",atk:1,col:"#16a34a"},
+{n:"中級",sub:"中級",icon:"",foe:"アイススライム",atk:2,col:"#2563eb"},
+{n:"上級",sub:"上級",icon:"",foe:"デススライム",atk:3,col:"#be123c"}];
 /* アプリ内の呼び名(世界観) */
 const WORLD={
-  map:{n:"討伐マップ",ic:"map",sub:"出題パターンを踏破する"},
-  drill:{n:"修練場",ic:"pencil",sub:"勘定科目を5要素に即分類"},
-  expdun:{n:"経験値ダンジョン",ic:"repeat",sub:"間違えた問題で経験値を稼ぐ"},
-  mock:{n:"決戦",ic:"cap",sub:"本番と同じ構成の模擬試験"},
+  map:{n:"パターン網羅マップ",ic:"map",sub:"出題パターンを制覇する"},
+  drill:{n:"仕訳",ic:"pencil",sub:"勘定科目を5要素に即分類"},
+  expdun:{n:"復習ダンジョン",ic:"repeat",sub:"間違えた問題で経験値を稼ぐ"},
+  mock:{n:"模試",ic:"cap",sub:"本番と同じ構成の模擬試験"},
   guide:{n:"練習モード",ic:"book",sub:"犬と一緒に解き方を学ぶ"}
 };
 const PATMAP=[
 {g:"第1問　商業簿記の仕訳",note:"分野=パターン。全分野○にすれば第1問(20点)はどの回でも対応可能。クリックでその分野のドリルを開始。",items:[
-{k:"pq",id:"pq_shiwake",label:"仕訳の解き方 5ステップ(まずはここから)",tier:1}]},
+]},
 {g:"第2問　個別論点",note:"過去問分析: 商品売買×3・銀行勘定調整×2・連結/税効果/有価証券/株変×各1。この7パターンで網羅。",items:[
 {k:"ref",label:"商品売買(商品有高帳・売上原価対立法)★頻出",exam:"m3",no:2,tier:1},
 {k:"pq",id:"pq_ginko",label:"銀行勘定調整表 ★頻出",tier:1},
@@ -1388,7 +1448,7 @@ const $=s=>document.querySelector(s);
 const main=$("#main"),tabs=$("#tabs"),timerEl=$("#timer"),btnFinish=$("#btn-finish");
 const fmt=n=>n==null||n===""?"":Number(n).toLocaleString("ja-JP");
 const parseNum=v=>{const s=String(v).replace(/[,，\s円¥]/g,"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));if(s==="")return null;const n=Number(s);return isNaN(n)?null:n;};
-const LS={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){localStorage.setItem(k,JSON.stringify(v));try{schedulePush()}catch(e){}}};
+const LS={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){try{console.warn("保存できませんでした",k,e);}catch(x){}}try{schedulePush()}catch(e){}}};
 const KEY_H="b2_history",KEY_D="b2_drill",KEY_W="b2_wrong";
 
 /* 全仕訳問題マップ(ドリル+模試の仕訳) 復習モード用 */
@@ -1433,21 +1493,26 @@ const RANKS=[
  {k:"C",min:.20,nm:"かすり",    cl:"#0e7a5f",xp:10,fd:[2,4], tk:.04},
  {k:"D",min:0,   nm:"ギリギリ",  cl:"#64748b",xp:6, fd:[1,3], tk:.02}
 ];
-/* ソース倍率: 経験値ダンジョン > 決戦(模試) > 討伐マップ > 修練場 > 練習 */
+/* ソース倍率: 復習ダンジョン > 模擬試験 > パターン網羅マップ > 仕訳ドリル > 練習 */
 const SRC={
- expdun:{m:3.0,nm:"経験値ダンジョン"},
- mock:  {m:2.5,nm:"決戦"},
- map:   {m:2.0,nm:"討伐マップ"},
- drill: {m:1.0,nm:"修練場"},
+ expdun:{m:3.0,nm:"復習ダンジョン"},
+ mock:  {m:2.5,nm:"模試"},
+ map:   {m:2.0,nm:"パターン網羅マップ"},
+ drill: {m:1.0,nm:"仕訳ドリル"},
  guide: {m:0.05,nm:"練習モード"}
 };
 function rankOf(pct){pct=Math.max(0,Math.min(1,pct||0));return RANKS.find(r=>pct>=r.min)||RANKS[RANKS.length-1];}
 /* Lv曲線: 次のLvまで round(50 * lv^1.15) → Lv5で約580、Lv20で約13,800 */
 function xpNeed(lv){return Math.round(50*Math.pow(lv,1.15));}
 function lvOf(total){
-  let lv=1,rest=total||0;
+  /* 壊れた値(文字列・真偽値・オブジェクト・NaN・負数・巨大値)で全解禁されないようにする */
+  let rest=(typeof total==="number"&&isFinite(total))?total:0;
+  if(rest<0)rest=0;
+  if(rest>1e8)rest=1e8;   /* Lv99でも約12万EXPなので十分な上限 */
+  const tot=rest;
+  let lv=1;
   while(lv<99){const n=xpNeed(lv);if(rest<n)break;rest-=n;lv++;}
-  return {lv,cur:rest,need:xpNeed(lv),total:total||0};
+  return {lv,cur:rest,need:xpNeed(lv),total:tot};
 }
 function userLv(){return lvOf(LS.get(KEY_XP,0));}
 /* 既存ユーザー救済: これまでの進捗ぶんの経験値を1度だけ付与する。
@@ -1477,16 +1542,18 @@ function migrateExp(){
 window.migrateExp=migrateExp;
 /* Lv解禁テーブル */
 const UNLOCK=[
- {lv:3, t:"経験値ダンジョン(1日1回)が解禁",k:"expdun"},
- {lv:5, t:"樹海(中級)が解禁",k:"tier2"},
- {lv:8, t:"決戦(模擬試験)が解禁",k:"mock"},
- {lv:12,t:"スタミナ上限 +10",k:"stam1"},
- {lv:16,t:"遺跡(上級)が解禁",k:"tier3"},
- {lv:20,t:"スタミナ上限 +10",k:"stam2"},
+ {lv:3, t:"復習ダンジョン(1日1回)が解禁",k:"expdun"},
+ {lv:5, t:"中級(中級)が解禁",k:"tier2"},
+ {lv:8, t:"模擬試験が解禁",k:"mock"},
+ {lv:12,t:"ペット枠が2匹に / スタミナ上限 +10",k:"stam1"},
+ {lv:12,t:"",k:"pet2"},
+ {lv:16,t:"上級(上級)が解禁",k:"tier3"},
+ {lv:20,t:"ペット枠が3匹に / スタミナ上限 +10",k:"stam2"},
+ {lv:20,t:"",k:"pet3"},
  {lv:25,t:"スタミナ上限 +10",k:"stam3"}
-];
-function unlockAt(lv){return UNLOCK.filter(u=>u.lv===lv).map(u=>u.t);}
-function nextUnlock(lv){return UNLOCK.find(u=>u.lv>lv)||null;}
+].filter(u=>true);
+function unlockAt(lv){return UNLOCK.filter(u=>u.lv===lv&&u.t).map(u=>u.t);}
+function nextUnlock(lv){return UNLOCK.find(u=>u.lv>lv&&u.t)||null;}
 /* 機能が解禁されているか。lvReq(key) は必要Lv(0=最初から) */
 function lvReq(k){const u=UNLOCK.find(x=>x.k===k);return u?u.lv:0;}
 function unlocked(k){return userLv().lv>=lvReq(k);}
@@ -1494,10 +1561,12 @@ window.unlocked=unlocked;window.lvReq=lvReq;
 
 /* ================= スタミナ ================= */
 const KEY_ST="b2_stam";        /* {v:残量, t:最後に計算した時刻(ms)} */
-const STAM_MIN=6;              /* 6分で1回復 */
+const STAM_MIN_BASE=6;         /* 6分で1回復(ゴールドパスで3分) */
+function stamMin(){return goldStamMin();}
+window.stamMin=stamMin;
 function stamMax(){
   const lv=userLv().lv;
-  let m=30;
+  let m=goldStamMax();
   if(lv>=lvReq("stam1"))m+=10;
   if(lv>=lvReq("stam2"))m+=10;
   if(lv>=lvReq("stam3"))m+=10;
@@ -1509,10 +1578,13 @@ function stam(){
   const max=stamMax();
   let s=LS.get(KEY_ST,null);
   const now=Date.now();
-  if(!s||typeof s.v!=="number"){s={v:max,t:now};LS.set(KEY_ST,s);return max;}
+  /* v も t も壊れていたら作り直す。t が未来(時計を戻した/同期のズレ)なら今に丸める */
+  if(!s||typeof s!=="object"||!isFinite(s.v)||!isFinite(s.t)){s={v:max,t:now};LS.set(KEY_ST,s);return max;}
+  s.v=Math.max(0,Math.min(max,Math.floor(s.v)));
+  if(s.t>now){s.t=now;LS.set(KEY_ST,s);}
   if(s.v>=max){s.t=now;LS.set(KEY_ST,s);return Math.min(s.v,max);}
-  const gain=Math.floor((now-s.t)/(STAM_MIN*60000));
-  if(gain>0){s.v=Math.min(max,s.v+gain);s.t=s.v>=max?now:s.t+gain*STAM_MIN*60000;LS.set(KEY_ST,s);}
+  const gain=Math.floor((now-s.t)/(stamMin()*60000));
+  if(gain>0){s.v=Math.min(max,s.v+gain);s.t=s.v>=max?now:s.t+gain*stamMin()*60000;LS.set(KEY_ST,s);}
   return s.v;
 }
 window.stam=stam;
@@ -1520,10 +1592,10 @@ window.stam=stam;
 function stamNextSec(){
   const s=LS.get(KEY_ST,null);
   if(!s||stam()>=stamMax())return 0;
-  return Math.max(0,Math.ceil((s.t+STAM_MIN*60000-Date.now())/1000));
+  return Math.max(0,Math.ceil((s.t+stamMin()*60000-Date.now())/1000));
 }
 /* 満タンまでの残り分 */
-function stamFullMin(){const d=stamMax()-stam();return d<=0?0:Math.ceil((d*STAM_MIN*60000-(STAM_MIN*60000-stamNextSec()*1000))/60000)+STAM_MIN;}
+function stamFullMin(){const d=stamMax()-stam();return d<=0?0:Math.ceil((d*stamMin()*60000-(stamMin()*60000-stamNextSec()*1000))/60000)+stamMin();}
 function stamUse(n){
   const cur=stam();
   if(cur<n)return false;
@@ -1538,6 +1610,66 @@ function stamAdd(n){
   s.v=Math.min(stamMax(),stam()+n);LS.set(KEY_ST,s);updHUD();
 }
 window.stamAdd=stamAdd;
+/* ================= ゴールドパス ================= */
+const KEY_GP="b2_gold";
+/* いま有効か(期限つき) */
+function isGold(){const t=LS.get(KEY_GP,0);return t>Date.now();}
+window.isGold=isGold;
+function goldDaysLeft(){const t=LS.get(KEY_GP,0)-Date.now();return t>0?Math.ceil(t/86400000):0;}
+window.goldDaysLeft=goldDaysLeft;
+const GOLD=[
+ {k:"stam", f:"スタミナ上限 30 → 60 / 回復 6分 → 3分",  free:"上限30・6分で1"},
+ {k:"exp",  f:"経験値 常時 1.2倍 + 弱点ダンジョンが2倍", free:"日替わりでランダムに2倍"},
+ {k:"mock", f:"模擬試験が無制限",                    free:"スタミナ15を消費"},
+ {k:"pet",  f:"ペット枠 5匹",                           free:"Lvに応じて最大3匹"},
+ {k:"ai",   f:"自分のミス傾向を反映したAI解説",          free:"なし"},
+ {k:"dash", f:"分析をすべて表示(ミス種別・期間推移・推奨)",free:"推定点と到達予測まで"}
+];
+/* ゴールドパスの効果 */
+function goldStamMax(){return isGold()?60:30;}
+function goldStamMin(){return isGold()?3:STAM_MIN_BASE;}
+function goldExpMult(){return isGold()?1.2:1;}
+function goldPetSlots(){return isGold()?5:0;}
+window.goldExpMult=goldExpMult;
+
+/* ================= 道具(チケット類) ================= */
+const KEY_IT="b2_items";
+const ITEMS={
+ stampot:{nm:"スタミナ回復薬",ic:"🧪",d:"スタミナを 10 回復する",     w:34},
+ wing:   {nm:"無限走破の羽",  ic:"🪶",d:"30分間スタミナを消費しない",  w:8},
+ collar: {nm:"無敵の首輪",    ic:"🦴",d:"次のダンジョン1回、被弾しない",w:8},
+ mockt:  {nm:"模試の受験券",  ic:"📜",d:"模試を1回、スタミナなしで受けられる",w:10}
+};
+function items(){const o=LS.get(KEY_IT,{});return (o&&typeof o==="object")?o:{};}
+function itemCount(k){const v=Number(items()[k]);return isFinite(v)&&v>0?Math.floor(v):0;}
+window.itemCount=itemCount;
+function addItem(k,n){
+  const o=items();
+  const cur=Number(o[k]);const add=Number(n);
+  o[k]=Math.max(0,Math.min(999,(isFinite(cur)?cur:0)+(isFinite(add)?add:1)));
+  LS.set(KEY_IT,o);updHUD();
+  return o[k];
+}
+window.addItem=addItem;
+function useItem(k){
+  const o=items();
+  if(itemCount(k)<1)return false;
+  o[k]=itemCount(k)-1;if(!o[k])delete o[k];LS.set(KEY_IT,o);
+  if(k==="stampot")stamAdd(10);
+  if(k==="wing")LS.set("b2_wing",Date.now()+30*60000);
+  if(k==="collar")LS.set("b2_collar",1);
+  if(k==="mockt")LS.set("b2_mockt",1);
+  updHUD();
+  try{track("item_use",{k});}catch(e){}
+  return true;
+}
+window.useItem=useItem;
+/* 無限走破の羽が効いている間か */
+function wingOn(){return LS.get("b2_wing",0)>Date.now();}
+window.wingOn=wingOn;
+function wingLeftMin(){const t=LS.get("b2_wing",0)-Date.now();return t>0?Math.ceil(t/60000):0;}
+window.wingLeftMin=wingLeftMin;
+
 /* ダンジョンごとのスタミナ消費 */
 const STAM_COST={drill:2,map1:3,map2:5,map3:8,expdun:5,mock:15};
 function stamCost(src,tier){
@@ -1548,12 +1680,15 @@ window.stamCost=stamCost;
 function mmssLeft(sec){const m=Math.floor(sec/60),s=sec%60;return m+":"+String(s).padStart(2,"0");}
 /* 入場ゲート: 解禁とスタミナを確認して、足りなければ理由を表示 */
 function canEnter(src,tier){
-  const need=stamCost(src,tier);
-  if(src==="expdun"&&!unlocked("expdun"))return {ok:false,why:"lv",lv:lvReq("expdun"),nm:"経験値ダンジョン"};
-  if(src==="mock"&&!unlocked("mock"))return {ok:false,why:"lv",lv:lvReq("mock"),nm:"決戦"};
-  if(src==="map"&&tier===2&&!unlocked("tier2"))return {ok:false,why:"lv",lv:lvReq("tier2"),nm:"樹海"};
-  if(src==="map"&&tier===3&&!unlocked("tier3"))return {ok:false,why:"lv",lv:lvReq("tier3"),nm:"遺跡"};
-  if(src==="expdun"&&LS.get("b2_expdd","")===daysKey(new Date()))return {ok:false,why:"daily",nm:"経験値ダンジョン"};
+  let need=stamCost(src,tier);
+  if(wingOn())need=0;                                   /* 無限走破の羽 */
+  if(src==="mock"&&LS.get("b2_mockt",0))need=0;         /* 模試の受験券 */
+  if(src==="mock"&&isGold())need=0;                     /* ゴールドパスは模試が無制限 */
+  if(src==="expdun"&&!unlocked("expdun"))return {ok:false,why:"lv",lv:lvReq("expdun"),nm:"復習ダンジョン"};
+  if(src==="mock"&&!unlocked("mock"))return {ok:false,why:"lv",lv:lvReq("mock"),nm:"模試"};
+  if(src==="map"&&tier===2&&!unlocked("tier2"))return {ok:false,why:"lv",lv:lvReq("tier2"),nm:"中級"};
+  if(src==="map"&&tier===3&&!unlocked("tier3"))return {ok:false,why:"lv",lv:lvReq("tier3"),nm:"上級"};
+  if(src==="expdun"&&LS.get("b2_expdd","")===daysKey(new Date()))return {ok:false,why:"daily",nm:"復習ダンジョン"};
   if(stam()<need)return {ok:false,why:"stam",need,have:stam()};
   return {ok:true,need};
 }
@@ -1561,23 +1696,27 @@ window.canEnter=canEnter;
 /* 入場できなければ理由をモーダル表示して false を返す */
 function gate(src,tier){
   const r=canEnter(src,tier);
-  if(r.ok){if(r.need)stamUse(r.need);return true;}
+  if(r.ok){
+    if(r.need)stamUse(r.need);
+    if(src==="mock"&&LS.get("b2_mockt",0)){LS.set("b2_mockt",0);miniToast("📜 模試の受験券をつかった");}
+    return true;
+  }
   const old=document.getElementById("gatev");if(old)old.remove();
   const o=document.createElement("div");o.id="gatev";
   o.onclick=e=>{if(e.target===o)o.remove();};
   let body;
   if(r.why==="lv")body=`<div class="gi">🔒</div><h3>まだ入れません</h3>
-    <p><b>${r.nm}</b> は <b>Lv.${r.lv}</b> で解禁されます。<br>いまは <b>Lv.${userLv().lv}</b>。草原や修練場で経験値をためましょう。</p>
-    <button class="btn" onclick="document.getElementById('gatev').remove();renderPatMap();">草原へ行く</button>`;
+    <p><b>${r.nm}</b> は <b>Lv.${r.lv}</b> で解禁されます。<br>いまは <b>Lv.${userLv().lv}</b>。初級や仕訳ドリルで経験値をためましょう。</p>
+    <button class="btn" onclick="document.getElementById('gatev').remove();renderPatMap();">初級へ行く</button>`;
   else if(r.why==="daily")body=`<div class="gi">🌙</div><h3>本日はここまで</h3>
     <p><b>${r.nm}</b> は <b>1日1回</b>です。明日また来てください。</p>
     <button class="btn gray" onclick="document.getElementById('gatev').remove()">とじる</button>`;
   else body=`<div class="gi">💤</div><h3>スタミナが足りません</h3>
     <p>必要 <b>${r.need}</b> ／ 手持ち <b>${r.have}</b><br>
     <span class="prog">次の回復まで ${mmssLeft(stamNextSec())}　･　全回復まで 約${stamFullMin()}分</span></p>
-    <p style="font-size:12.5px;color:var(--tx2);">スタミナは <b>${STAM_MIN}分で1</b> 回復します。軽い <b>修練場(${STAM_COST.drill})</b> なら入れるかも。</p>
+    <p style="font-size:12.5px;color:var(--tx2);">スタミナは <b>${stamMin()}分で1</b> 回復します。軽い <b>仕訳ドリル(${STAM_COST.drill})</b> なら入れるかも。</p>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-      <button class="btn" onclick="document.getElementById('gatev').remove();renderDrillSetup();">修練場へ</button>
+      <button class="btn" onclick="document.getElementById('gatev').remove();renderDrillSetup();">仕訳ドリルへ</button>
       <button class="btn gray" onclick="document.getElementById('gatev').remove()">とじる</button></div>`;
   o.innerHTML=`<div class="box">${body}</div>`;
   document.body.appendChild(o);
@@ -1657,7 +1796,9 @@ function showLvUp(from,to){
 function addFood(n,fromEl){
   if(!(n>0))return;
   LS.set(KEY_F,LS.get(KEY_F,0)+n);
-  for(let i=0;i<Math.min(4,n);i++)flyTo(fromEl,"#hud-food",`<span class="sicon" data-icon="food" data-s="1"></span>`,i*110);
+  const dogT=document.getElementById("btdog")?"#btdog":"#hud-food";
+  for(let i=0;i<Math.min(4,n);i++)flyTo(fromEl,dogT,`<span class="sicon" data-icon="food" data-s="1"></span>`,i*110);
+  if(dogT==="#btdog")setTimeout(()=>{const dg=document.getElementById("btdog");if(dg){dg.classList.remove("munch");void dg.offsetWidth;dg.classList.add("munch");}},860);
   setTimeout(()=>{updHUD();autoFeed(fromEl);},760);
 }
 window.addFood=addFood;
@@ -1712,9 +1853,10 @@ window.addTicket=addTicket;
 function grantBattle(src,pct,fromEl,opts){
   opts=opts||{};
   const s=SRC[src]||SRC.drill, r=rankOf(pct);
-  const xp=Math.max(1,Math.round(r.xp*s.m*(opts.mult||1)));
-  const fd=(src==="guide")?0:Math.round((r.fd[0]+Math.floor(Math.random()*(r.fd[1]-r.fd[0]+1)))*(opts.mult||1));
-  const tk=(src==="guide")?0:(Math.random()<r.tk*(opts.mult||1)?1:0);
+  const drop=(opts.drop==null)?1:opts.drop;    /* 犬の〈黄金律〉などのドロップ倍率(0も指定可) */
+  const xp=Math.max(1,Math.round(r.xp*s.m*(opts.mult||1)*goldExpMult()*(opts.boost||1)));
+  const fd=(src==="guide")?0:Math.round((r.fd[0]+Math.floor(Math.random()*(r.fd[1]-r.fd[0]+1)))*(opts.mult||1)*drop);
+  const tk=(src==="guide")?0:(Math.random()<r.tk*(opts.mult||1)*drop?1:0);
   addExp(xp,fromEl);
   if(fd>0)addFood(fd,fromEl);
   if(tk>0)setTimeout(()=>addTicket(tk,fromEl),300);
@@ -1725,41 +1867,78 @@ window.grantBattle=grantBattle;
 /* 報酬バッジHTML(結果表示用) */
 function rankBadge(res){
   if(!res)return "";
-  return `<span class="rkb" style="background:${res.rank.cl};">${res.rank.k}</span><span class="rkn">${res.rank.nm}</span>`
-    +` <span class="rkr">✨+${res.xp}${res.fd?` 🍖+${res.fd}`:""}${res.tk?` 🎟+${res.tk}`:""}</span>`;
+  const lvn=["D","C","B","A","S"].indexOf(res.rank.k)+1;   /* 1..5: はやいほど大きい */
+  const bars=[1,2,3,4,5].map(i=>`<i${i<=lvn?` class="on" style="background:${res.rank.cl};"`:""}></i>`).join("");
+  return `<span class="rkb" style="background:${res.rank.cl};">✨+${res.xp}</span>`
+    +`<span class="rkbar" title="はやく解くほど経験値が増えます">${bars}</span>`;
 }
+
 window.rankBadge=rankBadge;
 /* ================= 戦闘: 制限時間バー / 犬 vs スライム / ライフ ================= */
 let BT=null;
-/* 犬のライフ = 3 + 進化段階(最大6) */
+/* 犬のライフ = 3 + 進化段階(最大6) + 犬種ボーナス */
 function dogLives(){
   const d=getDogs()[getPartner()];
-  return 3+Math.min(3,d?dogStage(d.f||0):0);
+  return 3+Math.min(3,d?dogStage(d.f||0):0)+(partnerBreed().hp||0);
 }
 window.dogLives=dogLives;
-/* 戦闘セッション開始。atk=敵の攻撃力(1:草原/修練場 2:樹海 3:遺跡/決戦) */
+/* 戦闘セッション開始。atk=敵の攻撃力(1:初級/仕訳ドリル 2:中級 3:上級/模試) */
 function btStart(src,atk,onDefeat){
+  const br=partnerBreed();
+  /* 無敵の首輪を使っていれば、このダンジョンは被弾しない */
+  const inv=!!LS.get("b2_collar",0);
+  if(inv)LS.set("b2_collar",0);
   BT={src,atk:Math.min(3,Math.max(1,atk||1)),lives:dogLives(),max:dogLives(),
-      xp:0,fd:0,tk:0,onDefeat:onDefeat||null,dead:false};
+      xp:0,fd:0,tk:0,onDefeat:onDefeat||null,dead:false,
+      br,guard:br.sk==="guard",guts:br.sk==="guts",freeze:br.sk==="freeze"?2:0,streak:0,inv};
+  if(inv)setTimeout(()=>skPop("🦴 無敵の首輪! ダメージを受けない"),300);
   return BT;
 }
 window.btStart=btStart;
-/* 戦闘バーのHTML(問題カードの上に置く) */
-function btHTML(){
-  if(!BT)return "";
-  return `<div class="btwrap">
-    <div class="btmeta">
-      <span class="btlives" id="btlives">${btHearts()}</span>
-      <span class="btfoenm">${FOE_NM[BT.atk]}　<b>攻撃力 ${BT.atk}</b></span>
+/* 戦闘バーは問題カードの外(画面上部に固定)に置く。問題文と混ざらないようにするため */
+function btHTML(){return "";}   /* 互換用: 問題カード内には何も出さない */
+window.btHTML=btHTML;
+function btMountBar(){
+  if(!BT)return null;
+  btRemoveBar();
+  const br=BT.br||partnerBreed();
+  const sk=SKILLS[br.sk];
+  const el=document.createElement("div");el.id="btbar";
+  el.innerHTML=`<div class="btbar-in">
+    <div class="btside">
+      <div class="btlives" id="btlives">${btHearts()}</div>
+      <span class="btdog" id="btdog"></span>
     </div>
     <div class="bttrack" id="bttrack">
-      <div class="btbar"><i id="btbarf"></i></div>
-      <span class="btdog" id="btdog"></span>
+      <div class="xpzone"><span>経験値 少</span><span>多 ▶</span></div>
+      <div class="btbar-l"><i id="btbarf"></i></div>
       <span class="btfoe" id="btfoe"></span>
     </div>
+    ${br.sk==="freeze"?`<button class="btskbtn" id="btskbtn" onclick="btFreezeSkill()" title="${sk.d}">❄️${sk.nm}×${BT.freeze}</button>`
+      :sk?`<span class="btsk" title="${sk.d}">✦${sk.nm}</span>`:""}
   </div>`;
+  document.body.appendChild(el);
+  document.body.classList.add("bton");
+  try{
+    const h=document.getElementById("hdr");
+    const top=h?Math.round(h.getBoundingClientRect().height):56;
+    el.style.top=top+"px";
+    document.body.style.setProperty("--btbarh",(el.getBoundingClientRect().height||58)+"px");
+  }catch(e){}
+  try{
+    const d=getDogs()[getPartner()];
+    const st=d?dogStage(d.f||0):0;
+    el.querySelector("#btdog").appendChild(dogCanvas(st,34/STAGE_W[Math.min(st,4)],d?d.b:0));  /* 表示36px前後: 敵(24px)より大きく */
+    el.querySelector("#btfoe").appendChild(foeCanvas(BT.atk,2.2));
+  }catch(e){}
+  return el;
 }
-window.btHTML=btHTML;
+window.btMountBar=btMountBar;
+function btRemoveBar(){
+  const e=document.getElementById("btbar");if(e)e.remove();
+  document.body.classList.remove("bton");
+}
+window.btRemoveBar=btRemoveBar;
 function btHearts(){
   if(!BT)return "";
   let s="";
@@ -1769,16 +1948,18 @@ function btHearts(){
 /* バーとキャラを描画して、limit秒のカウントダウンを開始 */
 function btMount(limit,onTimeout){
   if(!BT)return;
+  /* のんき: 制限時間が10%のびる */
+  if((BT.br||partnerBreed()).sk==="slow")limit=limit*1.1;
+  BT._onTimeout=onTimeout;
+  if(!document.getElementById("btbar"))btMountBar();
   const tr=document.getElementById("bttrack");if(!tr)return;
-  const dg=document.getElementById("btdog"),fo=document.getElementById("btfoe");
-  if(dg&&!dg.firstChild){try{const d=getDogs()[getPartner()];dg.appendChild(dogCanvas(d?dogStage(d.f||0):0,0.62,d?d.b:0));}catch(e){}}
-  if(fo&&!fo.firstChild)fo.appendChild(foeCanvas(BT.atk,2.6));
   BT.limit=limit;BT.t0=Date.now();
-  const bar=document.getElementById("btbarf");
-  if(bar){bar.style.transition="none";bar.style.width="100%";void bar.offsetWidth;
-          bar.style.transition=`width ${limit}s linear`;bar.style.width="0%";}
-  if(fo){fo.style.transition="none";fo.style.left="calc(100% - 34px)";void fo.offsetWidth;
-         fo.style.transition=`left ${limit}s linear`;fo.style.left="46px";}
+  const bar=document.getElementById("btbarf"),fo=document.getElementById("btfoe");
+  /* btbarf は「消費済み」を右から覆う。下地のグラデが経験値の高い/低いゾーンを表す */
+  if(bar){bar.style.transition="none";bar.style.width="0%";void bar.offsetWidth;
+          bar.style.transition=`width ${limit}s linear`;bar.style.width="100%";}
+  if(fo){fo.style.transition="none";fo.style.left="calc(100% - 30px)";void fo.offsetWidth;
+         fo.style.transition=`left ${limit}s linear`;fo.style.left="0px";}
   clearTimeout(BT.tm);
   BT.tm=setTimeout(()=>{if(BT&&!BT.dead&&onTimeout)onTimeout();},limit*1000);
 }
@@ -1798,29 +1979,97 @@ function btFreeze(){
 /* 正解 → 犬が攻撃、敵を倒す。報酬を返す */
 function btHit(fromEl,opts){
   if(!BT)return null;
-  const pct=btPct();btFreeze();
+  let pct=btPct();btFreeze();
+  const br=BT.br||partnerBreed();
+  /* すばしっこい: D判定(20%未満)を C 相当に格上げ */
+  if(br.sk==="quick"&&pct<0.20){pct=0.21;skPop("💨 すばしっこい! 判定アップ");}
   const dg=document.getElementById("btdog"),fo=document.getElementById("btfoe");
   if(dg){dg.classList.remove("atk");void dg.offsetWidth;dg.classList.add("atk");}
   if(fo)setTimeout(()=>{fo.classList.add("dead");},170);
-  const res=grantBattle(BT.src,pct,fromEl||dg,opts);
+  /* 黄金律: ごはん券・ガチャ券が5割増し */
+  const o=Object.assign({},opts||{});
+  if(br.sk==="gold")o.drop=1.5;
+  const res=grantBattle(BT.src,pct,fromEl||dg,o);
   BT.xp+=res.xp;BT.fd+=res.fd;BT.tk+=res.tk;
+  /* 治癒: 3問連続正解でライフ1回復 */
+  BT.streak=(BT.streak||0)+1;
+  if(br.sk==="heal"&&BT.streak%3===0&&BT.lives<BT.max){
+    BT.lives++;skPop("💗 治癒! ライフ+1");
+    setTimeout(()=>{const h=document.getElementById("btlives");if(h)h.innerHTML=btHearts();},300);
+  }
   return res;
 }
+/* 氷結: バーの進行を8秒とめる */
+window.btFreezeSkill=function(){
+  if(!BT||!BT.freeze||!BT.limit)return;
+  BT.freeze--;
+  const bar=document.getElementById("btbarf"),fo=document.getElementById("btfoe");
+  const rest=Math.max(0,BT.limit*1000-(Date.now()-BT.t0));
+  [bar,fo].forEach(e=>{if(!e)return;const cs=getComputedStyle(e);const v=e===bar?cs.width:cs.left;e.style.transition="none";if(e===bar)e.style.width=v;else e.style.left=v;});
+  clearTimeout(BT.tm);
+  skPop("❄️ 氷結! 8秒とまった");
+  const track=document.getElementById("bttrack");if(track)track.classList.add("frozen");
+  const cb=BT._onTimeout;
+  setTimeout(()=>{
+    if(!BT)return;
+    if(track)track.classList.remove("frozen");
+    BT.t0=Date.now()-(BT.limit*1000-rest);
+    const sec=rest/1000;
+    if(bar){bar.style.transition=`width ${sec}s linear`;bar.style.width="0%";}
+    if(fo){fo.style.transition=`left ${sec}s linear`;fo.style.left="0px";}
+    BT.tm=setTimeout(()=>{if(BT&&!BT.dead&&cb)cb();},rest);
+  },8000);
+  const b=document.getElementById("btskbtn");
+  if(b){b.textContent=`❄️ 氷結 ×${BT.freeze}`;if(!BT.freeze)b.disabled=true;}
+};
 window.btHit=btHit;
-/* 不正解・時間切れ → 被弾。ライフ0なら敗走処理を呼ぶ */
+/* 犬の特技が出たときの吹き出し */
+function btPop(txt,bad){
+  const tr=document.getElementById("bttrack");if(!tr)return;
+  const e=document.createElement("div");e.className="skpop"+(bad?" bad":"");e.textContent=txt;
+  tr.appendChild(e);setTimeout(()=>{try{e.remove();}catch(x){}},1700);
+}
+window.btPop=btPop;
+function skPop(txt){
+  const tr=document.getElementById("bttrack");if(!tr)return;
+  const e=document.createElement("div");e.className="skpop";e.textContent=txt;
+  tr.appendChild(e);setTimeout(()=>e.remove(),1500);
+}
+window.skPop=skPop;
+/* 不正解・時間切れ → 被弾。回避・防御・特技を経て、ライフ0なら敗走 */
 function btMiss(){
   if(!BT||BT.dead)return null;
   btFreeze();
+  BT.streak=0;
   const dg=document.getElementById("btdog"),fo=document.getElementById("btfoe"),tr=document.getElementById("bttrack");
   if(fo){fo.classList.remove("atk");void fo.offsetWidth;fo.classList.add("atk");}
+  const br=BT.br||partnerBreed();
+  /* ⓪ 無敵の首輪 */
+  if(BT.inv){skPop("🦴 無敵! ダメージ無効");return {lives:BT.lives,dead:false,guarded:true};}
+  /* ① 回避 */
+  if(br.eva&&Math.random()<br.eva){
+    skPop("⚡ かわした!");
+    return {lives:BT.lives,dead:false,dodged:true};
+  }
+  /* ② 守護(最初の1回だけ無効化) */
+  if(BT.guard){
+    BT.guard=false;skPop("🛡 守護! ダメージ無効");
+    return {lives:BT.lives,dead:false,guarded:true};
+  }
   setTimeout(()=>{
     if(dg){dg.classList.remove("hurt");void dg.offsetWidth;dg.classList.add("hurt");}
     if(tr){tr.classList.remove("shake");void tr.offsetWidth;tr.classList.add("shake");}
   },160);
-  BT.lives=Math.max(0,BT.lives-BT.atk);
+  /* ③ 防御(ダメージ1軽減・最低1) */
+  let dmg=BT.atk;
+  if(br.def&&dmg>1&&Math.random()<br.def){dmg-=1;skPop("🛡 防御! ダメージ軽減");}
+  let lv=BT.lives-dmg;
+  /* ④ 根性(致命傷を1回だけ耐える) */
+  if(lv<=0&&BT.guts){BT.guts=false;lv=1;skPop("💪 根性! ふみとどまった");}
+  BT.lives=Math.max(0,lv);
   setTimeout(()=>{const h=document.getElementById("btlives");if(h)h.innerHTML=btHearts();},300);
   if(BT.lives<=0){BT.dead=true;const s=BT;setTimeout(()=>btDefeat(s),700);}
-  return {lives:BT.lives,dead:BT.dead};
+  return {lives:BT.lives,dead:BT.dead,dmg};
 }
 window.btMiss=btMiss;
 /* 敗走: 獲得済み報酬を半分にして終了。s は敗走したセッション本体 */
@@ -1851,7 +2100,7 @@ function btDefeat(s){
   try{const dg=getDogs()[getPartner()];o.querySelector("#btlosedog").appendChild(dogCanvas(dg?dogStage(dg.f||0):0,2.2,dg?dg.b:0));}catch(e){}
   o.querySelector("#btlosebtn").onclick=()=>{o.remove();BT=null;if(cb)cb();else renderHome();};
 }
-function btEnd(){const r=BT?{xp:BT.xp,fd:BT.fd,tk:BT.tk,lives:BT.lives,max:BT.max}:null;if(BT)clearTimeout(BT.tm);BT=null;return r;}
+function btEnd(){const r=BT?{xp:BT.xp,fd:BT.fd,tk:BT.tk,lives:BT.lives,max:BT.max}:null;if(BT)clearTimeout(BT.tm);BT=null;btRemoveBar();return r;}
 window.btEnd=btEnd;
 
 /* ---- ローディング: 犬が歩く ---- */
@@ -1889,8 +2138,8 @@ window.openLvInfo=function(){
    <p style="font-size:13px;color:var(--tx2);">問題を解くほど経験値がたまり、レベルが上がると新しいダンジョンや機能が解禁されます。<b>速く正解するほど経験値が多い</b>。</p>
    <div class="dcard" style="margin-top:12px;"><h3 style="font-size:14px;">スタミナ</h3>
      <div class="prow" style="cursor:default;"><span style="flex:1;">いまの残量</span><span>${stamHTML()}</span></div>
-     <div class="prow" style="cursor:default;"><span style="flex:1;">回復のはやさ</span><span class="prog">${STAM_MIN}分で ⚡1（全回復まで 約${Math.round(stamMax()*STAM_MIN/60*10)/10}時間）</span></div>
-     ${Object.keys(WORLD).filter(k=>k!=="guide").map(k=>{const c=k==="map"?`⚡${stamCost("map",1)}／${stamCost("map",2)}／${stamCost("map",3)}`:`⚡${stamCost(k)}`;return `<div class="prow" style="cursor:default;"><span style="flex:1;">${WORLD[k].n}${k==="map"?"（草原／樹海／遺跡）":""}</span><span class="prog">${c}</span></div>`;}).join("")}
+     <div class="prow" style="cursor:default;"><span style="flex:1;">回復のはやさ</span><span class="prog">${stamMin()}分で ⚡1（全回復まで 約${Math.round(stamMax()*stamMin()/60*10)/10}時間）</span></div>
+     ${Object.keys(WORLD).filter(k=>k!=="guide").map(k=>{const c=k==="map"?`⚡${stamCost("map",1)}／${stamCost("map",2)}／${stamCost("map",3)}`:`⚡${stamCost(k)}`;return `<div class="prow" style="cursor:default;"><span style="flex:1;">${WORLD[k].n}${k==="map"?"（初級／中級／上級）":""}</span><span class="prog">${c}</span></div>`;}).join("")}
    </div>
    <div class="dcard" style="margin-top:12px;"><h3 style="font-size:14px;">速さのランクと報酬</h3>
      ${RANKS.map(r=>`<div class="prow" style="cursor:default;"><span class="rkb" style="background:${r.cl};">${r.k}</span><span style="flex:1;">${r.nm}</span><span class="prog">✨${r.xp} 🍖${r.fd[0]}〜${r.fd[1]} 🎟${Math.round(r.tk*100)}%</span></div>`).join("")}
@@ -1915,7 +2164,9 @@ function recordActivity(n,o){
   try{if(n>0&&!LS.get("b2_ev_fq",0)){LS.set("b2_ev_fq",1);track("first_q");}}catch(x){}
   const d=LS.get(KEY_A,{});const k=daysKey(new Date());const e=d[k]||{q:0,o:0};
   const first=(e.o||0)===0&&o>0;
-  e.q+=n;e.o+=o;d[k]=e;LS.set(KEY_A,d);
+  e.q+=n;e.o+=o;
+  try{e.est=estScore();}catch(x){}      /* その日の推定点を残して、伸びを測れるようにする */
+  d[k]=e;LS.set(KEY_A,d);
   if(n===1){
     if(o>0){combo++;}else{combo=0;}
   }
@@ -2223,7 +2474,7 @@ function railHTML(kind){
 async function loadRailRank(){
   const el=document.getElementById("rail-rank-list");if(!el||!sb)return;
   try{
-    const {data}=await sb.from("profiles").select("*").limit(200);
+    const {data}=await sb.from("profiles").select("nickname,week_start,week_solved,streak,pat_done,pat_total,mock_best,ach,ach_top,dogs,partner").limit(200);
     const ws=weekStart();
     const rows=(data||[]).filter(r=>r.nickname).map(r=>({...r,wk:r.week_start===ws?(r.week_solved||0):0})).sort((a,b)=>b.wk-a.wk).slice(0,5);
     if(!document.getElementById("rail-rank-list"))return;
@@ -2328,9 +2579,9 @@ function renderHome(){
   </section>`;
   const center=isNew?onbCenter+`
   <div class="trio" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));">
-    <div class="tcard white" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>決戦(模擬試験)</h3><div class="arw">4回分 無料　→</div></div>
-    <div class="tcard white" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>討伐マップ</h3><div class="arw">草原・樹海・遺跡 全47パターン　→</div></div>
-    <div class="tcard white" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>修練場</h3><div class="arw">勘定科目を5要素に即分類・全${ACC5.length}問　→</div></div>
+    <div class="tcard white" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>模擬試験</h3><div class="arw">4回分 無料　→</div></div>
+    <div class="tcard white" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>パターン網羅マップ</h3><div class="arw">初級・中級・上級 全47パターン　→</div></div>
+    <div class="tcard white" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>仕訳ドリル</h3><div class="arw">勘定科目を5要素に即分類・全${ACC5.length}問　→</div></div>
   </div>`:`
   <section class="hero2" style="margin-top:0;padding:clamp(8px,1.4vw,18px) clamp(8px,1.6vw,20px);">
     <div class="heroflex">
@@ -2359,10 +2610,10 @@ function renderHome(){
     </div>
   </section>
   <div class="trio" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));">
-    <div class="tcard ${hl==="rev"?"light":"white"}" onclick="startReview()"><h3><span class="micon" data-icon="repeat"></span>経験値ダンジョン${unlocked("expdun")?`<span class="dcost">⚡${stamCost("expdun")}</span>`:`<span class="dlock">🔒Lv.${lvReq("expdun")}</span>`}</h3><div class="arw">${LS.get("b2_expdd","")===daysKey(new Date())?"本日クリア済み":wrong.length+"問 待機中 ✨EXP3倍"}　→</div></div>
-    <div class="tcard ${hl==="mock"?"light":"white"}" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>決戦(模擬試験)${unlocked("mock")?`<span class="dcost">⚡${stamCost("mock")}</span>`:`<span class="dlock">🔒Lv.${lvReq("mock")}</span>`}</h3><div class="arw">${best==null?"未挑戦":"ベスト "+best+"点"}　→</div></div>
-    <div class="tcard ${hl==="map"?"light":"white"}" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>討伐マップ<span class="dcost">⚡${stamCost("map",1)}〜</span></h3><div class="arw">${po} / ${pt} 討伐　→</div></div>
-    <div class="tcard ${hl==="drill"?"light":"white"}" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>修練場<span class="dcost">⚡${stamCost("drill")}</span></h3><div class="arw">踏破 ${accClearedParts()} / ${ACC_NLV} パート　→</div></div>
+    <div class="tcard ${hl==="rev"?"light":"white"}" onclick="startReview()"><h3><span class="micon" data-icon="repeat"></span>復習ダンジョン${unlocked("expdun")?`<span class="dcost">⚡${stamCost("expdun")}</span>`:`<span class="dlock">🔒Lv.${lvReq("expdun")}</span>`}</h3><div class="arw">${LS.get("b2_expdd","")===daysKey(new Date())?"本日クリア済み":wrong.length+"問 待機中 ✨EXP3倍"}　→</div></div>
+    <div class="tcard ${hl==="mock"?"light":"white"}" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>模擬試験${unlocked("mock")?`<span class="dcost">⚡${stamCost("mock")}</span>`:`<span class="dlock">🔒Lv.${lvReq("mock")}</span>`}</h3><div class="arw">${best==null?"未挑戦":"ベスト "+best+"点"}　→</div></div>
+    <div class="tcard ${hl==="map"?"light":"white"}" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>パターン網羅マップ<span class="dcost">⚡${stamCost("map",1)}〜</span></h3><div class="arw">${po} / ${pt} クリア　→</div></div>
+    <div class="tcard ${hl==="drill"?"light":"white"}" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>仕訳ドリル<span class="dcost">⚡${stamCost("drill")}</span></h3><div class="arw">踏破 ${accClearedParts()} / ${ACC_NLV} パート　→</div></div>
   </div>
   ${(!sbUser&&(Date.now()-LS.get("b2_savehide",0)>86400000)&&(totalQ>=5||dogs.length>0))?`
   <div class="qpane" id="savecard" style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
@@ -2448,7 +2699,7 @@ function renderExams(){
     return `<div class="tcard ${att.length?"white":"light"}" onclick="startExam('${ex.id}')"><h3>${ex.title}</h3><div class="arw">${att.length?`受験${att.length}回 / 最高 ${best}点`:"未受験"}　→</div></div>`;};
   const c2=EXAMS.filter(e=>e.lv!==3).map(card).join("");
   const promo3="";
-  const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">決戦</h2><p>本番と同じ構成・制限時間(90分)の模擬試験。ここが最終目標です。<b style="color:#e05656;">模試はベータ期間限定で無料開放中</b>(正式版では一部有料化を予定)。</p></div>
+  const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">模試</h2><p>本番と同じ構成・制限時間(90分)の模擬試験。ここが最終目標です。<b style="color:#e05656;">模試はベータ期間限定で無料開放中</b>(正式版では一部有料化を予定)。</p></div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${c2}</div>${promo3}`;
   main.innerHTML=page(center,"exams");
 }
@@ -2616,7 +2867,7 @@ function finishExam(auto){
   try{track("exam_finish",{exam:ex.id,score:total});}catch(e){}
   const rec={examId:ex.id,title:ex.title,date:new Date().toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}),total,secs:secRes.map(r=>({no:r.no,got:r.got,max:r.max,tag:r.tag,time:r.time}))};
   const h=LS.get(KEY_H,[]);h.push(rec);LS.set(KEY_H,h);
-  /* 決戦の報酬: 全体の残り時間で速度ランクを決め、正解数ぶんもらえる */
+  /* 模試の報酬: 全体の残り時間で速度ランクを決め、正解数ぶんもらえる */
   const lim=(ex.min||90)*60, used=secRes.reduce((s,r)=>s+r.time,0);
   window._exRes=ci>0?grantBattle("mock",Math.max(0,1-used/lim),null,{mult:ci}):null;
   exState=null;setMode("home");resetHdr();
@@ -2663,7 +2914,7 @@ function renderCards(){
 }
 window.renderCards=renderCards;
 
-/* ---------- 修練場(勘定科目を5要素にすばやく分類) ---------- */
+/* ---------- 仕訳ドリル(勘定科目を5要素にすばやく分類) ---------- */
 const ACCE=["資産","負債","純資産","費用","収益"];
 const ACC5=[
 ["現金",0,1],["当座預金",0,1],["普通預金",0,1],["売掛金",0,1],["買掛金",1,1],["借入金",1,1],["貸付金",0,1],["資本金",2,1],["売上",4,1],["仕入",3,1],["給料",3,1],["支払家賃",3,1],["受取利息",4,1],["備品",0,1],["未払金",1,1],
@@ -2671,7 +2922,7 @@ const ACC5=[
 ["クレジット売掛金",0,3],["売買目的有価証券",0,3],["満期保有目的債券",0,3],["その他有価証券",0,3],["のれん",0,3],["ソフトウェア",0,3],["リース資産",0,3],["リース債務",1,3],["退職給付引当金",1,3],["修繕引当金",1,3],["契約資産",0,3],["契約負債",1,3],["繰延税金資産",0,3],["有価証券利息",4,3],["固定資産売却損",3,3],
 ["資本準備金",2,4],["利益準備金",2,4],["繰越利益剰余金",2,4],["その他資本剰余金",2,4],["新株予約権",2,4],["非支配株主持分",2,4],["材料",0,4],["仕掛品",0,4],["製品",0,4],["賃金",3,4],["売上原価",3,4],["減価償却費",3,4],["貸倒引当金繰入",3,4],["固定資産売却益",4,4],["為替差益",4,4]
 ];
-const ACCLV=[null,"パート1　基本のキ","パート2　債権・債務と経過勘定","パート3　2級の新しい科目","パート4　純資産・工業簿記"];
+const ACCLV=[null,"基本のキ","債権・債務と経過勘定","2級の新しい科目","純資産・工業簿記"];
 const KEY_AC="b2_acc";
 const ACC_NLV=ACCLV.length-1;
 function accClearedParts(){const st=LS.get(KEY_AC,{});let n=0;for(let l=1;l<=ACC_NLV;l++)if(st["p"+l]&&st["p"+l].best>=13)n++;return n;}
@@ -2679,7 +2930,7 @@ let acc=null;
 function renderDrillSetup(){
   setMode("home");setNav("study");btEnd();acc=null;
   const st=LS.get(KEY_AC,{});
-  main.innerHTML=`<div class="qpane"><h2><span class="micon" data-icon="pencil"></span>修練場</h2>
+  main.innerHTML=`<div class="qpane"><h2><span class="micon" data-icon="pencil"></span>仕訳ドリル</h2>
   <p>勘定科目が出たら <b>資産・負債・純資産・費用・収益</b> のどれかを即タップ!<br>これが瞬時に判定できると、仕訳のスピードが一気に上がります。制限時間内にテンポよく答えよう。</p>
   ${Array.from({length:ACC_NLV},(_,i)=>i+1).map(l=>{
     const s=st["p"+l];const n=ACC5.filter(a=>a[2]===l).length;
@@ -2697,14 +2948,37 @@ window.accBegin=function(lv){
 };
 window.accStart=function(lv){
   if(!gate("drill"))return;
-  withLoading(()=>accBegin(lv),620,"修練場に むかっています");
+  withLoading(()=>accBegin(lv),620,"仕訳ドリルに むかっています");
 };
+/* 嗅覚: 誤答した問題を記録し、1日3回まで次回に選択肢を1つ減らす */
+const KEY_NOSE="b2_nose";
+function noseLeft(){
+  const n=LS.get(KEY_NOSE,null),k=daysKey(new Date());
+  if(!n||n.d!==k)return 3;
+  return Math.max(0,3-(n.u||0));
+}
+window.noseLeft=noseLeft;
+function noseUse(q){
+  if(noseLeft()<=0)return false;
+  const k=daysKey(new Date());
+  const n=LS.get(KEY_NOSE,null);
+  const o=(n&&n.d===k)?n:{d:k,u:0,q:[]};
+  o.u=(o.u||0)+1;o.q=(o.q||[]).concat([q[0]]);
+  LS.set(KEY_NOSE,o);
+  skPop(`🐽 嗅覚! つぎは選択肢を減らすよ(のこり${noseLeft()})`);
+  return true;
+}
+window.noseUse=noseUse;
+function noseMarked(name){
+  const n=LS.get(KEY_NOSE,null);
+  return !!(n&&n.d===daysKey(new Date())&&(n.q||[]).includes(name));
+}
+window.noseMarked=noseMarked;
 function accQ(){
   setMode("home");setNav("study");
   const q=acc.qs[acc.idx];
   main.innerHTML=`<div class="qpane accwrap">
   <div class="acchead"><span>問題 ${acc.idx+1} / ${acc.qs.length}</span><span>${ACCLV[acc.lv]}</span></div>
-  ${btHTML()}
   <div class="acccard">
     <div class="accname">${q[0]}</div>
     <div class="accgrid">
@@ -2717,6 +2991,14 @@ function accQ(){
     <div class="acccombo" id="acccombo">${acc.combo>=2?`<b>🔥 ${acc.combo}コンボ!</b>`:""}</div>
   </div>
   <div style="margin-top:12px;text-align:center;"><button class="btn gray" style="font-size:12.5px;padding:8px 18px;" onclick="acc=null;renderDrillSetup()">やめる</button></div></div>`;
+  /* 嗅覚: 前にまちがえた科目なら、はずれの選択肢を1つ潰す */
+  if(hasSkill("nose")&&noseMarked(q[0])){
+    const wrong=[0,1,2,3,4].filter(i=>i!==q[1]);
+    const kill=wrong[Math.floor(Math.random()*wrong.length)];
+    const b=main.querySelectorAll(".accbtn")[kill];
+    if(b){b.classList.add("dim");b.disabled=true;b.onclick=null;}
+    setTimeout(()=>skPop("🐽 嗅覚! ひとつ消したよ"),250);
+  }
   btMount(7,()=>accAnswer(-1));
   window.scrollTo(0,0);
 }
@@ -2727,6 +3009,8 @@ window.accAnswer=function(k){
   const btns=main.querySelectorAll(".accbtn");
   btns.forEach(b=>{b.onclick=null;});
   const hit=k===q[1];
+  logAttempt({id:"acc:"+q[0],ttl:q[0],sec:Math.round((Date.now()-(acc.t0||Date.now()))/1000),n:1,ok:hit?1:0,src:"drill",
+    m:hit?{}:(k<0?{time:1}:{sw:1})});
   if(hit){
     acc.ok++;acc.combo++;acc.maxCombo=Math.max(acc.maxCombo,acc.combo);
     btns[q[1]].classList.add("hit");
@@ -2741,7 +3025,11 @@ window.accAnswer=function(k){
     btns.forEach((b,i)=>{if(i===q[1])b.classList.add("hit");else if(i===k)b.classList.add("miss");else b.classList.add("dim");});
     const dm=btMiss();
     const c=$("#acccombo");
-    if(c)c.innerHTML=`<b style="color:#dc2626;">${k<0?"⏰ 時間切れ! ":""}正解は「${ACCE[q[1]]}」　-♥${BT?BT.atk:1}</b>`;
+    const hurt=dm&&!dm.dodged&&!dm.guarded;
+    if(c)c.innerHTML=`<b style="color:#dc2626;">正解は「${ACCE[q[1]]}」</b>`;
+    if(k<0)btPop("⏰ 時間切れ",1); else if(hurt)btPop("−♥"+(dm.dmg||1),1);
+    /* 嗅覚: まちがえた分野を1日3回まで覚えておいて、次に同じ科目が出たらヒントを出す */
+    if(hasSkill("nose"))noseUse(q);
     if(dm&&dm.dead)return;
     setTimeout(accNext,1600);
   }
@@ -2764,12 +3052,12 @@ function accEnd(){
   <h2>${ACCLV[lv]}　結果</h2>
   <div class="res-big ${cleared?"pass":"fail"}">${ok} / ${n} 問正解</div>
   <div style="text-align:center;font-weight:800;margin-top:4px;">${ok===n?"💯 パーフェクト!":cleared?"✅ パート踏破!":"あと"+(13-ok)+"問で踏破。もう一回!"}　${acc.maxCombo>=2?`🔥 最大${acc.maxCombo}コンボ`:""}</div>
-  <div class="xpsum">獲得経験値 <b>✨ ${acc.xp||0}</b>${bt?`　🍖 ${bt.fd}${bt.tk?`　🎟 ${bt.tk}`:""}　｜　残りライフ ${"♥".repeat(bt.lives)}`:""}</div>
+  <div class="xpsum">獲得経験値 <b>✨ ${acc.xp||0}</b>${bt&&bt.tk?`　🎟 ガチャチケット ${bt.tk}`:""}</div>
   ${acc.wrong.length?`<div class="dcard" style="margin-top:14px;"><h3 style="font-size:14px;">間違えた科目</h3>${acc.wrong.map(w=>`<div class="prow" style="cursor:default;"><span style="flex:1;">${w[0]}</span><span class="pst ok">${ACCE[w[1]]}</span></div>`).join("")}</div>`:""}
   <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
     <button class="btn" onclick="accStart(${lv})">もう一回</button>
     ${lv<ACC_NLV?`<button class="btn" style="background:var(--blue);" onclick="accStart(${lv+1})">次のパートへ →</button>`:""}
-    <button class="btn gray" onclick="renderDrillSetup()">修練場へもどる</button>
+    <button class="btn gray" onclick="renderDrillSetup()">仕訳ドリルへもどる</button>
   </div></div>`;
   acc=null;
   window.scrollTo(0,0);
@@ -2786,10 +3074,10 @@ function startDrill(qs,mode,atk){
 function startReview(){
   const wrong=LS.get(KEY_W,[]);
   const qs=wrong.map(id=>QMAP[id]).filter(Boolean);
-  if(!qs.length){alert("間違いリストは空です。決戦や討伐で間違えた仕訳がここに追加されます。");return;}
+  if(!qs.length){alert("間違いリストは空です。模試や問題演習で間違えた仕訳がここに追加されます。");return;}
   if(!gate("expdun"))return;
   LS.set("b2_expdd",daysKey(new Date()));   /* 1日1回の記録 */
-  withLoading(()=>{btStart("expdun",2,()=>{drill=null;renderHome();});startDrill([...qs].sort(()=>Math.random()-.5),"review",2);},620,"経験値ダンジョンへ むかっています");
+  withLoading(()=>{btStart("expdun",2,()=>{drill=null;renderHome();});startDrill([...qs].sort(()=>Math.random()-.5),"review",2);},620,"復習ダンジョンへ むかっています");
 }
 window.renderDrillSetup=renderDrillSetup;window.startReview=startReview;
 window.retryWrongDrill=function(){const qs=[...(drill.wrong||[])];if(qs.length)startDrill(qs.sort(()=>Math.random()-.5),drill.mode);};
@@ -2800,8 +3088,7 @@ function renderDrillQ(){
   const a={dr:[["",""],["",""],["",""],["",""]],cr:[["",""],["",""],["",""],["",""]]};
   drill.cur=a;
   main.innerHTML=`<div class="qpane">
-  <div style="display:flex;justify-content:space-between;align-items:center;"><h2>${drill.mode==="review"?"経験値ダンジョン":"仕訳"} ${drill.idx+1} / ${drill.qs.length}</h2><span class="prog">正解 ${drill.ok}${q.tag?" ｜ 分野: "+q.tag:""}</span></div>
-  ${btHTML()}
+  <div style="display:flex;justify-content:space-between;align-items:center;"><h2>${drill.mode==="review"?"復習ダンジョン":"仕訳"} ${drill.idx+1} / ${drill.qs.length}</h2><span class="prog">正解 ${drill.ok}${q.tag?" ｜ 分野: "+q.tag:""}</span></div>
   <div class="qtext" style="margin-top:10px;">${q.q}</div>
   <div style="font-size:12px;color:#64748b;">勘定科目: ${q.opts.join(" / ")}</div>
   <div id="dform">${journalFormHTML(0,0,0,q.opts,a)}</div>
@@ -2813,7 +3100,7 @@ function renderDrillQ(){
   main.querySelectorAll("input[data-j]").forEach(inp=>inp.addEventListener("blur",()=>{const n=parseNum(inp.value);inp.value=n==null?"":fmt(n);}));
   $("#d-grade").onclick=()=>gradeDrill(q);
   btMount(60,()=>{const m=btMiss();const r=$("#dres");
-    if(r&&(!m||!m.dead))r.innerHTML=`<div class="note" style="background:#fee2e2;border-color:#fca5a5;">⏰ 時間切れ! 敵の攻撃を受けました。</div>`;});
+    if(!m||!m.dead)btPop("⏰ 時間切れ",1);});
 }
 function gradeDrill(q){
   /* フォームから読み取り */
@@ -2837,11 +3124,17 @@ function gradeDrill(q){
   if(ok){const i=wrong.indexOf(q.id);if(i>=0){wrong.splice(i,1);recordRescue(1);}}
   LS.set(KEY_W,wrong);
   if(!ok){drill.wrong=drill.wrong||[];if(!drill.wrong.find(w=>w.id===q.id))drill.wrong.push(q);}
+  /* 分析用: 仕訳問題は「仕訳ミス」に分類する */
+  {
+    const secUsed=Math.round((Date.now()-(drill.t0||Date.now()))/1000);
+    logAttempt({id:q.id,ttl:q.tag||"仕訳",sec:secUsed,n:1,ok:ok?1:0,src:drill.mode==="review"?"expdun":"map",
+      m:ok?{}:(secUsed>60?{time:1}:{sw:1})});
+  }
   if(ok&&q.tag){
     const tagQs=DRILLS.filter(d=>d.tag===q.tag);
     if(tagQs.length&&tagQs.every(d=>{const x=st[d.id];return x&&x.o>0;}))awardTicket("tag:"+q.tag,"仕訳: "+q.tag);
   }
-  $("#dres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${ok?"correct":"wrong"}">${ok?"○ 正解！":"× 不正解"}</div>${dres?`<div class="xpsum">${rankBadge(dres)}</div>`:""}${ddmg&&!ddmg.dead?`<div class="xpsum" style="background:#fee2e2;border-color:#fca5a5;color:#b91c1c;">敵の攻撃! −♥${BT?BT.atk:1}　のこりライフ ${"♥".repeat(ddmg.lives)}</div>`:""}
+  $("#dres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${ok?"correct":"wrong"}">${ok?"○ 正解！":"× 不正解"}</div>${dres?`<div class="xpsum">${rankBadge(dres)}</div>`:""}
   <div class="ans-cmp">あなた: <span class="u">${journalUserText(a)}</span><br>正解: <span class="a">${journalAnsText(q)}</span></div>
   <div class="exp">${q.exp}</div>`;
   const btn=$("#d-grade");
@@ -2849,9 +3142,9 @@ function gradeDrill(q){
   else{btn.textContent="結果を見る";btn.onclick=()=>{
     const wr=drill.wrong||[];
     const bt=btEnd();
-    main.innerHTML=`<div class="qpane" style="text-align:center;"><h2>${drill.mode==="review"?"経験値ダンジョン":"討伐"} 終了</h2>
+    main.innerHTML=`<div class="qpane" style="text-align:center;"><h2>${drill.mode==="review"?"復習ダンジョン":"仕訳ドリル"} 終了</h2>
     <div class="res-big ${drill.ok/drill.qs.length>=0.8?"pass":"fail"}">${drill.ok} / ${drill.qs.length} 問正解</div>
-    ${drill.xp?`<div class="xpsum">獲得経験値 <b>✨ ${drill.xp}</b>${bt?`　🍖 ${bt.fd}${bt.tk?`　🎟 ${bt.tk}`:""}　｜　残りライフ ${"♥".repeat(bt.lives)}`:""}</div>`:""}
+    ${drill.xp?`<div class="xpsum">獲得経験値 <b>✨ ${drill.xp}</b>${bt&&bt.tk?`　🎟 ガチャチケット ${bt.tk}`:""}</div>`:""}
     <p style="color:#64748b;">${wr.length?"間違えた問題だけすぐ解き直すのが一番効きます。":"全問正解です!"}</p>
     <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
     ${wr.length?`<button class="btn" onclick="retryWrongDrill()">間違えた${wr.length}問だけやり直す</button>`:""}
@@ -2859,6 +3152,133 @@ function gradeDrill(q){
   };}
   window.scrollTo(0,document.body.scrollHeight);
 }
+
+/* ================= 分析: 挑戦ログとミス分類 ================= */
+const KEY_LOG="b2_plog";
+const MISS={
+ calc:{nm:"計算ミス",  ic:"🔢",c:"#f59e0b",d:"考え方は合っているのに数字がずれた"},
+ sw:  {nm:"仕訳ミス",  ic:"📗",c:"#8b5cf6",d:"勘定科目や貸借をまちがえた"},
+ time:{nm:"時間切れ",  ic:"⏰",c:"#64748b",d:"解ききる前に時間が尽きた"},
+ miss:{nm:"読み落とし",ic:"👀",c:"#0ea5e9",d:"空欄のまま・条件を見落とした"},
+ und: {nm:"理解不足",  ic:"❓",c:"#ef4444",d:"解き方そのものが身についていない"}
+};
+/* 数字の誤答を見て、計算ミスか理解不足かを切り分ける */
+function classifyNum(user,ans,timedOut){
+  if(timedOut)return "time";
+  if(user==null||user==="")return "miss";
+  const u=Number(user),a=Number(ans);
+  if(!isFinite(u)||!isFinite(a)||a===0)return "und";
+  const r=Math.abs(u-a)/Math.abs(a);
+  if(r<=0.12)return "calc";                                   /* 惜しい */
+  const su=String(Math.round(Math.abs(u))),sa=String(Math.round(Math.abs(a)));
+  if(su.length===sa.length&&[...su].sort().join("")===[...sa].sort().join(""))return "calc"; /* 桁の入れ替え */
+  if(su.replace(/0+$/,"")===sa.replace(/0+$/,""))return "calc";                              /* 桁ちがい */
+  return "und";
+}
+window.classifyNum=classifyNum;
+function logAttempt(o){
+  const l=LS.get(KEY_LOG,[]);
+  l.push(Object.assign({t:Date.now()},o));
+  if(l.length>600)l.splice(0,l.length-600);
+  LS.set(KEY_LOG,l);
+}
+window.logAttempt=logAttempt;
+/* 期間でしぼる。d=日数(0なら全期間) */
+function logsIn(days){
+  const l=LS.get(KEY_LOG,[]);
+  if(!days)return l;
+  const from=Date.now()-days*86400000;
+  return l.filter(x=>x.t>=from);
+}
+window.logsIn=logsIn;
+/* 大問ごとの配点(2級)。3級など構成が違う場合も、中身のある大問だけで100点に正規化する */
+const SEC_PTS={1:20,2:20,3:20,4:28,5:12};
+/* いまの実力を推定(パターンの到達度 × 大問配点) */
+function estScore(){
+  initPatMap();
+  let total=0,wsum=0;
+  PATMAP.forEach((g,gi)=>{
+    const no=gi+1,pts=SEC_PTS[no]||20;
+    const items=g.items;
+    if(!items.length)return;
+    wsum+=pts;
+    let s=0;
+    items.forEach(it=>{
+      const st=patStat(it);
+      s+= st.s==="○"?1 : st.s==="△"?0.6 : st.s==="⚔"?0.3 : 0;
+    });
+    total+=pts*(s/items.length);
+  });
+  if(wsum>0)total=total*100/wsum;    /* 満点=100点にそろえる */
+  /* 模試を受けていれば、直近2回の実測を重めに混ぜる */
+  const h=LS.get(KEY_H,[]);
+  if(h.length){
+    const rec=h.slice(-2).reduce((a,b)=>a+b.total,0)/Math.min(2,h.length);
+    total=total*0.45+rec*0.55;
+  }
+  return Math.max(0,Math.min(100,Math.round(total)));
+}
+window.estScore=estScore;
+/* 合格ライン(70点)への到達予測 */
+function passForecast(){
+  const cur=estScore();
+  const dd=LS.get(KEY_A,{});
+  const days=Object.keys(dd).sort();
+  /* 直近14日で、実際に学習した日の推定点の伸びを見る */
+  const recent=days.slice(-14).filter(k=>dd[k]&&dd[k].est!=null);
+  if(cur>=70)return {cur,done:true};
+  if(recent.length<3)return {cur,done:false,need:true};
+  const first=dd[recent[0]].est,last=dd[recent[recent.length-1]].est;
+  const spanDays=Math.max(1,(new Date(recent[recent.length-1])-new Date(recent[0]))/86400000);
+  const rate=(last-first)/spanDays;                 /* 1日あたりの伸び */
+  if(rate<=0.05)return {cur,done:false,stalled:true};
+  const d=Math.ceil((70-cur)/rate);
+  const dt=new Date();dt.setDate(dt.getDate()+d);
+  return {cur,done:false,days:d,date:`${dt.getMonth()+1}/${dt.getDate()}`,rate:Math.round(rate*10)/10};
+}
+window.passForecast=passForecast;
+/* 本日の経験値2倍ダンジョン。無料=ランダム / ゴールドパス=弱点に連動 */
+function bonusPat(){
+  initPatMap();
+  const flat=[];
+  PATMAP.forEach((g,gi)=>g.items.forEach((it,ii)=>{
+    const t=itemTier(it);
+    if(t>1&&!unlocked("tier"+t))return;
+    flat.push({gi,ii,it,tier:t,label:it.label});
+  }));
+  if(!flat.length)return null;
+  if(isGold()){
+    const r=recommendDungeon();
+    if(r)return Object.assign({},r,{gold:true});
+  }
+  /* 日付を種にして、その日は同じダンジョンが選ばれるようにする */
+  const k=daysKey(new Date());
+  let h=0;for(let i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))|0;
+  const p=flat[Math.abs(h)%flat.length];
+  return Object.assign({},p,{gold:false});
+}
+window.bonusPat=bonusPat;
+function isBonus(gi,ii){const b=bonusPat();return !!(b&&b.gi===gi&&b.ii===ii);}
+window.isBonus=isBonus;
+/* いま行くべきダンジョン(正解率が低く、配点の大きいところ) */
+function recommendDungeon(){
+  initPatMap();
+  let worst=null;
+  PATMAP.forEach((g,gi)=>{
+    const pts=SEC_PTS[gi+1]||20;
+    g.items.forEach((it,ii)=>{
+      const st=patStat(it);
+      if(st.s==="○")return;
+      const lack= st.s==="△"?0.4 : st.s==="⚔"?0.7 : 1;
+      const tier=itemTier(it);
+      if(tier>1&&!unlocked("tier"+tier))return;      /* まだ入れないエリアは薦めない */
+      const score=lack*pts;
+      if(!worst||score>worst.score)worst={gi,ii,it,score,tier,label:it.label,sec:gi+1};
+    });
+  });
+  return worst;
+}
+window.recommendDungeon=recommendDungeon;
 
 /* ---------- ダッシュボード ---------- */
 function renderDash(){
@@ -2888,7 +3308,73 @@ function renderDash(){
     }
     cal+=`<div style="display:flex;flex-direction:column;gap:4px;">${col}</div>`;
   }
+  /* ---- 期間フィルタ ---- */
+  const PER=[{d:7,n:"直近1週間"},{d:30,n:"直近1ヶ月"},{d:0,n:"全期間"}];
+  const pd=LS.get("b2_dashp",30);
+  const logs=logsIn(pd);
+  const perTabs=PER.map(p=>`<button class="ctab ${p.d===pd?"on":""}" style="padding:6px 14px;font-size:12.5px;" onclick="LS.set('b2_dashp',${p.d});renderDash();">${p.n}</button>`).join("");
+
+  /* ---- パターン別 所要時間・正解率 ---- */
+  const byId={};
+  logs.filter(x=>x.src==="map"||x.src==="expdun").forEach(x=>{
+    const o=byId[x.id]||(byId[x.id]={ttl:x.ttl,n:0,ok:0,q:0,sec:0,t:0});
+    o.n++;o.ok+=x.ok||0;o.q+=x.n||1;o.sec+=x.sec||0;o.t=Math.max(o.t,x.t);
+  });
+  const rows=Object.values(byId).sort((a,b)=>(a.ok/a.q)-(b.ok/b.q)).slice(0,12);
+  const patTable=rows.length?`<table class="rtable"><tr><th>パターン</th><th>正解率</th><th>平均時間</th><th>挑戦</th></tr>
+    ${rows.map(r=>{const acc=Math.round(r.ok/r.q*100),avg=Math.round(r.sec/r.n);
+      return `<tr><td style="text-align:left;">${escapeHtml(r.ttl||"")}</td>
+      <td class="${acc>=80?"correct":acc>=50?"":"wrong"}">${acc}%</td>
+      <td>${avg>=60?Math.floor(avg/60)+"分"+(avg%60)+"秒":avg+"秒"}</td><td>${r.n}回</td></tr>`;}).join("")}</table>
+    <p class="prog" style="margin-top:6px;">正解率の低い順。時間がかかりすぎている論点は、練習モードで解き方から確認しましょう。</p>`
+    :`<p class="prog">この期間のデータがありません。パターン網羅マップで解くとここに出ます。</p>`;
+
+  /* ---- ミスの種類 ---- */
+  const mtot={};let mall=0;
+  logs.forEach(x=>{Object.keys(x.m||{}).forEach(k=>{mtot[k]=(mtot[k]||0)+x.m[k];mall+=x.m[k];});});
+  const missRows=mall?Object.keys(MISS).filter(k=>mtot[k]).sort((a,b)=>mtot[b]-mtot[a]).map(k=>{
+    const p=Math.round(mtot[k]/mall*100);
+    return `<div class="bar"><span class="bl">${MISS[k].ic} ${MISS[k].nm}</span><div class="bt"><div class="bf" style="width:${p}%;background:${MISS[k].c};"></div></div><span class="bv">${mtot[k]}件 (${p}%)</span></div>`;
+  }).join(""):"";
+  const topMiss=mall?Object.keys(mtot).sort((a,b)=>mtot[b]-mtot[a])[0]:null;
+  const missBlock=mall?`${missRows}
+    <div class="note" style="margin-top:10px;"><b>${MISS[topMiss].ic} ${MISS[topMiss].nm}</b> がいちばん多いです。${MISS[topMiss].d}。<br>
+    ${topMiss==="calc"?"考え方は合っているので、下書きの書き方と電卓の打ち方を整えるだけで伸びます。"
+     :topMiss==="sw"?"5要素の定位置があやふやかもしれません。仕訳ドリルで科目の分類を反射でできるようにしましょう。"
+     :topMiss==="time"?"時間配分が課題です。速く解ける論点から手をつける練習をしましょう。"
+     :topMiss==="miss"?"問題文の条件を拾いきれていません。先に問われている数値に印をつける癖をつけましょう。"
+     :"解き方そのものを固める段階です。練習モードでガイドと一緒に解き直すのが近道です。"}</div>`
+    :`<p class="prog">まだミスの記録がありません。</p>`;
+
+  /* ---- 合格予測 ---- */
+  const fc=passForecast();
+  const rec=recommendDungeon();
+  const fcBlock=`<div class="fcwrap">
+    <div class="fcnum"><span>いまの推定</span><b>${fc.cur}<small>点</small></b></div>
+    <div class="fcbar"><div style="width:${Math.min(100,fc.cur)}%;"></div><i style="left:70%;"></i></div>
+    <div class="fctxt">${
+      fc.done?"🎉 <b>合格ラインに乗っています。</b>この状態を保ったまま、模試で時間配分を確かめましょう。"
+      :fc.need?"あと <b>3日ぶん</b> の記録がたまると、合格ラインへの到達日を予測できます。"
+      :fc.stalled?"最近は横ばいです。<b>まだ手をつけていないパターン</b>を崩すと一気に伸びます。"
+      :`このペースなら <b>${fc.days}日後(${fc.date}ごろ)</b> に合格ライン(70点)へ。<span class="prog">1日あたり +${fc.rate}点</span>`}</div>
+    ${rec?`<div class="fcrec"><span>いま行くべきダンジョン${isGold()?"":" (1つだけ表示)"}</span>
+      <button class="btn" style="font-size:13px;padding:9px 18px;" onclick="setPatLv(${rec.tier});renderPatMap();">${TIERS[rec.tier].icon} ${escapeHtml(rec.label)}　→</button>
+      <span class="prog">第${rec.sec}問・${TIERS[rec.tier].n}　配点が大きく、まだ固めきれていない論点です</span></div>`:""}
+  </div>`;
+
   const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">分析</h2></div>
+  <div class="qpane"><h2><span class="sicon" data-icon="trophy"></span>合格ラインまで</h2>${fcBlock}</div>
+  <div class="ctabs" style="margin:14px 0 0;">${perTabs}</div>
+  <div class="qpane"><h2><span class="sicon" data-icon="pin"></span>ミスの種類${isGold()?'<span class="gtag">👑</span>':""}</h2>
+    ${isGold()?missBlock:`<div class="lockwrap"><div class="lockblur">${missBlock}</div>
+      <div class="lockover"><div>🔒</div><b>ミスの内訳はゴールドパス</b><span class="prog">計算ミス・仕訳ミス・理解不足…<br>どこで落としているかが分かります</span>
+      <button class="btn" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);font-size:13px;padding:9px 20px;" onclick="openGold('dash_miss')">くわしく見る</button></div></div>`}
+  </div>
+  <div class="qpane"><h2><span class="sicon" data-icon="map"></span>パターン別 正解率・所要時間${isGold()?'<span class="gtag">👑</span>':""}</h2>
+    ${isGold()?patTable:`<div class="lockwrap"><div class="lockblur">${patTable}</div>
+      <div class="lockover"><div>🔒</div><b>パターン別の詳細はゴールドパス</b><span class="prog">どの論点に何分かかっているかが見えます</span>
+      <button class="btn" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);font-size:13px;padding:9px 20px;" onclick="openGold('dash_pat')">くわしく見る</button></div></div>`}
+  </div>
   <div class="qpane"><h2><span class="sicon" data-icon="fire"></span>学習カレンダー</h2>
     <div style="display:flex;gap:4px;overflow-x:auto;padding:8px 0;">${cal}</div>
     <div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:12px;color:#8a84a3;">
@@ -2897,6 +3383,10 @@ function renderDash(){
     </div></div>
   <div class="qpane"><h2><span class="sicon" data-icon="chart"></span>模試の得点推移(合格ライン70点)</h2>${trend}</div>
   <div class="qpane"><h2><span class="sicon" data-icon="clock"></span>直近の模試: 大問別 所要時間</h2>${timeRows}</div>
+  ${isGold()?"":`<div class="qpane gpromo" onclick="openGold('dash')">
+    <div style="font-size:30px;">👑</div>
+    <div style="flex:1;"><b>ゴールドパス</b><br><span class="prog">スタミナ2倍・模試無制限・弱点に連動したEXP2倍・分析フル解放</span></div>
+    <span class="arw">見てみる　→</span></div>`}
   <div style="margin-top:16px;">
    <button class="btn gray" style="font-size:12px;padding:8px 18px;" onclick="if(confirm('学習データ(履歴・統計・間違いリスト)をすべて削除しますか？')){localStorage.removeItem('b2_history');localStorage.removeItem('b2_drill');localStorage.removeItem('b2_wrong');renderDash();}">データをリセット</button>
   </div>`;
@@ -2905,7 +3395,7 @@ function renderDash(){
 }
 window.renderDash=renderDash;
 
-/* ---------- 討伐マップ ---------- */
+/* ---------- パターン網羅マップ ---------- */
 const KEY_P="b2_pat";
 function initPatMap(){
   if(PATMAP[0]._init)return;PATMAP[0]._init=1;
@@ -2935,7 +3425,7 @@ function patStat(item){
 function patCleared(st){return st.s==="○"||st.s==="△";}
 function tierProg(lv){
   let total=0,ok=0;
-  PATMAP.forEach(g=>g.items.forEach(it=>{if(itemTier(it)<=lv){total++;if(patCleared(patStat(it)))ok++;}}));
+  PATMAP.forEach(g=>g.items.forEach(it=>{if(itemTier(it)===lv){total++;if(patCleared(patStat(it)))ok++;}}));
   return{total,ok,done:total>0&&ok===total};
 }
 function renderPatMap(){
@@ -2945,45 +3435,34 @@ function renderPatMap(){
   const tabs=[1,2,3].map(k=>{
     const p=tierProg(k),T=TIERS[k];
     const lk=k>1&&!unlocked("tier"+k);
-    return `<button class="ctab ${k===lv?"on":""} ${lk?"lock":""}" onclick="setPatLv(${k})">${lk?"🔒":T.icon} ${T.n}<small>${lk?"Lv."+lvReq("tier"+k):T.sub}</small>${p.done?" ✓":""}</button>`;
+    return `<button class="ctab ${k===lv?"on":""} ${lk?"lock":""}" onclick="setPatLv(${k})">${lk?"🔒 ":""}${T.n}${lk?`<small>Lv.${lvReq("tier"+k)}</small>`:p.done?" ✓":""}</button>`;
   }).join("");
   const pr=tierProg(lv),T=TIERS[lv];
   const pct=pr.total?Math.round(pr.ok/pr.total*100):0;
   const lives=dogLives();
   const groups=PATMAP.map((g,gi)=>{
     const rows=g.items.map((it,ii)=>{
-      if(itemTier(it)>lv)return "";
+      if(itemTier(it)!==lv)return "";
       const st=patStat(it);
-      const isNew=itemTier(it)===lv&&lv>1;
-      return `<div class="prow" onclick="startPat(${gi},${ii})"><span class="pst ${st.cls}">${st.s}</span><span style="flex:1;">${it.label}${isNew?' <span class="tiernew">'+TIERS[lv].n+'</span>':""}</span><span class="prog">${st.d}</span></div>`;
+      return `<div class="prow" onclick="startPat(${gi},${ii})"><span class="pst ${st.cls}">${st.s}</span><span style="flex:1;">${it.label}${isBonus(gi,ii)?' <span class="bonusb">✨EXP2倍</span>':""}</span><span class="prog">${st.d}</span></div>`;
     }).join("");
     if(!rows)return "";
     return `<div class="dcard" style="margin-top:14px;"><h3 style="font-size:15px;">${g.g}</h3><p class="prog" style="margin-bottom:6px;">${g.note}</p>${rows}</div>`;
   }).join("");
-  main.innerHTML=`<div class="qpane"><h2><span class="micon" data-icon="map"></span>討伐マップ</h2>
-  <p class="prog" style="margin-top:-4px;">本試験の出題パターンを、犬と一緒に討伐していくメインクエストです。</p>
+  const locked=lv>1&&!unlocked("tier"+lv);
+  main.innerHTML=`<div class="qpane"><h2><span class="micon" data-icon="map"></span>パターン網羅マップ</h2>
   <div class="ctabs">${tabs}</div>
-  <div class="dgate" style="background:${T.bg};border-color:${T.col};">
-    <div class="dgate-h"><span class="dgate-ic">${T.icon}</span><span><b style="color:${T.col};">${T.n}</b><small>${T.sub}編</small></span>
-      <span class="dgate-foe" id="dgatefoe"></span></div>
-    <p>${T.d}</p>
-    <div class="dgate-st">
-      <span>敵 <b>${T.foe}</b></span>
-      <span>攻撃力 <b style="color:${T.col};">${T.atk}</b></span>
-      <span>相棒のライフ <b>${"♥".repeat(lives)}</b></span>
-      <span>1問あたり <b>⚡${stamCost("map",lv)}</b></span>
-      <span>${stamHTML()}</span>
-    </div>
-    ${lv>1&&!unlocked("tier"+lv)?`<div class="dgate-lock">🔒 このエリアは <b>Lv.${lvReq("tier"+lv)}</b> で解禁されます(いま Lv.${userLv().lv})。</div>`:""}
-    ${lives<=T.atk?`<div class="dgate-warn">⚠️ いまの相棒は <b>一撃で倒されます</b>。犬を育てるか、やさしいエリアから攻めましょう。</div>`
-      :lives<T.atk*2?`<div class="dgate-warn" style="background:#fef3c7;color:#92400e;">⚠️ 被弾 <b>1回</b> で危険域です。慎重に。</div>`:""}
-  </div>
-  <div class="cprog"><div class="cprog-bar"><div style="width:${pct}%;"></div></div><span class="prog"><b>${pr.ok} / ${pr.total}</b> 討伐</span></div>
-  ${pr.done?`<div class="note" style="background:#dcfce7;border-color:var(--ok);">🎉 <b>${T.n} 踏破!</b> ${lv<3?`次は「${TIERS[lv+1].icon} ${TIERS[lv+1].n}」へ。 <a style="text-decoration:underline;cursor:pointer;font-weight:700;" onclick="setPatLv(${lv+1})">${TIERS[lv+1].n}にいどむ →</a>`:"全パターン制覇! 仕上げに決戦(模試)を通しで解いて時間配分を確認しましょう。"}</div>`:""}
-  <div class="note" style="font-size:12.5px;">ステータス: <b>未</b>=未討伐 / <span class="pst mid" style="padding:1px 8px;">⚔</span>=交戦中(挑戦回数を記録) / <span class="pst gd" style="padding:1px 8px;">△</span>=練習モードで討伐 / <span class="pst ok" style="padding:1px 8px;">○</span>=自力で討伐。△も踏破にカウント。自力で倒し直すと○に昇格!</div>
-  ${groups}
+  ${locked?`<div class="lockarea">
+      <div class="lockic">🔒</div>
+      <b>${T.n}編は Lv.${lvReq("tier"+lv)} で解禁</b>
+      <span class="prog">いまは Lv.${userLv().lv}。${TIERS[lv-1].n}編を進めて経験値をためましょう。</span>
+      <div style="margin-top:14px;"><button class="btn" onclick="setPatLv(${lv-1})">${TIERS[lv-1].n}編にもどる</button></div>
+    </div>`
+   :`<div class="cprog"><div class="cprog-bar"><div style="width:${pct}%;"></div></div><span class="prog"><b>${pr.ok} / ${pr.total}</b> 制覇</span></div>
+  ${pr.done?`<div class="note" style="background:#dcfce7;border-color:var(--ok);">🎉 <b>${T.n}編 制覇!</b> ${lv<3?`<a style="text-decoration:underline;cursor:pointer;font-weight:700;" onclick="setPatLv(${lv+1})">${TIERS[lv+1].n}編にすすむ →</a>`:"全パターン制覇! 仕上げに模擬試験を通しで解いて時間配分を確認しましょう。"}</div>`:""}
+  <div class="note" style="font-size:12.5px;">ステータス: <b>未</b>=未挑戦 / <span class="pst mid" style="padding:1px 8px;">⚔</span>=挑戦中 / <span class="pst gd" style="padding:1px 8px;">△</span>=練習モードでクリア / <span class="pst ok" style="padding:1px 8px;">○</span>=自力でクリア。△も制覇にカウント。自力で解き直すと○に昇格!</div>
+  ${groups}`}
   <div style="margin-top:14px;"><button class="btn gray" onclick="renderHome()">ホームへ</button></div></div>`;
-  try{const fe=document.getElementById("dgatefoe");if(fe)fe.appendChild(foeCanvas(T.atk,2.4));}catch(e){}
   try{mountIcons(main);}catch(e){}
   window.scrollTo(0,0);
 }
@@ -2998,6 +3477,7 @@ function resolvePat(item){
 /* 実処理(即時)。ローディングを挟むのは startPat 側 */
 window.enterPat=function(gi,ii){
   window._patPos={gi,ii};
+  window._patBoost=isBonus(gi,ii)?2:1;
   const item=PATMAP[gi].items[ii];
   btStart("map",itemTier(item),()=>renderPatMap());
   if(item.k==="tag"){startDrill([...DRILLS.filter(d=>d.tag===item.tag)].sort(()=>Math.random()-.5),"drill",itemTier(item));return;}
@@ -3008,7 +3488,7 @@ window.enterPat=function(gi,ii){
 };
 window.startPat=function(gi,ii){
   const tier=itemTier(PATMAP[gi].items[ii]);
-  const nm=["","草原","樹海","遺跡"][tier]||"ダンジョン";
+  const nm=["","初級","中級","上級"][tier]||"ダンジョン";
   if(!gate("map",tier))return;
   withLoading(()=>enterPat(gi,ii),620,nm+"へ むかっています");
 };
@@ -3019,7 +3499,6 @@ function patRender(q,lock){
   const remain=lock?lock.filter(v=>!v).length:q.boxes.length;
   main.innerHTML=`<div class="qpane"><h2>${q.title}</h2>
   ${(typeof PATTUT!=="undefined"&&PATTUT[q.id]&&!lock)?`<button class="btn" style="margin:2px 0 10px;font-size:13px;padding:9px 18px;background:var(--blue);" onclick="startPatTut()">🐶 練習モード ─ 犬と一緒に解き方を学ぶ</button>`:""}
-  ${btHTML()}
   ${lock?`<div class="note">前回正解した欄はロック済み(○)。<b>残り ${remain} 問だけ</b>解けばOKです。 <a style="text-decoration:underline;cursor:pointer;" onclick="patRender(pqCur,null)">最初から全部解き直す</a></div>`:""}
   <div class="qtext">${q.intro}</div>
   ${q.boxes.map((b,i)=>{
@@ -3036,7 +3515,7 @@ function patRender(q,lock){
   window._patT0=Date.now();
   /* 大問は時間切れでも自動採点はせず、被弾だけさせる */
   btMount(patLimit(q),()=>{const m=btMiss();const r=$("#pqres");
-    if(r)r.innerHTML=`<div class="note" style="background:#fee2e2;border-color:#fca5a5;">⏰ 時間切れ! 敵の攻撃を受けました。落ち着いて解答を続けてください。</div>`+r.innerHTML;});
+    btPop("⏰ 時間切れ",1);});
   window.scrollTo(0,0);
 }
 /* パターンの目安時間(秒): 欄1つあたり45秒、最低90秒 */
@@ -3075,14 +3554,26 @@ function gradePat(q){
   const st=LS.get(KEY_P,{});const p=st[q.id]||{t:0,best:0};p.t++;p.best=Math.max(p.best,pct);p.ok=okFlags;
   if(newTry>newOk)p.fail=(p.fail||0)+1;
   st[q.id]=p;LS.set(KEY_P,st);
+  /* 分析用: 所要時間とミスの種類を記録 */
+  const secUsed=Math.round((Date.now()-(window._patT0||Date.now()))/1000);
+  const timedOut=secUsed>patLimit(q);
+  const kinds={};
+  q.boxes.forEach((b,i)=>{
+    if(patLock&&patLock[i])return;
+    if(okFlags[i])return;
+    const inp=main.querySelector(`input[data-pq="${i}"]`);
+    const kind=classifyNum(inp?parseNum(inp.value):null,b.ans,timedOut);
+    kinds[kind]=(kinds[kind]||0)+1;
+  });
+  logAttempt({id:q.id,ttl:q.title,sec:secUsed,n:q.boxes.length,ok:got,src:"map",m:kinds});
   const wrong=q.boxes.length-got;
   /* 冒険報酬: 正解した欄の数だけ、解答の速さに応じて付与。1つでも間違えたら被弾 */
   let res=null,dmg=null;
   const btn=document.getElementById("pq-grade");
-  if(newOk>0)res=btHit(btn,{mult:newOk});
+  if(newOk>0)res=btHit(btn,{mult:newOk,boost:window._patBoost||1});
   if(newTry>newOk)dmg=btMiss();
   if(wrong===0)awardTicket(q.id,q.title);
-  $("#pqres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${pct>=80?"correct":"wrong"}">${got} / ${q.boxes.length} 正解 (${pct}%)${wrong===0?" — このパターン完全制覇!":(pct>=80?" — 制覇! あと少しで満点":"")}</div>${res?`<div class="xpsum">${rankBadge(res)}</div>`:""}${dmg&&!dmg.dead?`<div class="xpsum" style="background:#fee2e2;border-color:#fca5a5;color:#b91c1c;">敵の攻撃! −♥${BT?BT.atk:1}　のこりライフ ${"♥".repeat(dmg.lives)}</div>`:""}<div class="exp">【解説】\n${q.exp}</div>`;
+  $("#pqres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${pct>=80?"correct":"wrong"}">${got} / ${q.boxes.length} 正解 (${pct}%)${wrong===0?" — このパターン完全制覇!":(pct>=80?" — 制覇! あと少しで満点":"")}</div>${res?`<div class="xpsum">${rankBadge(res)}</div>`:""}<div class="exp">【解説】\n${q.exp}</div>`;
   if(dmg&&dmg.dead)return;
   setTimeout(()=>flushEvo(),800);
   if(wrong>0){
@@ -3130,17 +3621,6 @@ const PATTUT={
 {p:2,box:9,look:"<b>⑩ 当月仕入高</b>の欄",think:"仕入高とは「<b>今月仕入れた金額の合計</b>」。<br>仕入れたのは <b>5日(63,000円)と18日(44,000円)</b> の2回だけ。",act:"<b>⑩</b>に <b>63,000+44,000</b> を入れよう",hint:"5日と18日の合計。",ans:107000},
 {p:3,say:"全問クリア!🎉 おぼえることは、たった2つ。<br><b>① 売ったら「売れた記録」+「商品が出ていった記録」の2セット</b><br><b>② 在庫は「◯個@◯円」の段でメモして、古い段から出す</b><br>数字が変わっても、同じ手順で解ける。仕上げに<b>自力で解いて制覇○</b>を取りに行こう!",last:true}
 
-]},
-"pq_shiwake":{ph:["仕訳の型","分解する","金額を計算","一致チェック","卒業"],steps:[
-{p:0,hlText:"仕訳",look:"問題文ぜんぶ(まずは読む前に、型をおさえよう)",think:"どんな取引でも、仕訳は<b>5ステップ</b>で書ける。<br>① 取引を「<b>何が増えた/減った</b>」に分解する<br>② それが<b>5要素</b>(資産・負債・純資産・費用・収益)のどれか考える<br>③ 増えたら定位置(資産・費用=借方/負債・純資産・収益=貸方)、減ったら逆側<br>④ 金額を計算する<br>⑤ <b>借方合計=貸方合計</b>をチェック",ex:"「パンを100円で買って現金で払った」<br>→ パン(資産)が増えた=<b>借方</b>/現金(資産)が減った=<b>貸方</b>。どんな複雑な取引も、この分解の積み重ね!",act:"この型を、実際の2級の取引で使ってみよう。"},
-{p:1,hlText:"仲介手数料",look:"「<b>仲介手数料</b>」と「<b>登記費用</b>」",think:"ステップ①: 登場人物を分解。<br>増えた: <b>建物・土地</b>(資産)→借方<br>減った: <b>当座預金・現金</b>(資産)→貸方<br>そして大事なルール: 手数料や登記費用などの<b>付随費用は、資産の取得原価に含める</b>。",act:"「費用」という科目は出てこない。ぜんぶ建物と土地の値段に入るよ!",why:"なぜ含めるの?<br>→ その資産を「使える状態にする」までに掛かったお金は、ぜんぶその資産の値段と考えるルールだから。"},
-{p:2,box:0,hlText:"建物¥3,000,000",look:"建物の本体価格と手数料",think:"手数料250,000は本体の比<b>3 : 2</b>で按分。<br>建物分=250,000×3/5=150,000。",act:"<b>①</b>に <b>3,000,000+150,000</b> を入れる",hint:"本体+按分150,000。",ans:3150000},
-{p:2,box:1,hlText:"登記費用¥50,000",look:"土地の本体・手数料・登記費用",think:"土地分の手数料=250,000×2/5=100,000。<br>登記費用50,000も土地の取得原価へ。",act:"<b>②</b>に <b>2,000,000+100,000+50,000</b> を入れる",hint:"本体+100,000+50,000。",ans:2150000},
-{p:2,box:2,hlText:"小切手を振り出して",look:"「小切手を振り出して支払った」",think:"小切手を振り出す=<b>当座預金の減少</b>。<br>払ったのは本体の合計。",act:"<b>③</b>に <b>3,000,000+2,000,000</b> を入れる",hint:"本体の合計。",ans:5000000},
-{p:2,box:3,hlText:"現金で支払った",look:"「現金で支払った」",think:"現金で払ったのは 手数料250,000+登記費用50,000。",act:"<b>④</b>に <b>250,000+50,000</b> を入れる",hint:"付随費用の合計。",ans:300000},
-{p:3,box:4,look:"<b>⑤ 借方合計</b>の欄",think:"仕訳を組み立てると:",sw:[["建物","3,150,000","当座預金","5,000,000"],["土地","2,150,000","現金","300,000"]],act:"<b>⑤</b>に 借方合計 <b>3,150,000+2,150,000</b> を入れる",hint:"①+②。",ans:5300000},
-{p:3,box:5,look:"<b>⑥ 貸方合計</b>の欄",think:"貸方=当座預金5,000,000+現金300,000。<br><b>借方と一致したら仕訳は完成!</b>ズレていたらどこかが間違い。",act:"<b>⑥</b>に <b>5,000,000+300,000</b> を入れる",hint:"③+④。⑤と同じ額になるはず。",ans:5300000},
-{p:4,say:"全問クリア!🎉 仕訳の5ステップ:<br><b>①分解 ②5要素 ③定位置 ④金額 ⑤貸借一致</b><br>第1問はこの型の反復あるのみ。下の分野別ドリルで、全分野○を目指そう!",last:true}
 ]},
 "pq_ginko":{ph:["ルールを知る","当社側を修正","銀行側を調整","卒業"],steps:[
 {p:0,hlText:"当座預金勘定の残高",look:"問題文の「<b>当座預金の残高 500,000円</b>」と「<b>銀行残高 571,000円</b>」",think:"当社のノート(帳簿)と、銀行の記録が<b>合っていない</b>。<br>そのズレの理由を整理するのが<b>銀行勘定調整表</b>。<br>大事なルールは1つ: <b>直す(仕訳する)のは当社側の理由だけ</b>。",ex:"財布に1,000円あるはずが900円。<br>「ジュース代を書き忘れてた」→ <b>自分のメモを直す</b>。<br>「友だちがまだお金を取りに来てないだけ」→ 自分は直さない。",act:"見分け方: <b>当社が知らなかった/間違えた → 仕訳する</b>。<b>銀行の処理待ち → 何もしない</b>。"},
@@ -3495,7 +3975,7 @@ function tutGuide(st){
     <div>${body}<div class="tg-hint" id="tghint"></div></div>
     <div style="margin-top:10px;text-align:right;">
       ${st.box!==undefined?`<button class="btn" style="padding:9px 24px;font-size:13.5px;" onclick="tutCheck()">答え合わせ</button>`
-      :st.last?`<button class="btn" style="padding:9px 16px;font-size:13.5px;" onclick="tutRetry()">自力で討伐する　→</button> <button class="btn gray" style="padding:9px 12px;font-size:13.5px;" onclick="tutExit(2)">マップへ</button>`
+      :st.last?`<button class="btn" style="padding:9px 16px;font-size:13.5px;" onclick="tutRetry()">自力で解いてみる　→</button> <button class="btn gray" style="padding:9px 12px;font-size:13.5px;" onclick="tutExit(2)">マップへ</button>`
       :`<button class="btn" style="padding:9px 28px;font-size:13.5px;" onclick="tutNext()">次へ　→</button>`}
     </div>`;
   try{g.querySelector("#tgdog").appendChild(dogCanvas(d?dogStage(d.f||0):0,0.9,d?d.b:0));}catch(e){}
@@ -3607,16 +4087,45 @@ window.nextQuiz=function(){
 const KEY_T="b2_tickets",KEY_CL="b2_cleared",KEY_DOG="b2_dogs";
 const KEY_F="b2_food";
 const DOG_PAL={K:"#28201c",W:"#ffffff",C:"#f2e3c8",B:"#c89b6a",G:"#9a9089",P:"#f2a0a0",R:"#e05656",Y:"#ffd66b",D:"#8a6a4a"};
+/* 犬種ごとの個性。hp=ライフ加算 / def=被弾を1軽減する確率 / eva=完全回避の確率 / sk=特殊能力 */
 const DOG_BREEDS=[
- {nm:"ビーグル",C:"#ef922a",B:"#c66e1a",r:0},
- {nm:"くろしば",C:"#8a776b",B:"#4a3c34",r:0},
- {nm:"しろ",C:"#ffffff",B:"#e3dccf",r:0},
- {nm:"ちゃいろ",C:"#d9a06b",B:"#9a6438",r:0},
- {nm:"ハスキー",C:"#c3cbd4",B:"#7d8a99",r:1},
- {nm:"ゴールド",C:"#f5d189",B:"#d9a84e",r:1},
- {nm:"さくら",C:"#f7d6da",B:"#e0a0ab",r:2},
- {nm:"こがね",C:"#ffe27a",B:"#e8b520",r:3}
+ {nm:"ビーグル",C:"#ef922a",B:"#c66e1a",r:0,hp:0,def:0,  eva:.05,sk:"nose"},
+ {nm:"くろしば",C:"#8a776b",B:"#4a3c34",r:0,hp:1,def:0,  eva:0,  sk:"guts"},
+ {nm:"しろ",    C:"#ffffff",B:"#e3dccf",r:0,hp:0,def:.10,eva:0,  sk:"slow"},
+ {nm:"ちゃいろ",C:"#d9a06b",B:"#9a6438",r:0,hp:0,def:0,  eva:.10,sk:"quick"},
+ {nm:"ハスキー",C:"#c3cbd4",B:"#7d8a99",r:1,hp:1,def:0,  eva:.15,sk:"freeze"},
+ {nm:"ゴールド",C:"#f5d189",B:"#d9a84e",r:1,hp:1,def:.15,eva:0,  sk:"guard"},
+ {nm:"さくら",  C:"#f7d6da",B:"#e0a0ab",r:2,hp:2,def:.20,eva:.10,sk:"heal"},
+ {nm:"こがね",  C:"#ffe27a",B:"#e8b520",r:3,hp:2,def:.25,eva:.15,sk:"gold"}
 ];
+/* 特殊能力 */
+const SKILLS={
+ nose:  {nm:"嗅覚",     d:"仕訳ドリルでまちがえたとき、選択肢を1つ減らしてくれる(1日3回)"},
+ guts:  {nm:"根性",     d:"ライフ1のとき、1回だけ踏みとどまる(1ダンジョン1回)"},
+ slow:  {nm:"のんき",   d:"制限時間が 10% のびる"},
+ quick: {nm:"すばしっこい",d:"D判定が C判定に格上げされる"},
+ freeze:{nm:"氷結",     d:"バーの進行を8秒とめる(1ダンジョン2回・ボタンで発動)"},
+ guard: {nm:"守護",     d:"最初の被弾を1回だけ無効化する"},
+ heal:  {nm:"治癒",     d:"3問連続で正解するとライフが1回復する"},
+ gold:  {nm:"黄金律",   d:"ごはん券とガチャ券の獲得が 50% 増える"}
+};
+/* 犬種indexを必ず 0..7 に収める(負数・小数・壊れた値で undefined にならないように) */
+function breedOf(b){
+  const L=DOG_BREEDS.length;
+  const i=Number.isFinite(+b)?((Math.trunc(+b)%L)+L)%L:0;
+  return DOG_BREEDS[i];
+}
+window.breedOf=breedOf;
+function partnerBreed(){
+  const d=getDogs()[getPartner()];
+  return d?breedOf(d.b):DOG_BREEDS[0];
+}
+window.partnerBreed=partnerBreed;
+function hasSkill(k){return partnerBreed().sk===k;}
+window.hasSkill=hasSkill;
+/* ペット枠(Lvで増える) */
+function petSlots(){if(isGold())return goldPetSlots();const lv=userLv().lv;return lv>=lvReq("pet3")?3:lv>=lvReq("pet2")?2:1;}
+window.petSlots=petSlots;
 /* 旧17種→8種への移行表(色違いは代表1種に統合) */
 const DOG_MIG=[0,1,2,3,4,5,6,6,6,6,6,6,6,6,6,6,7];
 const RARITY=[{n:"N",c:"#8a94a6",p:0.62},{n:"R",c:"#2b6cea",p:0.28},{n:"SR",c:"#a05ce0",p:0.08},{n:"SSR",c:"#e8a020",p:0.02}];
@@ -3633,8 +4142,11 @@ function getDogs(){
   let d=LS.get(KEY_DOG,[]);
   if(typeof d==="number")d=Array.from({length:d},()=>({f:0}));
   if(!Array.isArray(d))d=[];
+  /* 壊れた要素(null・文字列・数値)を捨てる。ここを通さないと以降で必ず落ちる */
+  const before=d.length;
+  d=d.filter(x=>x&&typeof x==="object"&&!Array.isArray(x));
   /* 旧データ移行: 犬種(b)と名前(n)が無い犬に未所持の犬種を順に割当 */
-  let dirty=false;
+  let dirty=before!==d.length;
   /* 犬種統合の移行(v2): 旧インデックスを新8種に写す */
   if(LS.get("b2_dogv",1)<2){
     d.forEach(x=>{if(typeof x.b==="number")x.b=DOG_MIG[x.b]!==undefined?DOG_MIG[x.b]:0;});
@@ -3643,7 +4155,7 @@ function getDogs(){
   const used=new Set(d.filter(x=>typeof x.b==="number").map(x=>x.b));
   d.forEach(x=>{
     if(typeof x.b!=="number"){let b=0;while(used.has(b)&&b<DOG_BREEDS.length-1)b++;used.add(b);x.b=b;dirty=true;}
-    if(!x.n){x.n=DOG_BREEDS[x.b%DOG_BREEDS.length].nm;dirty=true;}
+    if(!x.n){x.n=breedOf(x.b).nm;dirty=true;}
   });
   /* 同犬種は1匹ルール: 重複はフードを合算して統合 */
   if(new Set(d.map(x=>x.b)).size<d.length){
@@ -3837,8 +4349,15 @@ window.renderGarden=function(){
       <div style="font-weight:800;color:var(--navy);font-size:17px;"><span class="sicon" data-icon="food"></span>${food}</div>
       <div id="dogbox" style="display:inline-block;position:relative;padding:14px 40px;cursor:pointer;"></div>
       <h3 style="color:var(--navy);font-size:21px;margin:6px 0 2px;"><span id="dogname"></span> <button onclick="renameDog(${pi})" style="border:none;background:none;cursor:pointer;color:#8a84a3;font-size:14px;">✎</button></h3>
-      <p style="color:#8a84a3;font-size:13px;margin:0;"><span style="background:${RARITY[DOG_BREEDS[d.b%DOG_BREEDS.length].r].c};color:#fff;border-radius:6px;padding:1px 8px;font-size:11px;font-weight:800;margin-right:6px;">${RARITY[DOG_BREEDS[d.b%DOG_BREEDS.length].r].n}</span>${DOG_BREEDS[d.b%DOG_BREEDS.length].nm}・${DOG_NAMES[st]}</p>
+      <p style="color:#8a84a3;font-size:13px;margin:0;"><span style="background:${RARITY[breedOf(d.b).r].c};color:#fff;border-radius:6px;padding:1px 8px;font-size:11px;font-weight:800;margin-right:6px;">${RARITY[breedOf(d.b).r].n}</span>${breedOf(d.b).nm}・${DOG_NAMES[st]}</p>
       <div style="color:#f59e0b;letter-spacing:3px;font-size:15px;">${"★".repeat(st+1)}${"☆".repeat(4-st)}</div>
+      ${(()=>{const B=breedOf(d.b),sk=SKILLS[B.sk];return `
+        <div class="dstat">
+          <span>ライフ <b>${"♥".repeat(dogLives())}</b></span>
+          ${B.def?`<span>防御 <b>${Math.round(B.def*100)}%</b></span>`:""}
+          ${B.eva?`<span>回避 <b>${Math.round(B.eva*100)}%</b></span>`:""}
+        </div>
+        ${sk?`<div class="dskill"><b>✦ ${sk.nm}</b>${sk.d}${B.sk==="nose"?`<br><span style="opacity:.75;">きょう のこり ${noseLeft()}回</span>`:""}</div>`:""}`;})()}
       ${LS.get("b2_hungry",0)?`<p style="color:#5aa7e8;font-size:13px;margin:4px 0 0;">おなかぺこぺこ…</p>`:""}
       <div style="margin:4px 0 12px;">${evoMeterHTML(d,"garden")}</div>
       <div class="note" style="max-width:340px;margin:0 auto;font-size:12.5px;">${next?`ダンジョンで敵を倒すと <b>ごはんが自動でとどき</b>、そのまま成長します。<br>あと <b>🍖${next-d.f}</b> で進化。`:"もう これ以上ないくらい 立派に育ちました!"}</div>
@@ -3849,7 +4368,7 @@ window.renderGarden=function(){
     const st=dogStage(d.f),next=st<EVO.length?EVO[st]:null;
     const isAway=aw&&aw.b===d.b;
     const gone=isAway&&aw.st==="gone",sulk=isAway&&aw.st==="sulk";
-    const sub=gone?`旅に出ています(あと${Math.max(0,10-(aw.cnt||0))}問正解で帰宅)`:sulk?"すねている… ごはんで なかなおり":`${DOG_BREEDS[d.b%DOG_BREEDS.length].nm}・${DOG_NAMES[st]}`;
+    const sub=gone?`旅に出ています(あと${Math.max(0,10-(aw.cnt||0))}問正解で帰宅)`:sulk?"すねている… ごはんで なかなおり":`${breedOf(d.b).nm}・${DOG_NAMES[st]}`;
     return `<div class="rrowi" onclick="pickDog(${i})" style="cursor:pointer;${i===pi?"background:var(--lt);border-radius:10px;padding-left:8px;padding-right:8px;":""}">
       <span style="display:flex;align-items:center;gap:10px;">
         <span id="dico${i}" style="width:50px;display:flex;justify-content:center;align-items:flex-end;${gone?"filter:grayscale(1);opacity:.55;":""}"></span>
@@ -3915,7 +4434,12 @@ window.renderGacha=function(){
     <p style="color:var(--tx2);font-size:13px;margin:4px 0 10px;">ガチャ券1枚で タマゴをひとつ。<br>タップであたためると、新しい仲間がうまれるよ</p>
     <div style="font-weight:800;color:var(--navy);font-size:17px;margin:8px 0 14px;"><span class="sicon" data-icon="ticket"></span>ガチャ券 ${tk}枚</div>
     <button class="btn" style="font-size:18px;padding:14px 48px;" ${tk<1?"disabled":""} onclick="rollGacha()">タマゴをもらう</button>
-    <p style="color:var(--tx2);font-size:11.5px;margin-top:14px;">生まれる犬のレア度 ${rates}<br>すでに持っている犬が生まれた場合は ごはん+20 になります</p>
+    <p style="color:var(--tx2);font-size:11.5px;margin-top:14px;">タマゴからは <b>犬</b> か <b>道具</b> が出ます(道具 ${Math.round(ITEM_RATE*100)}%)<br>犬のレア度 ${rates}　｜　持っている犬なら ごはん+20</p>
+    <button class="btn gray" style="margin-top:10px;font-size:13px;padding:9px 22px;" onclick="openBag()">もちものを見る${(()=>{const t=Object.values(items()).reduce((a,b)=>a+b,0);return t?` (${t})`:"";})()}</button>
+  </div>
+  <div class="qpane pixf">
+    <h2 style="border:none;padding:0;font-size:16px;">タマゴから出る道具</h2>
+    ${Object.keys(ITEMS).map(k=>`<div class="prow" style="cursor:default;"><span style="font-size:20px;">${ITEMS[k].ic}</span><span style="flex:1;padding-left:8px;"><b>${ITEMS[k].nm}</b><br><span class="prog">${ITEMS[k].d}</span></span><span class="prog">${Math.round(ITEMS[k].w/Object.values(ITEMS).reduce((a,b)=>a+b.w,0)*100)}%</span></div>`).join("")}
   </div>
   <div class="qpane pixf" style="text-align:center;">
     <h2 style="border:none;padding:0;"><span class="sicon" data-icon="gift"></span>友だちを招待してガチャ券GET</h2>
@@ -3944,7 +4468,7 @@ window.showEvo=function(i){
   const ovl=document.createElement("div");ovl.id="cele-ovl";ovl.onclick=e=>{if(e.target===ovl)ovl.remove();};
   const dn=document.createElement("div");
   ovl.innerHTML=`<div id="cele-box" style="max-width:640px;"><h2 style="color:var(--navy);font-size:19px;" id="evoname"></h2>
-  <p style="color:#8a84a3;font-size:13px;margin:2px 0 12px;">${DOG_BREEDS[d.b%DOG_BREEDS.length].nm}の進化形態</p>
+  <p style="color:#8a84a3;font-size:13px;margin:2px 0 12px;">${breedOf(d.b).nm}の進化形態</p>
   <div id="evorow" style="display:flex;gap:14px;justify-content:center;align-items:flex-end;flex-wrap:wrap;"></div>
   <button class="btn gray" style="margin-top:16px;" onclick="document.getElementById('cele-ovl').remove()">閉じる</button></div>`;
   document.body.appendChild(ovl);
@@ -4115,13 +4639,15 @@ window.openInvite=async function(){
   if(!r||!r.code){body.textContent="コードを取得できませんでした。時間をおいて再度お試しください。";return;}
   const url="https://ryuseisuda.github.io/boki2-cbt/?ref="+r.code;
   const tw="https://twitter.com/intent/tweet?text="+encodeURIComponent("簿記2級の勉強、犬を育てながらやってる。\n一緒にやろう(無料)")+"&url="+encodeURIComponent(url);
+  /* onclick 属性の中にURLを直接書かない(コードに ' が混ざると属性を脱出できてしまうため) */
+  window._invUrl=url;window._invTw=tw;
   body.className="";
   body.innerHTML=`<div style="background:var(--lt);border-radius:12px;padding:12px;word-break:break-all;font-size:12.5px;color:var(--navy);">${escapeHtml(url)}</div>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
-      <button class="btn" onclick="navigator.clipboard.writeText('${url}');this.textContent='コピーしました!';">リンクをコピー</button>
-      <button class="btn gray" onclick="window.open('${tw}','_blank')">Xでシェア</button>
-      <button class="btn" style="background:#06c755;" onclick="window.open('https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('${url}'),'_blank')">LINEで送る</button>
-      ${navigator.share?`<button class="btn gray" onclick="navigator.share({title:'ボキイヌ 2級',text:'簿記2級の勉強、犬を育てながらやってる。一緒にやろう(無料)',url:'${url}'})">その他で共有</button>`:""}
+      <button class="btn" onclick="navigator.clipboard.writeText(window._invUrl);this.textContent='コピーしました!';">リンクをコピー</button>
+      <button class="btn gray" onclick="window.open(window._invTw,'_blank')">Xでシェア</button>
+      <button class="btn" style="background:#06c755;" onclick="window.open('https://social-plugins.line.me/lineit/share?url='+encodeURIComponent(window._invUrl),'_blank')">LINEで送る</button>
+      ${navigator.share?`<button class="btn gray" onclick="navigator.share({title:'ボキイヌ 2級',text:'簿記2級の勉強、犬を育てながらやってる。一緒にやろう(無料)',url:window._invUrl})">その他で共有</button>`:""}
     </div>
     <p class="prog" style="margin-top:10px;">これまでに ${r.invited||0}人 招待しました</p>`;
 };
@@ -4140,10 +4666,24 @@ function pickBreed(){
   }
   return 0;
 }
+/* ガチャの道具排出(重み付き) */
+function pickItem(){
+  const ks=Object.keys(ITEMS);
+  const tot=ks.reduce((s,k)=>s+ITEMS[k].w,0);
+  let r=Math.random()*tot;
+  for(const k of ks){r-=ITEMS[k].w;if(r<0)return k;}
+  return ks[0];
+}
+window.pickItem=pickItem;
+const ITEM_RATE=0.35;   /* この確率で犬ではなく道具が出る */
 window.rollGacha=function(){
   const t=LS.get(KEY_T,0);
   if(t<1)return;
-  LS.set(KEY_T,t-1);
+  LS.set(KEY_T,t-1);updHUD();
+  /* 全犬種そろっていれば道具の確率を上げる(重複ばかりで飽きないように) */
+  const full=ownedBreeds().size>=DOG_BREEDS.length;
+  const it=(Math.random()<(full?0.75:ITEM_RATE))?pickItem():null;
+  if(it){rollItem(it);return;}
   const b=pickBreed();
   const dup=ownedBreeds().has(b);
   const rar=RARITY[DOG_BREEDS[b].r];
@@ -4169,6 +4709,117 @@ window.rollGacha=function(){
     setTimeout(()=>hatchEgg(b,dup,rar),350);
   };
 };
+/* 道具が出たときの卵演出 */
+function rollItem(k){
+  const I=ITEMS[k];
+  const ovl=document.createElement("div");ovl.id="cele-ovl";
+  ovl.innerHTML=`<div id="cele-box" class="pixf">
+    <div class="eggwrap" id="eggw" onclick="tapEgg()"></div>
+    <h2 style="color:var(--navy);font-size:19px;margin:10px 0 2px;">タマゴをみつけた!</h2>
+    <p style="color:#6b6488;" id="eggmsg">タップして あたためよう(あと3回)</p></div>`;
+  document.body.appendChild(ovl);
+  const ew=ovl.querySelector("#eggw");ew.appendChild(eggCanvas(0,8));
+  let taps=0;
+  window.tapEgg=function(){
+    taps++;
+    ew.classList.remove("sh");void ew.offsetWidth;ew.classList.add("sh");
+    if(taps<3){
+      ew.innerHTML="";ew.appendChild(eggCanvas(taps,8));
+      const m=document.getElementById("eggmsg");if(m)m.textContent=taps===1?"ピシッ… なにかが動いてる(あと2回)":"ピシピシッ! もうすぐ生まれる(あと1回)";
+      return;
+    }
+    window.tapEgg=function(){};
+    const fl=document.createElement("div");fl.id="eggflash";document.body.appendChild(fl);
+    setTimeout(()=>fl.remove(),750);
+    setTimeout(()=>{
+      const n=addItem(k,1);
+      try{confettiBurst();}catch(e){}
+      try{track("gacha_item",{k});}catch(e){}
+      ovl.querySelector("#cele-box").innerHTML=`
+        <div style="font-size:64px;line-height:1;">${I.ic}</div>
+        <h2 style="color:var(--navy);font-size:20px;margin:8px 0 2px;">${I.nm} を てにいれた!</h2>
+        <p style="color:#6b6488;font-size:13.5px;">${I.d}</p>
+        <p class="prog" style="margin-top:4px;">もっている数: ${n}個</p>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;">
+          <button class="btn" onclick="document.getElementById('cele-ovl').remove();renderGacha();">つづける</button>
+          <button class="btn gray" onclick="document.getElementById('cele-ovl').remove();openBag();">もちものを見る</button>
+        </div>`;
+    },350);
+  };
+}
+window.rollItem=rollItem;
+/* ゴールドパスの案内 */
+window.openGold=function(src){
+  const o=document.getElementById("goldv");if(o)o.remove();
+  const on=isGold();
+  const v=document.createElement("div");v.id="goldv";
+  v.onclick=e=>{if(e.target===v)v.remove();};
+  v.innerHTML=`<div class="box">
+    <div class="gcrown">👑</div>
+    <h2>ゴールドパス</h2>
+    ${on?`<div class="note" style="background:#fef3c7;border-color:#fcd34d;">有効です(のこり ${goldDaysLeft()}日)</div>`
+        :`<p class="prog">スタミナに縛られず、弱点に集中して合格まで最短で行くためのプランです。</p>`}
+    <table class="gtable"><tr><th></th><th>無料</th><th>👑 ゴールド</th></tr>
+      ${GOLD.map(g=>`<tr><td>${g.f.split(/[ (]/)[0]}</td><td>${g.free}</td><td><b>${g.f}</b></td></tr>`).join("")}
+    </table>
+    <p class="prog" style="margin-top:12px;">※ ベータ期間(2026/9/30まで)は全機能を無料開放中です。正式版での提供予定を先にお見せしています。</p>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;">
+      ${on?`<button class="btn gray" onclick="document.getElementById('goldv').remove()">とじる</button>`
+          :`<button class="btn" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);" onclick="alert('正式版でのご提供予定です。ベータ期間中は全機能を無料でお使いいただけます。');document.getElementById('goldv').remove();">くわしく(準備中)</button>
+            <button class="btn gray" onclick="document.getElementById('goldv').remove()">とじる</button>`}
+    </div>
+  </div>`;
+  document.body.appendChild(v);
+  try{track("gold_view",{src:src||""});}catch(e){}
+};
+/* もちもの */
+window.openBag=function(){
+  const o=document.getElementById("bagv");if(o)o.remove();
+  const it=items();
+  const has=Object.keys(ITEMS).filter(k=>it[k]>0);
+  const v=document.createElement("div");v.id="bagv";
+  v.onclick=e=>{if(e.target===v)v.remove();};
+  v.innerHTML=`<div class="box">
+    <h2 style="margin:0 0 4px;">もちもの</h2>
+    <p class="prog" style="margin:0 0 12px;">ガチャで手に入る道具。ここから使えます。</p>
+    ${wingOn()?`<div class="note" style="background:#e0f2fe;border-color:#7dd3fc;">🪶 <b>無限走破の羽</b> が発動中(のこり約${wingLeftMin()}分)。スタミナを消費しません。</div>`:""}
+    ${LS.get("b2_collar",0)?`<div class="note" style="background:#fef3c7;border-color:#fcd34d;">🦴 <b>無敵の首輪</b> をセット中。次のダンジョンで被弾しません。</div>`:""}
+    ${LS.get("b2_mockt",0)?`<div class="note" style="background:#ede9fe;border-color:#c4b5fd;">📜 <b>模試の受験券</b> をセット中。次の模試はスタミナ0で挑めます。</div>`:""}
+    ${has.length?has.map(k=>{const I=ITEMS[k];return `<div class="prow" style="cursor:default;">
+      <span style="font-size:24px;">${I.ic}</span>
+      <span style="flex:1;padding-left:8px;"><b>${I.nm}</b> ×${it[k]}<br><span class="prog">${I.d}</span></span>
+      <button class="btn" style="font-size:12px;padding:7px 16px;" onclick="useItem('${k}')&&openBag()">つかう</button></div>`;}).join("")
+      :`<p style="text-align:center;color:var(--tx2);font-size:13.5px;padding:20px 0;">まだ道具がありません。<br>ガチャを回すと手に入ります。</p>`}
+    <div style="margin-top:14px;text-align:right;"><button class="btn gray" onclick="document.getElementById('bagv').remove()">とじる</button></div>
+  </div>`;
+  document.body.appendChild(v);
+};
+/* ペット枠がいっぱい: どの子とお別れするか(または見送るか)を選ぶ */
+function pickSlot(b,rar,badge){
+  const ovl=document.getElementById("cele-ovl");if(!ovl)return;
+  const dogs=getDogs();
+  const B=DOG_BREEDS[b],sk=SKILLS[B.sk];
+  const stat=x=>{const q=breedOf(x.b);return `${q.hp?"♥+"+q.hp+" ":""}${q.def?"🛡"+Math.round(q.def*100)+"% ":""}${q.eva?"⚡"+Math.round(q.eva*100)+"%":""}`;};
+  ovl.querySelector("#cele-box").innerHTML=`<div id="gdog" style="display:flex;justify-content:center;"></div>
+    <div style="margin:6px 0;">${badge}</div>
+    <h2 style="color:var(--navy);font-size:19px;margin:4px 0;">${B.nm} が うまれた!</h2>
+    <div class="dstat">${B.hp?`<span>ライフ <b>+${B.hp}</b></span>`:""}${B.def?`<span>防御 <b>${Math.round(B.def*100)}%</b></span>`:""}${B.eva?`<span>回避 <b>${Math.round(B.eva*100)}%</b></span>`:""}</div>
+    ${sk?`<div class="dskill"><b>✦ ${sk.nm}</b>${sk.d}</div>`:""}
+    <div class="note" style="margin-top:12px;font-size:12.5px;">ペット枠が いっぱいです(${dogs.length} / ${petSlots()})。<br>お別れする子をえらぶか、この子を見送ってください。<br><span class="prog">枠は Lv.${lvReq("pet2")} で2匹、Lv.${lvReq("pet3")} で3匹になります。</span></div>
+    <div style="margin-top:10px;">${dogs.map((x,i)=>`<div class="prow" onclick="replaceDog(${i},${b})"><span id="slotd${i}" style="display:inline-flex;"></span><span style="flex:1;text-align:left;padding-left:8px;"><b>${escapeHtml(x.n||"")}</b><br><span class="prog">${breedOf(x.b).nm}・${DOG_NAMES[dogStage(x.f||0)]}　${stat(x)}</span></span><span class="prog">お別れ →</span></div>`).join("")}</div>
+    <button class="btn gray" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove();LS.set(KEY_F,LS.get(KEY_F,0)+20);updHUD();miniToast('この子は見送りました。かわりに ごはん +20');renderGacha();">この子を見送る(ごはん+20)</button>`;
+  ovl.querySelector("#gdog").appendChild(dogCanvas(0,6,b));
+  dogs.forEach((x,i)=>{const e=ovl.querySelector("#slotd"+i);if(e)e.appendChild(dogCanvas(dogStage(x.f||0),1.6,x.b));});
+}
+window.pickSlot=pickSlot;
+window.replaceDog=function(i,b){
+  const dogs=getDogs();
+  if(!confirm((dogs[i].n||"この子")+" とお別れして、新しい子をむかえますか？"))return;
+  dogs.splice(i,1);LS.set(KEY_DOG,dogs);
+  if(getPartner()>=dogs.length)LS.set("b2_partner",Math.max(0,dogs.length-1));
+  /* 枠があいた状態で、名づけ画面をやり直す */
+  hatchEgg(b,false,RARITY[DOG_BREEDS[b].r]);
+};
 function hatchEgg(b,dup,rar){
   const ovl=document.getElementById("cele-ovl");if(!ovl)return;
   {
@@ -4185,10 +4836,15 @@ function hatchEgg(b,dup,rar){
       ovl.querySelector("#gdog").appendChild(dogCanvas(0,7,b));
       return;
     }
+    /* ペット枠がいっぱいなら、入れ替えるか見送るかを選ばせる */
+    if(getDogs().length>=petSlots()){pickSlot(b,rar,badge);return;}
+    const B=DOG_BREEDS[b],sk=SKILLS[B.sk];
     ovl.querySelector("#cele-box").innerHTML=`<div id="gdog" style="display:flex;justify-content:center;"></div>
       <div style="margin:6px 0;">${badge}</div>
       <h2 style="color:var(--navy);font-size:21px;margin:4px 0;">${DOG_BREEDS[b].nm} のちびわんが うまれた!</h2>
-      <p style="color:#6b6488;">名前をつけてあげよう(必須)</p>
+      <div class="dstat">${B.hp?`<span>ライフ <b>+${B.hp}</b></span>`:""}${B.def?`<span>防御 <b>${Math.round(B.def*100)}%</b></span>`:""}${B.eva?`<span>回避 <b>${Math.round(B.eva*100)}%</b></span>`:""}</div>
+      ${sk?`<div class="dskill"><b>✦ ${sk.nm}</b>${sk.d}</div>`:""}
+      <p style="color:#6b6488;margin-top:10px;">名前をつけてあげよう(必須)</p>
       <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
         <input id="dogname-in" maxlength="10" value="" placeholder="なまえを入力" style="border:1px solid var(--bd);border-radius:999px;padding:10px 16px;font-family:inherit;text-align:center;">
         <button class="btn" id="dogname-btn" style="opacity:.5;" disabled onclick="nameNewDog(${b})">けってい</button>
@@ -4417,6 +5073,12 @@ window.fteDone=function(){
 };
 /* ---------- ランキング ---------- */
 function weekStart(){const d=new Date();d.setHours(0,0,0,0);const wd=(d.getDay()+6)%7;d.setDate(d.getDate()-wd);return daysKey(d);}
+/* 画像URLは https のみ許可(javascript: や data: を弾く) */
+/* 自分の行かどうか。user_id を公開しない代わりにニックネームで判定する */
+function isMe(r){const nk=LS.get("b2_nick","");return !!(sbUser&&nk&&r&&r.nickname===nk);}
+window.isMe=isMe;
+function safeImg(u){try{if(!u)return "";const x=String(u);return /^https:\/\//i.test(x)?x:"";}catch(e){return "";}}
+window.safeImg=safeImg;
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 async function pushProfile(){
   if(!sb||!sbUser)return;
@@ -4428,7 +5090,9 @@ async function pushProfile(){
     const ws=weekStart();
     const dd=LS.get(KEY_A,{});let wk=0;Object.entries(dd).forEach(([k,v])=>{if(k>=ws)wk+=v.q||0;});
     const _es=(()=>{try{return earnedAch();}catch(e){return [];}})();
-    await sb.from("profiles").upsert({user_id:sbUser.id,nickname:nick,week_start:ws,week_solved:wk,streak:a.streak,pat_done:po,pat_total:pt,mock_best:best,ach:_es.length,ach_top:_es.length?_es[_es.length-1].nm:"",dogs:getDogs().map(x=>({f:x.f||0,b:x.b||0,n:(x.n||"").slice(0,10)})),partner:getPartner(),updated_at:new Date().toISOString()});
+    /* クライアントの値をそのまま信用しないための上限。根本解決にはサーバ集計が必要 */
+  const clamp=(v,mx)=>{const x=Number(v);return isFinite(x)&&x>0?Math.min(Math.floor(x),mx):0;};
+  await sb.from("profiles").upsert({user_id:sbUser.id,nickname:nick,week_start:ws,week_solved:clamp(wk,3000),streak:clamp(a.streak,4000),pat_done:clamp(po,pt),pat_total:clamp(pt,200),mock_best:clamp(best,100),ach:_es.length,ach_top:_es.length?_es[_es.length-1].nm:"",dogs:getDogs().map(x=>({f:x.f||0,b:x.b||0,n:(x.n||"").slice(0,10)})),partner:getPartner(),updated_at:new Date().toISOString()});
   }catch(e){}
 }
 let rankTab="week";
@@ -4442,9 +5106,50 @@ window.editNick=function(){
   const v=prompt("新しいニックネーム(12文字まで)",LS.get("b2_nick",""));
   if(v&&v.trim()){LS.set("b2_nick",v.trim().slice(0,12));pushProfile();renderRank();}
 };
+/* 週間ランキングの報酬 */
+const RANK_RWD=[
+ {nm:"1位",   cls:"g1",rw:"✨EXP 1000 ・ 🎟ガチャ券 10 ・ 📜模試の受験券 3 ・ 公式Xで紹介"},
+ {nm:"2〜3位",cls:"g2",rw:"✨EXP 500 ・ 🎟ガチャ券 5 ・ 📜模試の受験券 1"},
+ {nm:"4〜10位",cls:"g3",rw:"✨EXP 200 ・ 🎟ガチャ券 2"}
+];
+/* 順位に応じた報酬を配る(週の切り替わり時に1回だけ) */
+function grantRankReward(rank){
+  if(!rank||rank>10)return null;
+  const wk=weekKey();
+  if(LS.get("b2_rankwk","")===wk)return null;
+  LS.set("b2_rankwk",wk);
+  const r= rank===1?{xp:1000,tk:10,mock:3}
+         : rank<=3?{xp:500,tk:5,mock:1}
+         : {xp:200,tk:2,mock:0};
+  addExp(r.xp,null);addTicket(r.tk,null);
+  if(r.mock)addItem("mockt",r.mock);
+  try{track("rank_reward",{rank});}catch(e){}
+  setTimeout(()=>{
+    const o=document.createElement("div");o.id="goldv";
+    o.onclick=e=>{if(e.target===o)o.remove();};
+    o.innerHTML=`<div class="box"><div class="gcrown">🏆</div>
+      <h2>先週 ${rank}位!</h2>
+      <p class="prog">ランキングの報酬をお届けします。</p>
+      <div class="note" style="background:#fff8e6;border-color:#fcd34d;font-weight:800;">✨EXP +${r.xp}　🎟ガチャ券 +${r.tk}${r.mock?`　📜模試の受験券 +${r.mock}`:""}</div>
+      ${rank===1?`<p class="prog">1位おめでとうございます! 公式X(@bokiinu)で紹介させていただきます。</p>`:""}
+      <button class="btn" style="margin-top:14px;" onclick="document.getElementById('goldv').remove()">うけとる</button></div>`;
+    document.body.appendChild(o);
+  },800);
+  return r;
+}
+function weekKey(){
+  const d=new Date();const day=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-day);d.setHours(0,0,0,0);
+  return daysKey(d);
+}
+window.weekKey=weekKey;
 window.renderRank=async function(){
   setMode("home");setNav("rank");exState=null;
-  const head=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">ランキング</h2><p>「今週」は月曜0時リセット。行をタップするとその人の犬が見られます。参加はログイン+ニックネーム登録で。</p></div>`;
+  const head=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">ランキング</h2><p>「今週」は月曜0時リセット。行をタップするとその人の犬が見られます。参加はログイン+ニックネーム登録で。</p></div>
+  <div class="qpane rwd"><h2 style="border:none;padding:0;font-size:16px;"><span class="sicon" data-icon="trophy"></span>今週の報酬</h2>
+    <p class="prog" style="margin:4px 0 10px;">毎週月曜0時に順位が確定し、<b>運営が手動でお届け</b>します(受け取りにはログインが必要です)。上位の方は <b>@bokiinu</b> の公式アカウントで紹介させていただきます。</p>
+    ${RANK_RWD.map(r=>`<div class="prow" style="cursor:default;"><span class="rwdno ${r.cls}">${r.nm}</span><span style="flex:1;padding-left:10px;">${r.rw}</span></div>`).join("")}
+  </div>`;
   if(!sb){main.innerHTML=head+`<div class="qpane">通信機能を読み込めませんでした。再読み込みしてください。</div>`;return;}
   const nick=LS.get("b2_nick","");
   let joinUi="";
@@ -4461,7 +5166,7 @@ window.renderRank=async function(){
 };
 async function loadRank(){
   try{
-    const {data,error}=await sb.from("profiles").select("*").limit(200);
+    const {data,error}=await sb.from("profiles").select("nickname,week_start,week_solved,streak,pat_done,pat_total,mock_best,ach,ach_top,dogs,partner").limit(200);
     const el=document.getElementById("rlist");if(!el)return;
     if(error||!data){el.textContent="読み込みエラー("+(error?error.message:"")+")";return;}
     const ws=weekStart();
@@ -4471,7 +5176,7 @@ async function loadRank(){
     window._rankRows=rows;
     const unit=rankTab==="week"?"問":rankTab==="streak"?"日":"";
     el.className="";
-    el.innerHTML=rows.length?rows.map((r,i)=>`<div class="rrow ${sbUser&&r.user_id===sbUser.id?"me":""}" onclick="showUserDogs(${i})">
+    el.innerHTML=rows.length?rows.map((r,i)=>`<div class="rrow ${isMe(r)?"me":""}" onclick="showUserDogs(${i})">
       <span class="rnum2">${i+1}位</span><span class="ricon" id="ric${i}"></span><b style="color:var(--navy);">${escapeHtml(r.nickname)}</b>
       ${(r.streak||0)>0?strkHTML(r.streak,1.4):""}${r.ach_top?`<span class="achb">${escapeHtml(r.ach_top)}</span>`:""}
       <span class="rv">${rankTab==="pat"?(r.pat_done||0)+" / "+(r.pat_total||47):(r[key]||0)+unit}</span></div>`).join("")
@@ -4491,7 +5196,7 @@ window.showUserDogs=function(i){
   <button class="btn gray" onclick="document.getElementById('cele-ovl').remove()">閉じる</button></div>`;
   document.body.appendChild(ovl);
   const box=ovl.querySelector("#udogs");
-  dogs.slice(0,20).forEach(d=>{const st=dogStage(d.f||0);const w=document.createElement("div");w.style.textAlign="center";w.appendChild(dogCanvas(st,3,d.b||0));const nm=document.createElement("div");nm.style.cssText="font-size:12px;color:var(--navy);font-weight:700;margin-top:2px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";nm.textContent=d.n||DOG_BREEDS[(d.b||0)%DOG_BREEDS.length].nm;w.appendChild(nm);const cap=document.createElement("div");cap.style.cssText="font-size:10px;color:#8a84a3;";cap.textContent=DOG_NAMES[st];w.appendChild(cap);box.appendChild(w);});
+  dogs.slice(0,20).forEach(d=>{const st=dogStage(d.f||0);const w=document.createElement("div");w.style.textAlign="center";w.appendChild(dogCanvas(st,3,d.b||0));const nm=document.createElement("div");nm.style.cssText="font-size:12px;color:var(--navy);font-weight:700;margin-top:2px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";nm.textContent=d.n||breedOf(d.b).nm;w.appendChild(nm);const cap=document.createElement("div");cap.style.cssText="font-size:10px;color:#8a84a3;";cap.textContent=DOG_NAMES[st];w.appendChild(cap);box.appendChild(w);});
 };
 /* ---------- 今日はここまで(日次サマリー) ---------- */
 window.showEOD=function(){
@@ -4524,8 +5229,8 @@ window.shareEOD=function(){
   const k=daysKey(new Date());
   if(LS.get("b2_xreward",null)!==k){
     LS.set("b2_xreward",k);
-    LS.set(KEY_F,LS.get(KEY_F,0)+10);
-    setTimeout(()=>miniToast(`<span data-icon="food" data-s="2"></span>投稿ありがとう! ごはん +10`),400);
+    addTicket(1,null);
+    setTimeout(()=>miniToast(`<span data-icon="ticket" data-s="2"></span>投稿ありがとう! ガチャ券 +1`),400);
     try{track("x_reward",{});}catch(e){}
   }
 };
@@ -4584,7 +5289,7 @@ track("visit",{screen:"home"});
 /* ---------- アカウント同期(Supabase) ---------- */
 const SB_URL="https://ijddujtdsvmbrwtboodt.supabase.co",SB_KEY="sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt";
 let sb=null,sbUser=null,pushT=null;
-const SYNC_KEYS=["b2_exp","b2_expmig","b2_stam","b2_expdd","b2_history","b2_drill","b2_wrong","b2_pat","b2_days","b2_qz","b2_exam","b2_acc","b2_patlv","b3_history","b3_drill","b3_wrong","b3_pat","b3_days","b3_qz","b3_exam","b3_acc","b3_patlv","b2_seen","b2_tickets","b2_cleared","b2_dogs","b2_food","b2_partner","b2_nick","b2_login","b2_xreward","b2_hungry","b2_away","b2_refdone","b2_regbonus","b2_dogv","b2_achseen"];
+const SYNC_KEYS=["b2_exp","b2_expmig","b2_gold","b2_rankwk","b2_stam","b2_nose","b2_plog","b2_dashp","b2_items","b2_wing","b2_collar","b2_mockt","b2_expdd","b2_history","b2_drill","b2_wrong","b2_pat","b2_days","b2_qz","b2_exam","b2_acc","b2_patlv","b3_history","b3_drill","b3_wrong","b3_pat","b3_days","b3_qz","b3_exam","b3_acc","b3_patlv","b2_seen","b2_tickets","b2_cleared","b2_dogs","b2_food","b2_partner","b2_nick","b2_login","b2_xreward","b2_hungry","b2_away","b2_refdone","b2_regbonus","b2_dogv","b2_achseen"];
 function collectLocal(){const o={};SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)o[k]=v;});return o;}
 function tqOf(o){try{const d=JSON.parse(o[KEY_A]||"{}");let t=0;Object.values(d).forEach(e=>t+=e.q||0);return t;}catch(e){return 0;}}
 function applyData(o){SYNC_KEYS.forEach(k=>{if(o[k]!=null)localStorage.setItem(k,o[k]);});}
@@ -4604,7 +5309,7 @@ function setAcctBtn(){
   }catch(e){}
   if(sbUser){
     const m=sbUser.user_metadata||{};
-    b.innerHTML=(m.avatar_url?`<img src="${m.avatar_url}" referrerpolicy="no-referrer" style="width:20px;height:20px;border-radius:50%;vertical-align:-5px;margin-right:7px;">`:"")+sbName()+deco;
+    b.innerHTML=(safeImg(m.avatar_url)?`<img src="${escapeHtml(safeImg(m.avatar_url))}" referrerpolicy="no-referrer" style="width:20px;height:20px;border-radius:50%;vertical-align:-5px;margin-right:7px;">`:"")+sbName()+deco;
   }else b.innerHTML="記録を保存"+deco;
   try{mountIcons(b);}catch(e){}
 }
@@ -4640,7 +5345,7 @@ window.openAcct=function(){
     document.getElementById("acct-name").textContent=sbName();
     document.getElementById("acct-mail").textContent=sbUser.email||"";
     const m=sbUser.user_metadata||{},av=document.getElementById("acct-ava");
-    if(m.avatar_url){av.src=m.avatar_url;av.classList.remove("hidden");}else av.classList.add("hidden");
+    if(m.avatar_url){av.src=safeImg(m.avatar_url);av.classList.remove("hidden");}else av.classList.add("hidden");
   }
 };
 window.googleLogin=async function(){
