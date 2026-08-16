@@ -343,6 +343,7 @@ body.bton .wrap{padding-top:calc(var(--btbarh,58px) + 8px);}
 .rwd .g1{background:#fef3c7;color:#92400e;}
 .rwd .g2{background:#e5e7eb;color:#374151;}
 .rwd .g3{background:#fce7d6;color:#9a3412;}
+.rwd .g4{background:var(--lt);color:var(--tx2);}
 .bonusb{font-size:10.5px;font-weight:800;color:#b45309;background:#fff8e6;border:1px solid #fcd34d;border-radius:6px;padding:1px 6px;margin-left:4px;}
 .cprog{display:flex;align-items:center;gap:12px;margin:10px 0 4px;}
 .cprog-bar{flex:1;height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden;}
@@ -5123,7 +5124,19 @@ async function pushProfile(){
     const _es=(()=>{try{return earnedAch();}catch(e){return [];}})();
     /* クライアントの値をそのまま信用しないための上限。根本解決にはサーバ集計が必要 */
   const clamp=(v,mx)=>{const x=Number(v);return isFinite(x)&&x>0?Math.min(Math.floor(x),mx):0;};
-  await sb.from("profiles").upsert({user_id:sbUser.id,nickname:nick,week_start:ws,week_solved:clamp(wk,3000),streak:clamp(a.streak,4000),pat_done:clamp(po,pt),pat_total:clamp(pt,200),mock_best:clamp(best,100),ach:_es.length,ach_top:_es.length?_es[_es.length-1].nm:"",dogs:getDogs().map(x=>({f:x.f||0,b:x.b||0,n:(x.n||"").slice(0,10)})),partner:getPartner(),updated_at:new Date().toISOString()});
+  /* 週が変わっていたら、先週の成績を last_week_* に退避してからでないと順位を出せない */
+  const row={user_id:sbUser.id,nickname:nick,week_start:ws,week_solved:clamp(wk,3000),streak:clamp(a.streak,4000),pat_done:clamp(po,pt),pat_total:clamp(pt,200),mock_best:clamp(best,100),ach:_es.length,ach_top:_es.length?_es[_es.length-1].nm:"",dogs:getDogs().map(x=>({f:x.f||0,b:x.b||0,n:(x.n||"").slice(0,10)})),partner:getPartner(),updated_at:new Date().toISOString()};
+    try{
+      const {data:prev}=await sb.from("profiles").select("week_start,week_solved,last_week_start,last_week_solved").eq("user_id",sbUser.id).maybeSingle();
+      if(prev&&prev.week_start&&prev.week_start!==ws){
+        row.last_week_start=prev.week_start;
+        row.last_week_solved=clamp(prev.week_solved,3000);
+      }else if(prev){
+        row.last_week_start=prev.last_week_start;
+        row.last_week_solved=prev.last_week_solved;
+      }
+    }catch(e){}
+    await sb.from("profiles").upsert(row);
   }catch(e){}
 }
 let rankTab="week";
@@ -5139,34 +5152,50 @@ window.editNick=function(){
 };
 /* 週間ランキングの報酬 */
 const RANK_RWD=[
- {nm:"1位",   cls:"g1",rw:"✨EXP 1000 ・ 🎟ガチャ券 10 ・ 📜模試の受験券 3 ・ 公式Xで紹介"},
- {nm:"2〜3位",cls:"g2",rw:"✨EXP 500 ・ 🎟ガチャ券 5 ・ 📜模試の受験券 1"},
- {nm:"4〜10位",cls:"g3",rw:"✨EXP 200 ・ 🎟ガチャ券 2"}
+ {nm:"1位",     cls:"g1",rw:"✨EXP 1500 ・ 🎟ガチャ券 10 ・ 📜模試の受験券 3 ・ 🧪回復薬 3 ・ 公式Xで紹介"},
+ {nm:"2位",     cls:"g2",rw:"✨EXP 1000 ・ 🎟ガチャ券 7 ・ 📜模試の受験券 2 ・ 🧪回復薬 2"},
+ {nm:"3位",     cls:"g2",rw:"✨EXP 800 ・ 🎟ガチャ券 5 ・ 📜模試の受験券 2 ・ 🧪回復薬 2"},
+ {nm:"4〜10位", cls:"g3",rw:"✨EXP 400 ・ 🎟ガチャ券 3 ・ 📜模試の受験券 1 ・ 🧪回復薬 1"},
+ {nm:"11〜30位",cls:"g3",rw:"✨EXP 150 ・ 🎟ガチャ券 1"},
+ {nm:"参加賞",  cls:"g4",rw:"✨EXP 50 (その週に20問以上といた人みんな)"}
 ];
 /* 順位に応じた報酬を配る(週の切り替わり時に1回だけ) */
-function grantRankReward(rank){
-  if(!rank||rank>10)return null;
+/* 先週の順位はサーバ(claim_weekly_reward)が判定する。受け取りは週に1回だけ。
+   ローカルの b2_rankwk は「今週すでに問い合わせたか」のメモにすぎない */
+async function claimWeeklyReward(){
+  if(!sb||!sbUser)return null;
   const wk=weekKey();
   if(LS.get("b2_rankwk","")===wk)return null;
-  LS.set("b2_rankwk",wk);
-  const r= rank===1?{xp:1000,tk:10,mock:3}
-         : rank<=3?{xp:500,tk:5,mock:1}
-         : {xp:200,tk:2,mock:0};
-  addExp(r.xp,null);addTicket(r.tk,null);
-  if(r.mock)addItem("mockt",r.mock);
-  try{track("rank_reward",{rank});}catch(e){}
-  setTimeout(()=>{
-    const o=document.createElement("div");o.id="goldv";
-    o.onclick=e=>{if(e.target===o)o.remove();};
-    o.innerHTML=`<div class="box"><div class="gcrown">🏆</div>
-      <h2>先週 ${rank}位!</h2>
-      <p class="prog">ランキングの報酬をお届けします。</p>
-      <div class="note" style="background:#fff8e6;border-color:#fcd34d;font-weight:800;">✨EXP +${r.xp}　🎟ガチャ券 +${r.tk}${r.mock?`　📜模試の受験券 +${r.mock}`:""}</div>
-      ${rank===1?`<p class="prog">1位おめでとうございます! 公式X(@bokiinu)で紹介させていただきます。</p>`:""}
-      <button class="btn" style="margin-top:14px;" onclick="document.getElementById('goldv').remove()">うけとる</button></div>`;
-    document.body.appendChild(o);
-  },800);
-  return r;
+  let res=null;
+  try{
+    const {data,error}=await sb.rpc("claim_weekly_reward");
+    if(error)return null;                 /* 通信失敗なら次回また試す */
+    res=data;
+  }catch(e){return null;}
+  LS.set("b2_rankwk",wk);                 /* 判定が返ってきたら今週はもう聞かない */
+  if(!res||!res.ok)return null;
+  const rw=res.reward||{};
+  const xp=+rw.xp||0, tk=+rw.tk||0, mock=+rw.mockt||0, pot=+rw.stampot||0;
+  if(xp)addExp(xp,null);
+  if(tk)addTicket(tk,null);
+  if(mock)addItem("mockt",mock);
+  if(pot)addItem("stampot",pot);
+  try{track("rank_reward",{rank:res.rank});}catch(e){}
+  setTimeout(()=>showRankReward(res.rank,{xp,tk,mock,pot}),800);
+  return {rank:res.rank,xp,tk,mock,pot};
+}
+window.claimWeeklyReward=claimWeeklyReward;
+function showRankReward(rank,r){
+  const o=document.createElement("div");o.id="goldv";
+  o.onclick=e=>{if(e.target===o)o.remove();};
+  const items=[`✨EXP +${r.xp}`,r.tk?`🎟ガチャ券 +${r.tk}`:"",r.mock?`📜模試の受験券 +${r.mock}`:"",r.pot?`🧪回復薬 +${r.pot}`:""].filter(Boolean).join("　");
+  o.innerHTML=`<div class="box"><div class="gcrown">${rank<=3?"🏆":"🎁"}</div>
+    <h2>先週 ${rank}位!</h2>
+    <p class="prog">ランキングの報酬をお届けします。</p>
+    <div class="note" style="background:#fff8e6;border-color:#fcd34d;font-weight:800;">${items}</div>
+    ${rank===1?`<p class="prog">1位おめでとうございます! 公式X(@bokiinu)で紹介させていただきます。</p>`:""}
+    <button class="btn" style="margin-top:14px;" onclick="document.getElementById('goldv').remove()">うけとる</button></div>`;
+  document.body.appendChild(o);
 }
 function weekKey(){
   const d=new Date();const day=(d.getDay()+6)%7;
@@ -5178,7 +5207,7 @@ window.renderRank=async function(){
   setMode("home");setNav("rank");exState=null;
   const head=`<div class="sechead" style="margin-top:20px;"><h2 class="disp2">ランキング</h2><p>「今週」は月曜0時リセット。行をタップするとその人の犬が見られます。参加はログイン+ニックネーム登録で。</p></div>
   <div class="qpane rwd"><h2 style="border:none;padding:0;font-size:16px;"><span class="sicon" data-icon="trophy"></span>今週の報酬</h2>
-    <p class="prog" style="margin:4px 0 10px;">毎週月曜0時に順位が確定し、<b>運営が手動でお届け</b>します(受け取りにはログインが必要です)。上位の方は <b>@bokiinu</b> の公式アカウントで紹介させていただきます。</p>
+    <p class="prog" style="margin:4px 0 10px;">毎週月曜0時に順位が確定し、<b>次にひらいたときに自動でお届け</b>します(受け取りにはログインが必要です)。集計対象はその週に<b>20問以上</b>といた人。上位の方は <b>@bokiinu</b> の公式アカウントで紹介させていただきます。</p>
     ${RANK_RWD.map(r=>`<div class="prow" style="cursor:default;"><span class="rwdno ${r.cls}">${r.nm}</span><span style="flex:1;padding-left:10px;">${r.rw}</span></div>`).join("")}
   </div>`;
   if(!sb){main.innerHTML=head+`<div class="qpane">通信機能を読み込めませんでした。再読み込みしてください。</div>`;return;}
@@ -5351,7 +5380,8 @@ async function onLogin(user){
     if(row&&row.data&&tqOf(row.data)>tqOf(collectLocal()))applyData(row.data);
     await sb.from("user_progress").upsert({user_id:user.id,data:collectLocal(),updated_at:new Date().toISOString()});
   }catch(e){}
-  try{pushProfile();}catch(e){}
+  try{await pushProfile();}catch(e){}
+  try{claimWeeklyReward();}catch(e){}      /* 先週の順位はサーバが判定する */
   try{pullBonusTickets();tryClaimReferral();}catch(e){}
   try{if(!LS.get("b2_ev_su",0)){LS.set("b2_ev_su",1);track("signup");}}catch(e){}
   try{if(!LS.get("b2_regbonus",0)){LS.set("b2_regbonus",1);LS.set(KEY_T,LS.get(KEY_T,0)+1);setTimeout(()=>miniToast(`<span data-icon="ticket" data-s="2"></span>登録ありがとう! ガチャ券+1 と模試第3・4回が解放されました`),800);}}catch(e){}
