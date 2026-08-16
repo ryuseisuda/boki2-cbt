@@ -252,6 +252,24 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 .dgate-st{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--tx2);}
 .dgate-st b{color:var(--navy);}
 .dgate-warn{margin-top:10px;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:8px 11px;font-size:12.5px;font-weight:700;}
+.dgate-lock{margin-top:10px;background:#f1f5f9;color:#475569;border-radius:10px;padding:8px 11px;font-size:12.5px;font-weight:700;}
+/* ===== スタミナ ===== */
+#hud .hud-st{color:#fde68a;}
+#hud .hud-st.low{color:#fca5a5;animation:stlow 1.4s infinite;}
+@keyframes stlow{0%,100%{opacity:1;}50%{opacity:.45;}}
+.stampill{display:inline-flex;align-items:center;gap:3px;background:#fff7ed;border:1px solid #fed7aa;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:800;color:#b45309;}
+.stampill span{opacity:.65;font-weight:700;}
+.stampill i{font-style:normal;font-size:10.5px;opacity:.7;margin-left:4px;font-weight:700;}
+.stampill.empty{background:#fee2e2;border-color:#fca5a5;color:#b91c1c;}
+.dcost{font-size:11.5px;font-weight:800;color:#b45309;background:#fff7ed;border:1px solid #fed7aa;border-radius:999px;padding:1px 8px;margin-left:6px;white-space:nowrap;}
+.dlock{font-size:11.5px;font-weight:800;color:#64748b;background:#f1f5f9;border:1px solid var(--bd);border-radius:999px;padding:1px 8px;margin-left:6px;white-space:nowrap;}
+.ctab.lock{opacity:.55;}
+/* 入場ゲート */
+#gatev{position:fixed;inset:0;z-index:9998;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadein .2s;}
+#gatev .box{background:#fff;border-radius:22px;padding:26px 28px;max-width:340px;text-align:center;}
+#gatev .gi{font-size:44px;line-height:1;}
+#gatev h3{color:var(--navy);font-size:18px;margin:8px 0 6px;}
+#gatev p{font-size:13.5px;color:var(--tx2);margin:0 0 14px;line-height:1.7;}
 .cprog{display:flex;align-items:center;gap:12px;margin:10px 0 4px;}
 .cprog-bar{flex:1;height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden;}
 .cprog-bar>div{height:100%;background:linear-gradient(90deg,#22c55e,#4ade80);border-radius:999px;transition:width .5s;}
@@ -682,6 +700,7 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
   <h1 id="hdr-title" style="cursor:pointer;display:flex;align-items:center;"><span class="nicon" data-icon="dog"></span>ボキイヌ 2級</h1>
   <div style="display:flex;gap:12px;align-items:center;">
     <div id="hud" onclick="openLvInfo()">
+      <span class="hud-i hud-st" id="hud-stam">⚡<b>30</b></span>
       <span class="hud-i" id="hud-food"><span class="sicon" data-icon="food" data-s="1"></span><b>0</b></span>
       <span class="hud-lv"><span class="hud-lvn">Lv.<b id="hud-lvv">1</b></span><span class="hud-bar"><i id="hud-barf"></i></span><span class="hud-exp" id="hud-expv">0/50</span></span>
       <span class="hud-i" id="hud-tk"><span class="sicon" data-icon="ticket" data-s="1"></span><b>0</b></span>
@@ -1431,19 +1450,147 @@ function lvOf(total){
   return {lv,cur:rest,need:xpNeed(lv),total:total||0};
 }
 function userLv(){return lvOf(LS.get(KEY_XP,0));}
+/* 既存ユーザー救済: これまでの進捗ぶんの経験値を1度だけ付与する。
+   これがないと、すでに模試や上級を使っていた人が急に締め出されてしまう。 */
+function migrateExp(){
+  if(LS.get("b2_expmig",0))return 0;
+  LS.set("b2_expmig",1);
+  let xp=0;
+  try{
+    const p=LS.get(KEY_P,{});
+    Object.keys(p).forEach(k=>{const v=p[k];if(v&&v.best>=80)xp+=120;else if(v&&v.g)xp+=40;});
+    const st=LS.get(KEY_AC,{});
+    for(let l=1;l<=ACC_NLV;l++)if(st["p"+l]&&st["p"+l].best>=13)xp+=150;
+    xp+=(LS.get(KEY_H,[]).length)*400;
+    const d=LS.get(KEY_D,{});
+    xp+=Object.keys(d).filter(k=>d[k]&&d[k].o>0).length*25;
+  }catch(e){}
+  if(xp>0){
+    LS.set(KEY_XP,LS.get(KEY_XP,0)+xp);
+    setTimeout(()=>{
+      const L=userLv();
+      miniToast(`<span data-icon="trophy" data-s="2"></span>これまでの進捗ぶん ✨${xp} を引き継ぎました(Lv.${L.lv})`);
+    },1400);
+  }
+  return xp;
+}
+window.migrateExp=migrateExp;
 /* Lv解禁テーブル */
 const UNLOCK=[
- {lv:3, t:"経験値ダンジョン(1日1回)が解禁"},
- {lv:5, t:"討伐マップ 中級 / ガチャ1日3回"},
- {lv:8, t:"決戦(模試)が解禁"},
- {lv:12,t:"ペット枠が2匹に / スタミナ上限+10"},
- {lv:16,t:"討伐マップ 上級が解禁"},
- {lv:20,t:"ペット枠が3匹に / ガチャ1日5回"},
- {lv:25,t:"スタミナ上限+10"},
- {lv:30,t:"決戦の回数が増える"}
+ {lv:3, t:"経験値ダンジョン(1日1回)が解禁",k:"expdun"},
+ {lv:5, t:"樹海(中級)が解禁",k:"tier2"},
+ {lv:8, t:"決戦(模擬試験)が解禁",k:"mock"},
+ {lv:12,t:"スタミナ上限 +10",k:"stam1"},
+ {lv:16,t:"遺跡(上級)が解禁",k:"tier3"},
+ {lv:20,t:"スタミナ上限 +10",k:"stam2"},
+ {lv:25,t:"スタミナ上限 +10",k:"stam3"}
 ];
 function unlockAt(lv){return UNLOCK.filter(u=>u.lv===lv).map(u=>u.t);}
 function nextUnlock(lv){return UNLOCK.find(u=>u.lv>lv)||null;}
+/* 機能が解禁されているか。lvReq(key) は必要Lv(0=最初から) */
+function lvReq(k){const u=UNLOCK.find(x=>x.k===k);return u?u.lv:0;}
+function unlocked(k){return userLv().lv>=lvReq(k);}
+window.unlocked=unlocked;window.lvReq=lvReq;
+
+/* ================= スタミナ ================= */
+const KEY_ST="b2_stam";        /* {v:残量, t:最後に計算した時刻(ms)} */
+const STAM_MIN=6;              /* 6分で1回復 */
+function stamMax(){
+  const lv=userLv().lv;
+  let m=30;
+  if(lv>=lvReq("stam1"))m+=10;
+  if(lv>=lvReq("stam2"))m+=10;
+  if(lv>=lvReq("stam3"))m+=10;
+  return m;
+}
+window.stamMax=stamMax;
+/* 経過時間から自然回復を反映して現在値を返す */
+function stam(){
+  const max=stamMax();
+  let s=LS.get(KEY_ST,null);
+  const now=Date.now();
+  if(!s||typeof s.v!=="number"){s={v:max,t:now};LS.set(KEY_ST,s);return max;}
+  if(s.v>=max){s.t=now;LS.set(KEY_ST,s);return Math.min(s.v,max);}
+  const gain=Math.floor((now-s.t)/(STAM_MIN*60000));
+  if(gain>0){s.v=Math.min(max,s.v+gain);s.t=s.v>=max?now:s.t+gain*STAM_MIN*60000;LS.set(KEY_ST,s);}
+  return s.v;
+}
+window.stam=stam;
+/* 次の1回復までの残り秒 */
+function stamNextSec(){
+  const s=LS.get(KEY_ST,null);
+  if(!s||stam()>=stamMax())return 0;
+  return Math.max(0,Math.ceil((s.t+STAM_MIN*60000-Date.now())/1000));
+}
+/* 満タンまでの残り分 */
+function stamFullMin(){const d=stamMax()-stam();return d<=0?0:Math.ceil((d*STAM_MIN*60000-(STAM_MIN*60000-stamNextSec()*1000))/60000)+STAM_MIN;}
+function stamUse(n){
+  const cur=stam();
+  if(cur<n)return false;
+  const s=LS.get(KEY_ST,{v:cur,t:Date.now()});
+  if(s.v>=stamMax())s.t=Date.now();   /* 満タンから減った瞬間に回復開始 */
+  s.v=cur-n;LS.set(KEY_ST,s);updHUD();
+  return true;
+}
+window.stamUse=stamUse;
+function stamAdd(n){
+  const s=LS.get(KEY_ST,{v:stamMax(),t:Date.now()});
+  s.v=Math.min(stamMax(),stam()+n);LS.set(KEY_ST,s);updHUD();
+}
+window.stamAdd=stamAdd;
+/* ダンジョンごとのスタミナ消費 */
+const STAM_COST={drill:2,map1:3,map2:5,map3:8,expdun:5,mock:15};
+function stamCost(src,tier){
+  if(src==="map")return STAM_COST["map"+(tier||1)]||3;
+  return STAM_COST[src]||0;
+}
+window.stamCost=stamCost;
+function mmssLeft(sec){const m=Math.floor(sec/60),s=sec%60;return m+":"+String(s).padStart(2,"0");}
+/* 入場ゲート: 解禁とスタミナを確認して、足りなければ理由を表示 */
+function canEnter(src,tier){
+  const need=stamCost(src,tier);
+  if(src==="expdun"&&!unlocked("expdun"))return {ok:false,why:"lv",lv:lvReq("expdun"),nm:"経験値ダンジョン"};
+  if(src==="mock"&&!unlocked("mock"))return {ok:false,why:"lv",lv:lvReq("mock"),nm:"決戦"};
+  if(src==="map"&&tier===2&&!unlocked("tier2"))return {ok:false,why:"lv",lv:lvReq("tier2"),nm:"樹海"};
+  if(src==="map"&&tier===3&&!unlocked("tier3"))return {ok:false,why:"lv",lv:lvReq("tier3"),nm:"遺跡"};
+  if(src==="expdun"&&LS.get("b2_expdd","")===daysKey(new Date()))return {ok:false,why:"daily",nm:"経験値ダンジョン"};
+  if(stam()<need)return {ok:false,why:"stam",need,have:stam()};
+  return {ok:true,need};
+}
+window.canEnter=canEnter;
+/* 入場できなければ理由をモーダル表示して false を返す */
+function gate(src,tier){
+  const r=canEnter(src,tier);
+  if(r.ok){if(r.need)stamUse(r.need);return true;}
+  const old=document.getElementById("gatev");if(old)old.remove();
+  const o=document.createElement("div");o.id="gatev";
+  o.onclick=e=>{if(e.target===o)o.remove();};
+  let body;
+  if(r.why==="lv")body=`<div class="gi">🔒</div><h3>まだ入れません</h3>
+    <p><b>${r.nm}</b> は <b>Lv.${r.lv}</b> で解禁されます。<br>いまは <b>Lv.${userLv().lv}</b>。草原や修練場で経験値をためましょう。</p>
+    <button class="btn" onclick="document.getElementById('gatev').remove();renderPatMap();">草原へ行く</button>`;
+  else if(r.why==="daily")body=`<div class="gi">🌙</div><h3>本日はここまで</h3>
+    <p><b>${r.nm}</b> は <b>1日1回</b>です。明日また来てください。</p>
+    <button class="btn gray" onclick="document.getElementById('gatev').remove()">とじる</button>`;
+  else body=`<div class="gi">💤</div><h3>スタミナが足りません</h3>
+    <p>必要 <b>${r.need}</b> ／ 手持ち <b>${r.have}</b><br>
+    <span class="prog">次の回復まで ${mmssLeft(stamNextSec())}　･　全回復まで 約${stamFullMin()}分</span></p>
+    <p style="font-size:12.5px;color:var(--tx2);">スタミナは <b>${STAM_MIN}分で1</b> 回復します。軽い <b>修練場(${STAM_COST.drill})</b> なら入れるかも。</p>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn" onclick="document.getElementById('gatev').remove();renderDrillSetup();">修練場へ</button>
+      <button class="btn gray" onclick="document.getElementById('gatev').remove()">とじる</button></div>`;
+  o.innerHTML=`<div class="box">${body}</div>`;
+  document.body.appendChild(o);
+  try{track("gate",{src,why:r.why});}catch(e){}
+  return false;
+}
+window.gate=gate;
+/* スタミナ表示(数値+次の回復) */
+function stamHTML(){
+  const c=stam(),m=stamMax();
+  return `<span class="stampill ${c<=0?"empty":""}"><b>⚡${c}</b><span>/${m}</span>${c<m?`<i>+1 in ${mmssLeft(stamNextSec())}</i>`:""}</span>`;
+}
+window.stamHTML=stamHTML;
 
 /* ---- HUD ---- */
 function updHUD(){
@@ -1452,6 +1599,8 @@ function updHUD(){
   const f=h.querySelector("#hud-food b"),t=h.querySelector("#hud-tk b");
   if(f)f.textContent=LS.get(KEY_F,0);
   if(t)t.textContent=LS.get(KEY_T,0);
+  const sp=h.querySelector("#hud-stam");
+  if(sp){const c=stam();sp.querySelector("b").textContent=c;sp.classList.toggle("low",c<STAM_COST.map1);sp.title="スタミナ "+c+" / "+stamMax();}
   const lv=h.querySelector("#hud-lvv");if(lv)lv.textContent=L.lv;
   const bf=h.querySelector("#hud-barf");if(bf)bf.style.width=Math.round(L.cur/L.need*100)+"%";
   const ev=h.querySelector("#hud-expv");if(ev)ev.textContent=L.cur+"/"+L.need;
@@ -1738,6 +1887,11 @@ window.openLvInfo=function(){
    <h2 style="margin:0 0 4px;">冒険者レベル <span style="color:var(--blue);">Lv.${L.lv}</span></h2>
    <div class="cprog"><div class="cprog-bar"><div style="width:${Math.round(L.cur/L.need*100)}%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div><span class="prog">${L.cur} / ${L.need}</span></div>
    <p style="font-size:13px;color:var(--tx2);">問題を解くほど経験値がたまり、レベルが上がると新しいダンジョンや機能が解禁されます。<b>速く正解するほど経験値が多い</b>。</p>
+   <div class="dcard" style="margin-top:12px;"><h3 style="font-size:14px;">スタミナ</h3>
+     <div class="prow" style="cursor:default;"><span style="flex:1;">いまの残量</span><span>${stamHTML()}</span></div>
+     <div class="prow" style="cursor:default;"><span style="flex:1;">回復のはやさ</span><span class="prog">${STAM_MIN}分で ⚡1（全回復まで 約${Math.round(stamMax()*STAM_MIN/60*10)/10}時間）</span></div>
+     ${Object.keys(WORLD).filter(k=>k!=="guide").map(k=>{const c=k==="map"?`⚡${stamCost("map",1)}／${stamCost("map",2)}／${stamCost("map",3)}`:`⚡${stamCost(k)}`;return `<div class="prow" style="cursor:default;"><span style="flex:1;">${WORLD[k].n}${k==="map"?"（草原／樹海／遺跡）":""}</span><span class="prog">${c}</span></div>`;}).join("")}
+   </div>
    <div class="dcard" style="margin-top:12px;"><h3 style="font-size:14px;">速さのランクと報酬</h3>
      ${RANKS.map(r=>`<div class="prow" style="cursor:default;"><span class="rkb" style="background:${r.cl};">${r.k}</span><span style="flex:1;">${r.nm}</span><span class="prog">✨${r.xp} 🍖${r.fd[0]}〜${r.fd[1]} 🎟${Math.round(r.tk*100)}%</span></div>`).join("")}
    </div>
@@ -2205,10 +2359,10 @@ function renderHome(){
     </div>
   </section>
   <div class="trio" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));">
-    <div class="tcard ${hl==="rev"?"light":"white"}" onclick="startReview()"><h3><span class="micon" data-icon="repeat"></span>経験値ダンジョン</h3><div class="arw">${wrong.length}問 待機中 ✨EXP3倍　→</div></div>
-    <div class="tcard ${hl==="mock"?"light":"white"}" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>決戦(模擬試験)</h3><div class="arw">${best==null?"未挑戦":"ベスト "+best+"点"}　→</div></div>
-    <div class="tcard ${hl==="map"?"light":"white"}" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>討伐マップ</h3><div class="arw">${po} / ${pt} 討伐　→</div></div>
-    <div class="tcard ${hl==="drill"?"light":"white"}" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>修練場</h3><div class="arw">踏破 ${accClearedParts()} / ${ACC_NLV} パート　→</div></div>
+    <div class="tcard ${hl==="rev"?"light":"white"}" onclick="startReview()"><h3><span class="micon" data-icon="repeat"></span>経験値ダンジョン${unlocked("expdun")?`<span class="dcost">⚡${stamCost("expdun")}</span>`:`<span class="dlock">🔒Lv.${lvReq("expdun")}</span>`}</h3><div class="arw">${LS.get("b2_expdd","")===daysKey(new Date())?"本日クリア済み":wrong.length+"問 待機中 ✨EXP3倍"}　→</div></div>
+    <div class="tcard ${hl==="mock"?"light":"white"}" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>決戦(模擬試験)${unlocked("mock")?`<span class="dcost">⚡${stamCost("mock")}</span>`:`<span class="dlock">🔒Lv.${lvReq("mock")}</span>`}</h3><div class="arw">${best==null?"未挑戦":"ベスト "+best+"点"}　→</div></div>
+    <div class="tcard ${hl==="map"?"light":"white"}" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>討伐マップ<span class="dcost">⚡${stamCost("map",1)}〜</span></h3><div class="arw">${po} / ${pt} 討伐　→</div></div>
+    <div class="tcard ${hl==="drill"?"light":"white"}" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>修練場<span class="dcost">⚡${stamCost("drill")}</span></h3><div class="arw">踏破 ${accClearedParts()} / ${ACC_NLV} パート　→</div></div>
   </div>
   ${(!sbUser&&(Date.now()-LS.get("b2_savehide",0)>86400000)&&(totalQ>=5||dogs.length>0))?`
   <div class="qpane" id="savecard" style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
@@ -2311,6 +2465,7 @@ function patProgress(){
 function startExam(id){
   const ex=EXAMS.find(e=>e.id===id);
   if(ex.lock&&!sbUser){try{track('signup_click',{src:'examlock'})}catch(e){};openAcct();return;}
+  if(!gate("mock"))return;
   const answers={};
   ex.sections.forEach(sec=>{
     const parts=sec.type==="mixed"?sec.parts:[sec];
@@ -2531,7 +2686,7 @@ function renderDrillSetup(){
     const cleared=s&&s.best>=13;
     return `<div class="tcard ${cleared?"light":"white"}" style="margin-top:10px;" onclick="accStart(${l})"><h3>${cleared?"✅ ":"⚔️ "}${ACCLV[l]}</h3><div class="arw">${n}問${s?`　｜　ベスト ${s.best}/${n}${s.combo?`　🔥最大${s.combo}コンボ`:""}`:""}　→</div></div>`;
   }).join("")}
-  <p class="prog" style="margin-top:10px;">13問以上正解でパート踏破 ✅　｜　敵は <b>スライム(攻撃力1)</b>・相棒のライフ <b>${"♥".repeat(dogLives())}</b></p>
+  <p class="prog" style="margin-top:10px;">13問以上正解でパート踏破 ✅　｜　敵は <b>スライム(攻撃力1)</b>・相棒のライフ <b>${"♥".repeat(dogLives())}</b>　｜　入場 <b>⚡${stamCost("drill")}</b>　${stamHTML()}</p>
   <div style="margin-top:8px;"><button class="btn gray" onclick="renderHome()">戻る</button></div></div>`;
 }
 window.accBegin=function(lv){
@@ -2540,7 +2695,10 @@ window.accBegin=function(lv){
   btStart("drill",1,()=>{acc=null;renderDrillSetup();});
   accQ();
 };
-window.accStart=function(lv){withLoading(()=>accBegin(lv),620,"修練場に むかっています");};
+window.accStart=function(lv){
+  if(!gate("drill"))return;
+  withLoading(()=>accBegin(lv),620,"修練場に むかっています");
+};
 function accQ(){
   setMode("home");setNav("study");
   const q=acc.qs[acc.idx];
@@ -2628,7 +2786,9 @@ function startDrill(qs,mode,atk){
 function startReview(){
   const wrong=LS.get(KEY_W,[]);
   const qs=wrong.map(id=>QMAP[id]).filter(Boolean);
-  if(!qs.length){alert("間違いリストは空です。模試やドリルで間違えた仕訳がここに追加されます。");return;}
+  if(!qs.length){alert("間違いリストは空です。決戦や討伐で間違えた仕訳がここに追加されます。");return;}
+  if(!gate("expdun"))return;
+  LS.set("b2_expdd",daysKey(new Date()));   /* 1日1回の記録 */
   withLoading(()=>{btStart("expdun",2,()=>{drill=null;renderHome();});startDrill([...qs].sort(()=>Math.random()-.5),"review",2);},620,"経験値ダンジョンへ むかっています");
 }
 window.renderDrillSetup=renderDrillSetup;window.startReview=startReview;
@@ -2784,7 +2944,8 @@ function renderPatMap(){
   if(!lv){lv=1;for(let k=1;k<=3;k++){if(!tierProg(k).done){lv=k;break;}lv=Math.min(k+1,3);}}
   const tabs=[1,2,3].map(k=>{
     const p=tierProg(k),T=TIERS[k];
-    return `<button class="ctab ${k===lv?"on":""}" onclick="setPatLv(${k})">${T.icon} ${T.n}<small>${T.sub}</small>${p.done?" ✓":""}</button>`;
+    const lk=k>1&&!unlocked("tier"+k);
+    return `<button class="ctab ${k===lv?"on":""} ${lk?"lock":""}" onclick="setPatLv(${k})">${lk?"🔒":T.icon} ${T.n}<small>${lk?"Lv."+lvReq("tier"+k):T.sub}</small>${p.done?" ✓":""}</button>`;
   }).join("");
   const pr=tierProg(lv),T=TIERS[lv];
   const pct=pr.total?Math.round(pr.ok/pr.total*100):0;
@@ -2810,7 +2971,10 @@ function renderPatMap(){
       <span>敵 <b>${T.foe}</b></span>
       <span>攻撃力 <b style="color:${T.col};">${T.atk}</b></span>
       <span>相棒のライフ <b>${"♥".repeat(lives)}</b></span>
+      <span>1問あたり <b>⚡${stamCost("map",lv)}</b></span>
+      <span>${stamHTML()}</span>
     </div>
+    ${lv>1&&!unlocked("tier"+lv)?`<div class="dgate-lock">🔒 このエリアは <b>Lv.${lvReq("tier"+lv)}</b> で解禁されます(いま Lv.${userLv().lv})。</div>`:""}
     ${lives<=T.atk?`<div class="dgate-warn">⚠️ いまの相棒は <b>一撃で倒されます</b>。犬を育てるか、やさしいエリアから攻めましょう。</div>`
       :lives<T.atk*2?`<div class="dgate-warn" style="background:#fef3c7;color:#92400e;">⚠️ 被弾 <b>1回</b> で危険域です。慎重に。</div>`:""}
   </div>
@@ -2843,7 +3007,9 @@ window.enterPat=function(gi,ii){
   patRender(q,lock);
 };
 window.startPat=function(gi,ii){
-  const nm=["","草原","樹海","遺跡"][itemTier(PATMAP[gi].items[ii])]||"ダンジョン";
+  const tier=itemTier(PATMAP[gi].items[ii]);
+  const nm=["","草原","樹海","遺跡"][tier]||"ダンジョン";
+  if(!gate("map",tier))return;
   withLoading(()=>enterPat(gi,ii),620,nm+"へ むかっています");
 };
 let pqCur=null,patLock=null;
@@ -4418,7 +4584,7 @@ track("visit",{screen:"home"});
 /* ---------- アカウント同期(Supabase) ---------- */
 const SB_URL="https://ijddujtdsvmbrwtboodt.supabase.co",SB_KEY="sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt";
 let sb=null,sbUser=null,pushT=null;
-const SYNC_KEYS=["b2_exp","b2_history","b2_drill","b2_wrong","b2_pat","b2_days","b2_qz","b2_exam","b2_acc","b2_patlv","b3_history","b3_drill","b3_wrong","b3_pat","b3_days","b3_qz","b3_exam","b3_acc","b3_patlv","b2_seen","b2_tickets","b2_cleared","b2_dogs","b2_food","b2_partner","b2_nick","b2_login","b2_xreward","b2_hungry","b2_away","b2_refdone","b2_regbonus","b2_dogv","b2_achseen"];
+const SYNC_KEYS=["b2_exp","b2_expmig","b2_stam","b2_expdd","b2_history","b2_drill","b2_wrong","b2_pat","b2_days","b2_qz","b2_exam","b2_acc","b2_patlv","b3_history","b3_drill","b3_wrong","b3_pat","b3_days","b3_qz","b3_exam","b3_acc","b3_patlv","b2_seen","b2_tickets","b2_cleared","b2_dogs","b2_food","b2_partner","b2_nick","b2_login","b2_xreward","b2_hungry","b2_away","b2_refdone","b2_regbonus","b2_dogv","b2_achseen"];
 function collectLocal(){const o={};SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)o[k]=v;});return o;}
 function tqOf(o){try{const d=JSON.parse(o[KEY_A]||"{}");let t=0;Object.values(d).forEach(e=>t+=e.q||0);return t;}catch(e){return 0;}}
 function applyData(o){SYNC_KEYS.forEach(k=>{if(o[k]!=null)localStorage.setItem(k,o[k]);});}
@@ -4509,6 +4675,7 @@ window.deleteAccount=async function(){
   }
 };
 initSb();
+try{migrateExp();}catch(e){}
 renderHome();
 try{updHUD();}catch(e){}
 if(!LS.get("b2_seen",0))LS.set("b2_seen",1);
