@@ -207,10 +207,13 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 @keyframes blink{0%,60%{opacity:.25;}30%{opacity:1;}}
 #loadv .sub{color:rgba(255,255,255,.5);font-size:12px;}
 /* ===== 戦闘バー(問題カードの外・画面上部に固定) ===== */
-#btbar{position:fixed;left:0;right:0;top:var(--hdrh,56px);z-index:60;background:rgba(255,255,255,.97);
+#btbar{position:fixed;left:216px;right:0;top:var(--hdrh,56px);z-index:60;background:rgba(255,255,255,.97);
   border-bottom:1px solid var(--bd);box-shadow:0 4px 14px rgba(15,23,42,.07);backdrop-filter:blur(6px);}
+#nav.hidden~#btbar{left:0;}
 body.dark #btbar{background:rgba(24,28,42,.97);}
-#btbar .btbar-in{max-width:760px;margin:0 auto;padding:8px 16px 10px;display:flex;align-items:flex-end;gap:12px;}
+/* 中身は本文カラム(.wrap>*:not(.page) の 920px)にそろえる */
+#btbar .btbar-in{max-width:920px;margin:0 auto;padding:8px 28px 10px;display:flex;align-items:flex-end;gap:12px;}
+@media(max-width:900px){#btbar{left:0;}}
 .btside{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;}
 .btlives{line-height:1;white-space:nowrap;}
 .btlives i{font-style:normal;font-size:14px;color:#e2e8f0;margin:0 .5px;transition:color .3s;}
@@ -254,7 +257,7 @@ body.bton .wrap{padding-top:calc(var(--btbarh,58px) + 8px);}
 .skpop{position:absolute;left:50%;top:11px;transform:translateX(-50%);background:rgba(15,23,42,.92);color:#fff;font-size:12px;font-weight:800;padding:4px 12px;border-radius:999px;white-space:nowrap;z-index:5;animation:skp 1.6s ease-out forwards;pointer-events:none;}
 @keyframes skp{0%{opacity:0;transform:translate(-50%,8px) scale(.8);}18%{opacity:1;transform:translate(-50%,-6px) scale(1.05);}30%{transform:translate(-50%,-2px) scale(1);}80%{opacity:1;}100%{opacity:0;transform:translate(-50%,-16px);}}
 @media(max-width:900px){
-  #btbar .btbar-in{padding:6px 12px 8px;gap:9px;}
+  #btbar .btbar-in{padding:6px 14px 8px;gap:9px;}
   .bttrack{height:42px;}
   body.bton .wrap{padding-top:calc(var(--btbarh,54px) + 6px);}
 }
@@ -279,6 +282,8 @@ body.bton .wrap{padding-top:calc(var(--btbarh,58px) + 8px);}
 .dgate-st{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--tx2);}
 .dgate-st b{color:var(--navy);}
 .dgate-warn{margin-top:10px;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:8px 11px;font-size:12.5px;font-weight:700;}
+.gtag.beta{background:#0e7a5f;color:#fff;}
+.lockrow{opacity:.55;cursor:default;}
 .lockarea{text-align:center;padding:38px 20px;background:var(--lt);border-radius:16px;margin-top:14px;}
 .lockarea .lockic{font-size:40px;line-height:1;}
 .lockarea b{display:block;color:var(--navy);font-size:16px;margin:10px 0 4px;}
@@ -1172,7 +1177,9 @@ window.migrateExp=migrateExp;
 const UNLOCK=[
  {lv:3, t:"復習ダンジョン(1日1回)が解禁",k:"expdun"},
  {lv:5, t:"中級(中級)が解禁",k:"tier2"},
+ {lv:6, t:"仕訳ドリルの第3分野が解禁",k:"acc3"},
  {lv:8, t:"模擬試験が解禁",k:"mock"},
+ {lv:10,t:"仕訳ドリルの第4分野が解禁",k:"acc4"},
  {lv:12,t:"ペット枠が2匹に / スタミナ上限 +10",k:"stam1"},
  {lv:12,t:"",k:"pet2"},
  {lv:16,t:"上級(上級)が解禁",k:"tier3"},
@@ -1242,6 +1249,15 @@ window.stamAdd=stamAdd;
 const KEY_GP="b2_gold";
 /* いま有効か(期限つき) */
 function isGold(){const t=LS.get(KEY_GP,0);return t>Date.now();}
+/* ベータ期間中は「分析」だけ全員に開放する(購入手段がまだ無いため)。
+   課金開始時に BETA_DASH_FREE を false にすればゴールドパス限定に戻る。
+   スタミナ・経験値倍率・ペット枠は据え置き(ゲームバランスを保つため) */
+const BETA_DASH_FREE=true;
+function dashOpen(){return BETA_DASH_FREE||isGold();}
+/* 見出しにつけるタグ: ベータ中は「無料開放中」、課金開始後は 👑 */
+function goldTag(){return BETA_DASH_FREE&&!isGold()?'<span class="gtag beta">ベータ中は無料</span>':'<span class="gtag">👑</span>';}
+window.goldTag=goldTag;
+window.dashOpen=dashOpen;window.BETA_DASH_FREE=BETA_DASH_FREE;
 window.isGold=isGold;
 function goldDaysLeft(){const t=LS.get(KEY_GP,0)-Date.now();return t>0?Math.ceil(t/86400000):0;}
 window.goldDaysLeft=goldDaysLeft;
@@ -1314,6 +1330,7 @@ function canEnter(src,tier){
   if(src==="mock"&&isGold())need=0;                     /* ゴールドパスは模試が無制限 */
   if(src==="expdun"&&!unlocked("expdun"))return {ok:false,why:"lv",lv:lvReq("expdun"),nm:"復習ダンジョン"};
   if(src==="mock"&&!unlocked("mock"))return {ok:false,why:"lv",lv:lvReq("mock"),nm:"模試"};
+  if(src==="drill"&&tier>=3&&!unlocked("acc"+tier))return {ok:false,why:"lv",lv:lvReq("acc"+tier),nm:"仕訳ドリル "+(typeof ACCLV!=="undefined"?ACCLV[tier]:"")};
   if(src==="map"&&tier===2&&!unlocked("tier2"))return {ok:false,why:"lv",lv:lvReq("tier2"),nm:"中級"};
   if(src==="map"&&tier===3&&!unlocked("tier3"))return {ok:false,why:"lv",lv:lvReq("tier3"),nm:"上級"};
   if(src==="expdun"&&LS.get("b3_expdd","")===daysKey(new Date()))return {ok:false,why:"daily",nm:"復習ダンジョン"};
@@ -1424,6 +1441,7 @@ function showLvUp(from,to){
 function addFood(n,fromEl){
   if(!(n>0))return;
   LS.set(KEY_F,LS.get(KEY_F,0)+n);
+  try{bumpDay("fd",n);}catch(e){}
   const dogT=document.getElementById("btdog")?"#btdog":"#hud-food";
   for(let i=0;i<Math.min(4,n);i++)flyTo(fromEl,dogT,`<span class="sicon" data-icon="food" data-s="1"></span>`,i*110);
   if(dogT==="#btdog")setTimeout(()=>{const dg=document.getElementById("btdog");if(dg){dg.classList.remove("munch");void dg.offsetWidth;dg.classList.add("munch");}},860);
@@ -1547,12 +1565,8 @@ function btMountBar(){
   </div>`;
   document.body.appendChild(el);
   document.body.classList.add("bton");
-  try{
-    const h=document.getElementById("hdr");
-    const top=h?Math.round(h.getBoundingClientRect().height):56;
-    el.style.top=top+"px";
-    document.body.style.setProperty("--btbarh",(el.getBoundingClientRect().height||58)+"px");
-  }catch(e){}
+  btPlaceBar();
+  window.addEventListener("resize",btPlaceBar);
   try{
     const d=getDogs()[getPartner()];
     const st=d?dogStage(d.f||0):0;
@@ -1562,8 +1576,22 @@ function btMountBar(){
   return el;
 }
 window.btMountBar=btMountBar;
+/* ヘッダー(と、狭い画面では横並びナビ)の下に置く。左サイドバーとは重ねない */
+function btPlaceBar(){
+  const el=document.getElementById("btbar");if(!el)return;
+  try{
+    const h=document.getElementById("hdr"),nv=document.getElementById("nav");
+    let top=h?Math.round(h.getBoundingClientRect().height):56;
+    const rowNav=nv&&!nv.classList.contains("hidden")&&innerWidth<=900;
+    if(rowNav)top+=Math.round(nv.getBoundingClientRect().height);
+    el.style.top=top+"px";
+    document.body.style.setProperty("--btbarh",(el.getBoundingClientRect().height||58)+"px");
+  }catch(e){}
+}
+window.btPlaceBar=btPlaceBar;
 function btRemoveBar(){
   const e=document.getElementById("btbar");if(e)e.remove();
+  window.removeEventListener("resize",btPlaceBar);
   document.body.classList.remove("bton");
 }
 window.btRemoveBar=btRemoveBar;
@@ -1769,8 +1797,9 @@ window.openLvInfo=function(){
      <div class="prow" style="cursor:default;"><span style="flex:1;">回復のはやさ</span><span class="prog">${stamMin()}分で ⚡1（全回復まで 約${Math.round(stamMax()*stamMin()/60*10)/10}時間）</span></div>
      ${Object.keys(WORLD).filter(k=>k!=="guide").map(k=>{const c=k==="map"?`⚡${stamCost("map",1)}／${stamCost("map",2)}／${stamCost("map",3)}`:`⚡${stamCost(k)}`;return `<div class="prow" style="cursor:default;"><span style="flex:1;">${WORLD[k].n}${k==="map"?"（初級／中級／上級）":""}</span><span class="prog">${c}</span></div>`;}).join("")}
    </div>
-   <div class="dcard" style="margin-top:12px;"><h3 style="font-size:14px;">速さのランクと報酬</h3>
-     ${RANKS.map(r=>`<div class="prow" style="cursor:default;"><span class="rkb" style="background:${r.cl};">${r.k}</span><span style="flex:1;">${r.nm}</span><span class="prog">✨${r.xp} 🍖${r.fd[0]}〜${r.fd[1]} 🎟${Math.round(r.tk*100)}%</span></div>`).join("")}
+   <div class="dcard" style="margin-top:12px;"><h3 style="font-size:14px;">速さと報酬</h3>
+     <p class="prog" style="margin-bottom:6px;">制限時間バーがどこまで残っているかで、もらえる量が変わります。</p>
+     ${RANKS.map((r,i)=>`<div class="prow" style="cursor:default;"><span class="rkb" style="background:${r.cl};">✨${r.xp}</span><span style="flex:1;">バーの残り ${Math.round(r.min*100)}% 以上</span><span class="prog">🍖${r.fd[0]}〜${r.fd[1]}　🎟${Math.round(r.tk*100)}%</span></div>`).join("")}
    </div>
    <div class="dcard" style="margin-top:12px;"><h3 style="font-size:14px;">場所ごとの倍率</h3>
      ${Object.keys(SRC).map(k=>`<div class="prow" style="cursor:default;"><span style="flex:1;">${SRC[k].nm}</span><span class="prog">×${SRC[k].m}</span></div>`).join("")}
@@ -1818,7 +1847,7 @@ function miniToast(html){
 }
 /* ---------- デイリーミッション & バッジ ---------- */
 const QUESTS=[
- {id:"feed1",nm:"ペットに ごはんをあげる",sn:"ごはんをあげる",icon:"food",target:1,val:e=>e.fd||0,f:3},
+ {id:"feed1",nm:"ごはんを 10こ 持ちかえる",sn:"ごはんを10こ",icon:"food",target:10,val:e=>e.fd||0,f:3},
  {id:"rev3",nm:"復習で3問 取りもどす",sn:"復習で3問 取りもどす",icon:"repeat",target:3,val:e=>e.r||0,f:6},
  {id:"pat1",nm:"パターンを1つ 制覇する",sn:"パターンを1つ 制覇",icon:"map",target:1,val:e=>e.p||0,f:8},
  {id:"q10",nm:"10問 正解する",sn:"10問 正解する",icon:"pencil",target:10,val:e=>e.o||0,f:5},
@@ -2241,7 +2270,7 @@ function renderHome(){
     <div class="tcard ${hl==="rev"?"light":"white"}" onclick="startReview()"><h3><span class="micon" data-icon="repeat"></span>復習ダンジョン${unlocked("expdun")?`<span class="dcost">⚡${stamCost("expdun")}</span>`:`<span class="dlock">🔒Lv.${lvReq("expdun")}</span>`}</h3><div class="arw">${LS.get("b3_expdd","")===daysKey(new Date())?"本日クリア済み":wrong.length+"問 待機中 ✨EXP3倍"}　→</div></div>
     <div class="tcard ${hl==="mock"?"light":"white"}" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>模擬試験${unlocked("mock")?`<span class="dcost">⚡${stamCost("mock")}</span>`:`<span class="dlock">🔒Lv.${lvReq("mock")}</span>`}</h3><div class="arw">${best==null?"未挑戦":"ベスト "+best+"点"}　→</div></div>
     <div class="tcard ${hl==="map"?"light":"white"}" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>パターン網羅マップ<span class="dcost">⚡${stamCost("map",1)}〜</span></h3><div class="arw">${po} / ${pt} クリア　→</div></div>
-    <div class="tcard ${hl==="drill"?"light":"white"}" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>仕訳ドリル<span class="dcost">⚡${stamCost("drill")}</span></h3><div class="arw">踏破 ${accClearedParts()} / ${ACC_NLV} パート　→</div></div>
+    <div class="tcard ${hl==="drill"?"light":"white"}" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>仕訳ドリル<span class="dcost">⚡${stamCost("drill")}</span></h3><div class="arw">踏破 ${accClearedParts()} / ${ACC_NLV} 分野　→</div></div>
   </div>
   ${(!sbUser&&(Date.now()-LS.get("b2_savehide",0)>86400000)&&(totalQ>=5||dogs.length>0))?`
   <div class="qpane" id="savecard" style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
@@ -2562,9 +2591,11 @@ function renderDrillSetup(){
   ${Array.from({length:ACC_NLV},(_,i)=>i+1).map(l=>{
     const s=st["p"+l];const n=ACC5.filter(a=>a[2]===l).length;
     const cleared=s&&s.best>=13;
+    const lk=l>=3&&!unlocked("acc"+l);
+    if(lk)return `<div class="tcard white lockrow" style="margin-top:10px;"><h3>🔒 ${ACCLV[l]}</h3><div class="arw">Lv.${lvReq("acc"+l)} で解禁　｜　${n}問</div></div>`;
     return `<div class="tcard ${cleared?"light":"white"}" style="margin-top:10px;" onclick="accStart(${l})"><h3>${cleared?"✅ ":"⚔️ "}${ACCLV[l]}</h3><div class="arw">${n}問${s?`　｜　ベスト ${s.best}/${n}${s.combo?`　🔥最大${s.combo}コンボ`:""}`:""}　→</div></div>`;
   }).join("")}
-  <p class="prog" style="margin-top:10px;">13問以上正解でパート踏破 ✅　｜　敵は <b>スライム(攻撃力1)</b>・相棒のライフ <b>${"♥".repeat(dogLives())}</b>　｜　入場 <b>⚡${stamCost("drill")}</b>　${stamHTML()}</p>
+  <p class="prog" style="margin-top:10px;">13問以上正解で踏破 ✅　｜　相棒のライフ <b>${"♥".repeat(dogLives())}</b>　｜　入場 <b>⚡${stamCost("drill")}</b>　${stamHTML()}</p>
   <div style="margin-top:8px;"><button class="btn gray" onclick="renderHome()">戻る</button></div></div>`;
 }
 window.accBegin=function(lv){
@@ -2574,7 +2605,7 @@ window.accBegin=function(lv){
   accQ();
 };
 window.accStart=function(lv){
-  if(!gate("drill"))return;
+  if(!gate("drill",lv))return;
   withLoading(()=>accBegin(lv),620,"仕訳ドリルに むかっています");
 };
 /* 嗅覚: 誤答した問題を記録し、1日3回まで次回に選択肢を1つ減らす */
@@ -2644,7 +2675,7 @@ window.accAnswer=function(k){
     const res=btHit(btns[q[1]]);
     acc.xp=(acc.xp||0)+(res?res.xp:0);
     const c=$("#acccombo");
-    if(c&&res)c.innerHTML=`<span class="rkb" style="background:${res.rank.cl};">${res.rank.k}</span><span class="rkn">${res.rank.nm}</span>${acc.combo>=2?` <b>🔥${acc.combo}</b>`:""}`;
+    if(c&&res)c.innerHTML=`${rankBadge(res)}${acc.combo>=2?` <b>🔥${acc.combo}</b>`:""}`;
     if(acc.combo===5||acc.combo===10||acc.combo===15){try{confettiBurst()}catch(e){}}
     setTimeout(accNext,700);
   }else{
@@ -2678,12 +2709,12 @@ function accEnd(){
   main.innerHTML=`<div class="qpane accwrap">
   <h2>${ACCLV[lv]}　結果</h2>
   <div class="res-big ${cleared?"pass":"fail"}">${ok} / ${n} 問正解</div>
-  <div style="text-align:center;font-weight:800;margin-top:4px;">${ok===n?"💯 パーフェクト!":cleared?"✅ パート踏破!":"あと"+(13-ok)+"問で踏破。もう一回!"}　${acc.maxCombo>=2?`🔥 最大${acc.maxCombo}コンボ`:""}</div>
+  <div style="text-align:center;font-weight:800;margin-top:4px;">${ok===n?"💯 パーフェクト!":cleared?"✅ 踏破!":"あと"+(13-ok)+"問で踏破。もう一回!"}　${acc.maxCombo>=2?`🔥 最大${acc.maxCombo}コンボ`:""}</div>
   <div class="xpsum">獲得経験値 <b>✨ ${acc.xp||0}</b>${bt&&bt.tk?`　🎟 ガチャチケット ${bt.tk}`:""}</div>
   ${acc.wrong.length?`<div class="dcard" style="margin-top:14px;"><h3 style="font-size:14px;">間違えた科目</h3>${acc.wrong.map(w=>`<div class="prow" style="cursor:default;"><span style="flex:1;">${w[0]}</span><span class="pst ok">${ACCE[w[1]]}</span></div>`).join("")}</div>`:""}
   <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
     <button class="btn" onclick="accStart(${lv})">もう一回</button>
-    ${lv<ACC_NLV?`<button class="btn" style="background:var(--blue);" onclick="accStart(${lv+1})">次のパートへ →</button>`:""}
+    ${(lv<ACC_NLV&&(lv+1<3||unlocked("acc"+(lv+1))))?`<button class="btn" style="background:var(--blue);" onclick="accStart(${lv+1})">次へ →</button>`:""}
     <button class="btn gray" onclick="renderDrillSetup()">仕訳ドリルへもどる</button>
   </div></div>`;
   acc=null;
@@ -2984,7 +3015,7 @@ function renderDash(){
       :fc.need?"あと <b>3日ぶん</b> の記録がたまると、合格ラインへの到達日を予測できます。"
       :fc.stalled?"最近は横ばいです。<b>まだ手をつけていないパターン</b>を崩すと一気に伸びます。"
       :`このペースなら <b>${fc.days}日後(${fc.date}ごろ)</b> に合格ライン(70点)へ。<span class="prog">1日あたり +${fc.rate}点</span>`}</div>
-    ${rec?`<div class="fcrec"><span>いま行くべきダンジョン${isGold()?"":" (1つだけ表示)"}</span>
+    ${rec?`<div class="fcrec"><span>いま行くべきダンジョン${dashOpen()?"":" (1つだけ表示)"}</span>
       <button class="btn" style="font-size:13px;padding:9px 18px;" onclick="setPatLv(${rec.tier});renderPatMap();">${TIERS[rec.tier].icon} ${escapeHtml(rec.label)}　→</button>
       <span class="prog">第${rec.sec}問・${TIERS[rec.tier].n}　配点が大きく、まだ固めきれていない論点です</span></div>`:""}
   </div>`;
@@ -2992,13 +3023,13 @@ function renderDash(){
   const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">分析</h2></div>
   <div class="qpane"><h2><span class="sicon" data-icon="trophy"></span>合格ラインまで</h2>${fcBlock}</div>
   <div class="ctabs" style="margin:14px 0 0;">${perTabs}</div>
-  <div class="qpane"><h2><span class="sicon" data-icon="pin"></span>ミスの種類${isGold()?'<span class="gtag">👑</span>':""}</h2>
-    ${isGold()?missBlock:`<div class="lockwrap"><div class="lockblur">${missBlock}</div>
+  <div class="qpane"><h2><span class="sicon" data-icon="pin"></span>ミスの種類${goldTag()}</h2>
+    ${dashOpen()?missBlock:`<div class="lockwrap"><div class="lockblur">${missBlock}</div>
       <div class="lockover"><div>🔒</div><b>ミスの内訳はゴールドパス</b><span class="prog">計算ミス・仕訳ミス・理解不足…<br>どこで落としているかが分かります</span>
       <button class="btn" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);font-size:13px;padding:9px 20px;" onclick="openGold('dash_miss')">くわしく見る</button></div></div>`}
   </div>
-  <div class="qpane"><h2><span class="sicon" data-icon="map"></span>パターン別 正解率・所要時間${isGold()?'<span class="gtag">👑</span>':""}</h2>
-    ${isGold()?patTable:`<div class="lockwrap"><div class="lockblur">${patTable}</div>
+  <div class="qpane"><h2><span class="sicon" data-icon="map"></span>パターン別 正解率・所要時間${goldTag()}</h2>
+    ${dashOpen()?patTable:`<div class="lockwrap"><div class="lockblur">${patTable}</div>
       <div class="lockover"><div>🔒</div><b>パターン別の詳細はゴールドパス</b><span class="prog">どの論点に何分かかっているかが見えます</span>
       <button class="btn" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);font-size:13px;padding:9px 20px;" onclick="openGold('dash_pat')">くわしく見る</button></div></div>`}
   </div>
@@ -3010,7 +3041,7 @@ function renderDash(){
     </div></div>
   <div class="qpane"><h2><span class="sicon" data-icon="chart"></span>模試の得点推移(合格ライン70点)</h2>${trend}</div>
   <div class="qpane"><h2><span class="sicon" data-icon="clock"></span>直近の模試: 大問別 所要時間</h2>${timeRows}</div>
-  ${isGold()?"":`<div class="qpane gpromo" onclick="openGold('dash')">
+  ${dashOpen()?"":`<div class="qpane gpromo" onclick="openGold('dash')">
     <div style="font-size:30px;">👑</div>
     <div style="flex:1;"><b>ゴールドパス</b><br><span class="prog">スタミナ2倍・模試無制限・弱点に連動したEXP2倍・分析フル解放</span></div>
     <span class="arw">見てみる　→</span></div>`}
@@ -3044,7 +3075,7 @@ function patStat(item){
   const id=item.k==="pq"?item.id:refId(item);
   const p=LS.get(KEY_P,{})[id];
   if(!p)return{s:"未",cls:"none",d:""};
-  const fl=p.fail?` ・${p.fail}回 挑戦`:"";
+  const fl=p.fail?` ・${p.fail}回 失敗`:"";
   if(p.best>=80)return{s:"○",cls:"ok",d:"最高"+p.best+"% ("+p.t+"回)"};
   if(p.g)return{s:"△",cls:"gd",d:"ガイドと一緒にクリア"+fl};
   return {s:"⚔",cls:"mid",d:"挑戦中 最高"+p.best+"%"+fl};
