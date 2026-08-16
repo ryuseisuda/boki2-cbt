@@ -2771,18 +2771,18 @@ function renderHome(){
       <div class="wbadge"><span class="sicon" data-icon="paw" data-s="1"></span>ベータ公開中・ぜんぶ無料</div>
       <h1 class="onbh1">犬を育てたら、<br><span style="color:var(--blue);">簿記2級に受かった。</span></h1>
       <div style="font-size:14.5px;color:var(--tx2);margin-top:4px;">日商簿記2級のCBT対策アプリ</div>
-      <div class="prog" style="margin-top:16px;font-size:13.5px;">勉強すると<b style="color:var(--blue);">進化</b>します</div>
+      <button class="ctaflat" id="lpcta" onclick="lpCta('top')">30秒で1問解いてみる　→</button>
+      <div class="minichips">
+        <span><span class="sicon" data-icon="map" data-s="1"></span>全47パターン網羅</span>
+        <span><span class="sicon" data-icon="zap" data-s="1"></span>登録不要</span>
+        <span><span class="sicon" data-icon="paw" data-s="1"></span>無理せず続く</span>
+      </div>
+      <div class="prog" style="margin-top:18px;font-size:13.5px;">勉強すると<b style="color:var(--blue);">進化</b>します</div>
       <div id="onbevo" class="evorow big"></div>
       <div class="mokushi">
         <div class="mkt"><span class="sicon" data-icon="cap" data-s="1"></span>本番のCBT画面を再現</div>
         <div class="mkn">ネット試験模試 4回分無料</div>
         <div class="mks">今だけ無料(ベータ期間限定)・今後さらに追加予定</div>
-      </div>
-      <button class="ctaflat" onclick="startFTE()">30秒で1問解いてみる　→</button>
-      <div class="minichips">
-        <span><span class="sicon" data-icon="map" data-s="1"></span>全47パターン網羅</span>
-        <span><span class="sicon" data-icon="zap" data-s="1"></span>登録不要</span>
-        <span><span class="sicon" data-icon="paw" data-s="1"></span>無理せず続く</span>
       </div>
       <div class="lpsec">
         <h2 class="lph">本番さながらの<span style="color:var(--blue);">ネット試験</span>模試</h2>
@@ -2801,6 +2801,7 @@ function renderHome(){
           <button class="btn" style="margin-top:12px;font-size:14px;padding:10px 30px;opacity:.55;cursor:default;" disabled><span class="sicon" data-icon="food" data-s="1"></span>たべさせる</button>
         </div>
       </div>
+      <button class="ctaflat" id="lpcta2" onclick="lpCta('bot')">30秒で1問解いてみる　→</button>
     </div>
   </section>`;
   const center=isNew?onbCenter+`
@@ -2861,6 +2862,7 @@ function renderHome(){
     }
     const ld=document.getElementById("lpdogimg");
     if(ld){try{ld.appendChild(dogCanvas(1,4.5,0));}catch(e){}}
+    try{lpInstrument();}catch(e){}
     return;
   }
   if(dogs.length){
@@ -5095,6 +5097,48 @@ window.nameNewDog=function(b){
 };
 /* ---------- 初回体験フロー(1問→ギフト→レア確定ガチャ→ごはん→進化) ---------- */
 const FTEQ={q:"商品をクレジットカード払いで販売した。債権を記録する勘定科目は?",c:["クレジット売掛金","売掛金","未収入金","受取手形"],x:"信販会社への債権は「クレジット売掛金」。通常の掛け販売(売掛金)と区別します。"};
+/* ---------- LP→1問目 のファネル計測 ---------- */
+let LPT0=0,LPHIT={},LPCLK=0;
+function lpInstrument(){
+  if(window.__lpi)return;window.__lpi=1;
+  LPT0=Date.now();
+  const cta=document.getElementById("lpcta");
+  const vh=innerHeight||844;
+  let top=0,fold=0;
+  if(cta){const r=cta.getBoundingClientRect();top=Math.round(r.top+(window.scrollY||0));fold=(r.bottom<=vh)?1:0;}
+  try{track("lp_view",{w:innerWidth,h:vh,ctatop:top,fold});}catch(e){}
+  /* CTAが実際に画面に入った瞬間 */
+  if(cta){
+    if(fold){try{track("lp_cta_view",{t:0,fold:1});}catch(e){}}
+    else if(window.IntersectionObserver){
+      const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){io.disconnect();
+        try{track("lp_cta_view",{t:Date.now()-LPT0,fold:0});}catch(er){}}});},{threshold:.6});
+      io.observe(cta);
+    }
+  }
+  /* スクロール深度 */
+  const onSc=()=>{
+    const H=(document.documentElement.scrollHeight||0)-(innerHeight||0);
+    const p=H>0?Math.round((window.scrollY||0)/H*100):100;
+    [25,50,75,100].forEach(m=>{if(!LPHIT[m]&&p>=m){LPHIT[m]=1;try{track("lp_depth",{d:m,t:Date.now()-LPT0});}catch(e){}}});
+    if(LPHIT[100])removeEventListener("scroll",onSc);
+  };
+  addEventListener("scroll",onSc,{passive:true});
+  onSc();
+  /* 押さずに離脱した人 */
+  const bye=()=>{
+    if(LPCLK||window.__lpbye)return;window.__lpbye=1;
+    const ds=Object.keys(LPHIT).map(Number);
+    try{track("lp_leave",{t:Date.now()-LPT0,d:ds.length?Math.max.apply(null,ds):0});}catch(e){}
+  };
+  addEventListener("pagehide",bye);
+  addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")bye();});
+}
+window.lpCta=function(pos){
+  LPCLK=1;
+  try{track("lp_cta_click",{pos,t:LPT0?Date.now()-LPT0:0});}catch(e){}
+  startFTE();
+};
 let fte=null;
 function fteBox(html){
   let o=document.getElementById("cele-ovl");if(o)o.remove();
@@ -5132,7 +5176,7 @@ window.fteAnswer=function(k){
   fte.done=true;clearInterval(fte.iv);
   const ok=fte.order[k].i===0;
   try{recordActivity(1,ok?1:0);}catch(e){}
-  try{track("fte_answer",{ok})}catch(e){}
+  try{track("fte_answer",{ok,sec:30-fte.sec})}catch(e){}
   document.querySelectorAll("#fqc .qzc").forEach((b,i)=>{b.disabled=true;
     if(fte.order[i].i===0)b.classList.add("ok");else if(i===k)b.classList.add("ng");});
   if(ok)confettiBurst();
