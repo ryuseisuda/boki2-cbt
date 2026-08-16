@@ -240,6 +240,18 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 .ctabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
 .ctab{border:2px solid var(--bd);background:#fff;border-radius:999px;padding:8px 16px;font-size:13.5px;font-weight:800;cursor:pointer;color:var(--tx2);font-family:inherit;}
 .ctab.on{border-color:var(--blue);background:var(--blue);color:#fff;}
+.ctab small{font-size:10.5px;opacity:.7;margin-left:5px;font-weight:700;}
+/* ダンジョン入口カード */
+.dgate{border:2px solid;border-radius:16px;padding:14px 16px;margin-top:12px;}
+.dgate-h{display:flex;align-items:center;gap:10px;}
+.dgate-ic{font-size:26px;line-height:1;}
+.dgate-h b{font-size:19px;}
+.dgate-h small{font-size:11.5px;color:var(--tx2);margin-left:6px;font-weight:700;}
+.dgate-foe{margin-left:auto;line-height:0;}
+.dgate p{font-size:13px;margin:8px 0 10px;color:var(--tx2);}
+.dgate-st{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--tx2);}
+.dgate-st b{color:var(--navy);}
+.dgate-warn{margin-top:10px;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:8px 11px;font-size:12.5px;font-weight:700;}
 .cprog{display:flex;align-items:center;gap:12px;margin:10px 0 4px;}
 .cprog-bar{flex:1;height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden;}
 .cprog-bar>div{height:100%;background:linear-gradient(90deg,#22c55e,#4ade80);border-radius:999px;transition:width .5s;}
@@ -683,7 +695,7 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
 </div>
 <div id="nav">
   <button data-v="home"><span class="nicon" data-icon="home"></span>ホーム</button>
-  <button data-v="exams"><span class="nicon" data-icon="cap"></span>模擬試験</button>
+  <button data-v="exams"><span class="nicon" data-icon="cap"></span>決戦</button>
   <button data-v="dash"><span class="nicon" data-icon="chart"></span>分析</button>
   <button data-v="garden"><span class="nicon" data-icon="dog"></span>ペット</button>
   <button data-v="gacha"><span class="nicon" data-icon="capsule"></span>ガチャ</button>
@@ -790,7 +802,7 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
 </div>
 <script>
 "use strict";
-/* ================= 仕訳ドリル 50問 ================= */
+/* ================= 仕訳問題(討伐マップ/経験値ダンジョン用) ================= */
 const DRILLS=[
 {id:"d01",tag:"商品売買",q:"商品¥300,000をクレジットカード払いの条件で販売した。信販会社への手数料は販売代金の2%であり、販売時に計上する。",opts:["クレジット売掛金","売掛金","支払手数料","売上","受取手数料","現金"],dr:[["クレジット売掛金",294000],["支払手数料",6000]],cr:[["売上",300000]],exp:"手数料 300,000×2%=6,000 を差し引いた残額をクレジット売掛金とする。"},
 {id:"d02",tag:"手形・電子記録債権",q:"得意先に対する売掛金¥500,000について、電子記録債権の発生記録の通知を受けた。",opts:["電子記録債権","電子記録債務","売掛金","買掛金","受取手形"],dr:[["電子記録債権",500000]],cr:[["売掛金",500000]],exp:"売掛金が電子記録債権に置き換わる。"},
@@ -1296,10 +1308,25 @@ exp:"売上=900×600=540,000。変動費=900×(300+20)=288,000 → 貢献利益2
 ];
 /* ================= パターンマップ定義 ================= */
 const TIER_TAG={"商品売買":1,"手形・電子記録債権":1,"固定資産":2,"引当金":2,"有価証券":2,"税金":2,"外貨建取引":2,"リース":2,"純資産":2,"債権":2,"決算振替":2,"工簿:費目別":1,"工簿:製造間接費":2,"工簿:製品":2,"工簿:本社工場":3};
+/* ===== ダンジョン(討伐マップのエリア) ===== */
 const TIERS=[null,
-{n:"初級編",icon:"🌱",d:"全大問をひとまわり、約20問。まず1コース修了して感覚をつかもう。"},
-{n:"中級編",icon:"🔥",d:"初級 + 頻出パターン。ここまで○なら合格ラインに乗れる量です。"},
-{n:"上級編",icon:"👑",d:"全パターン制覇。本番で初見の問題はもう出ない、満点も狙えるレベル。"}];
+{n:"草原",sub:"初級",icon:"🌿",foe:"スライム",atk:1,
+ d:"全大問をひとまわり、約20問。まずここを踏破して「1コース終えた」感覚をつかもう。",
+ col:"#16a34a",bg:"linear-gradient(135deg,#dcfce7,#bbf7d0)"},
+{n:"樹海",sub:"中級",icon:"🌲",foe:"アイススライム",atk:2,
+ d:"草原 + 頻出パターン。ここを踏破できれば合格ラインに乗ります。",
+ col:"#2563eb",bg:"linear-gradient(135deg,#dbeafe,#bfdbfe)"},
+{n:"遺跡",sub:"上級",icon:"🏛",foe:"デススライム",atk:3,
+ d:"全パターン制覇。本番で初見の問題はもう出ない、満点も狙えるレベル。",
+ col:"#be123c",bg:"linear-gradient(135deg,#ffe4e6,#fecdd3)"}];
+/* アプリ内の呼び名(世界観) */
+const WORLD={
+  map:{n:"討伐マップ",ic:"map",sub:"出題パターンを踏破する"},
+  drill:{n:"修練場",ic:"pencil",sub:"勘定科目を5要素に即分類"},
+  expdun:{n:"経験値ダンジョン",ic:"repeat",sub:"間違えた問題で経験値を稼ぐ"},
+  mock:{n:"決戦",ic:"cap",sub:"本番と同じ構成の模擬試験"},
+  guide:{n:"練習モード",ic:"book",sub:"犬と一緒に解き方を学ぶ"}
+};
 const PATMAP=[
 {g:"第1問　商業簿記の仕訳",note:"分野=パターン。全分野○にすれば第1問(20点)はどの回でも対応可能。クリックでその分野のドリルを開始。",items:[
 {k:"pq",id:"pq_shiwake",label:"仕訳の解き方 5ステップ(まずはここから)",tier:1}]},
@@ -2147,9 +2174,9 @@ function renderHome(){
   </section>`;
   const center=isNew?onbCenter+`
   <div class="trio" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));">
-    <div class="tcard white" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>模擬試験</h3><div class="arw">4回分 無料　→</div></div>
-    <div class="tcard white" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>パターン網羅マップ</h3><div class="arw">全47パターン　→</div></div>
-    <div class="tcard white" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>仕訳ドリル</h3><div class="arw">勘定科目を5要素に即分類・全${ACC5.length}問　→</div></div>
+    <div class="tcard white" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>決戦(模擬試験)</h3><div class="arw">4回分 無料　→</div></div>
+    <div class="tcard white" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>討伐マップ</h3><div class="arw">草原・樹海・遺跡 全47パターン　→</div></div>
+    <div class="tcard white" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>修練場</h3><div class="arw">勘定科目を5要素に即分類・全${ACC5.length}問　→</div></div>
   </div>`:`
   <section class="hero2" style="margin-top:0;padding:clamp(8px,1.4vw,18px) clamp(8px,1.6vw,20px);">
     <div class="heroflex">
@@ -2178,10 +2205,10 @@ function renderHome(){
     </div>
   </section>
   <div class="trio" style="margin-top:18px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));">
-    <div class="tcard ${hl==="rev"?"light":"white"}" onclick="startReview()"><h3><span class="micon" data-icon="repeat"></span>復習</h3><div class="arw">${wrong.length}問 待機中　→</div></div>
-    <div class="tcard ${hl==="mock"?"light":"white"}" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>模擬試験</h3><div class="arw">${best==null?"未受験":"ベスト "+best+"点"}　→</div></div>
-    <div class="tcard ${hl==="map"?"light":"white"}" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>パターン網羅マップ</h3><div class="arw">${po} / ${pt} 制覇　→</div></div>
-    <div class="tcard ${hl==="drill"?"light":"white"}" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>仕訳ドリル</h3><div class="arw">クリア ${accClearedParts()} / ${ACC_NLV} パート　→</div></div>
+    <div class="tcard ${hl==="rev"?"light":"white"}" onclick="startReview()"><h3><span class="micon" data-icon="repeat"></span>経験値ダンジョン</h3><div class="arw">${wrong.length}問 待機中 ✨EXP3倍　→</div></div>
+    <div class="tcard ${hl==="mock"?"light":"white"}" onclick="renderExams()"><h3><span class="micon" data-icon="cap"></span>決戦(模擬試験)</h3><div class="arw">${best==null?"未挑戦":"ベスト "+best+"点"}　→</div></div>
+    <div class="tcard ${hl==="map"?"light":"white"}" onclick="renderPatMap()"><h3><span class="micon" data-icon="map"></span>討伐マップ</h3><div class="arw">${po} / ${pt} 討伐　→</div></div>
+    <div class="tcard ${hl==="drill"?"light":"white"}" onclick="renderDrillSetup()"><h3><span class="micon" data-icon="pencil"></span>修練場</h3><div class="arw">踏破 ${accClearedParts()} / ${ACC_NLV} パート　→</div></div>
   </div>
   ${(!sbUser&&(Date.now()-LS.get("b2_savehide",0)>86400000)&&(totalQ>=5||dogs.length>0))?`
   <div class="qpane" id="savecard" style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
@@ -2267,7 +2294,7 @@ function renderExams(){
     return `<div class="tcard ${att.length?"white":"light"}" onclick="startExam('${ex.id}')"><h3>${ex.title}</h3><div class="arw">${att.length?`受験${att.length}回 / 最高 ${best}点`:"未受験"}　→</div></div>`;};
   const c2=EXAMS.filter(e=>e.lv!==3).map(card).join("");
   const promo3="";
-  const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">模擬試験</h2><p>本番と同じ構成・制限時間(90分)。<b style="color:#e05656;">模試はベータ期間限定で無料開放中</b>(正式版では一部有料化を予定)。</p></div>
+  const center=`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">決戦</h2><p>本番と同じ構成・制限時間(90分)の模擬試験。ここが最終目標です。<b style="color:#e05656;">模試はベータ期間限定で無料開放中</b>(正式版では一部有料化を予定)。</p></div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${c2}</div>${promo3}`;
   main.innerHTML=page(center,"exams");
 }
@@ -2481,7 +2508,7 @@ function renderCards(){
 }
 window.renderCards=renderCards;
 
-/* ---------- 仕訳ドリル(5要素すばやく分類) ---------- */
+/* ---------- 修練場(勘定科目を5要素にすばやく分類) ---------- */
 const ACCE=["資産","負債","純資産","費用","収益"];
 const ACC5=[
 ["現金",0,1],["当座預金",0,1],["普通預金",0,1],["売掛金",0,1],["買掛金",1,1],["借入金",1,1],["貸付金",0,1],["資本金",2,1],["売上",4,1],["仕入",3,1],["給料",3,1],["支払家賃",3,1],["受取利息",4,1],["備品",0,1],["未払金",1,1],
@@ -2497,14 +2524,14 @@ let acc=null;
 function renderDrillSetup(){
   setMode("home");setNav("study");btEnd();acc=null;
   const st=LS.get(KEY_AC,{});
-  main.innerHTML=`<div class="qpane"><h2>仕訳ドリル</h2>
+  main.innerHTML=`<div class="qpane"><h2><span class="micon" data-icon="pencil"></span>修練場</h2>
   <p>勘定科目が出たら <b>資産・負債・純資産・費用・収益</b> のどれかを即タップ!<br>これが瞬時に判定できると、仕訳のスピードが一気に上がります。制限時間内にテンポよく答えよう。</p>
   ${Array.from({length:ACC_NLV},(_,i)=>i+1).map(l=>{
     const s=st["p"+l];const n=ACC5.filter(a=>a[2]===l).length;
     const cleared=s&&s.best>=13;
-    return `<div class="tcard ${cleared?"light":"white"}" style="margin-top:10px;" onclick="accStart(${l})"><h3>${cleared?"✅ ":""}${ACCLV[l]}</h3><div class="arw">${n}問${s?`　｜　ベスト ${s.best}/${n}${s.combo?`　🔥最大${s.combo}コンボ`:""}`:""}　→</div></div>`;
+    return `<div class="tcard ${cleared?"light":"white"}" style="margin-top:10px;" onclick="accStart(${l})"><h3>${cleared?"✅ ":"⚔️ "}${ACCLV[l]}</h3><div class="arw">${n}問${s?`　｜　ベスト ${s.best}/${n}${s.combo?`　🔥最大${s.combo}コンボ`:""}`:""}　→</div></div>`;
   }).join("")}
-  <p class="prog" style="margin-top:10px;">13問以上正解でパートクリア ✅</p>
+  <p class="prog" style="margin-top:10px;">13問以上正解でパート踏破 ✅　｜　敵は <b>スライム(攻撃力1)</b>・相棒のライフ <b>${"♥".repeat(dogLives())}</b></p>
   <div style="margin-top:8px;"><button class="btn gray" onclick="renderHome()">戻る</button></div></div>`;
 }
 window.accBegin=function(lv){
@@ -2578,13 +2605,13 @@ function accEnd(){
   main.innerHTML=`<div class="qpane accwrap">
   <h2>${ACCLV[lv]}　結果</h2>
   <div class="res-big ${cleared?"pass":"fail"}">${ok} / ${n} 問正解</div>
-  <div style="text-align:center;font-weight:800;margin-top:4px;">${ok===n?"💯 パーフェクト!":cleared?"✅ パートクリア!":"あと"+(13-ok)+"問でクリア。もう一回!"}　${acc.maxCombo>=2?`🔥 最大${acc.maxCombo}コンボ`:""}</div>
+  <div style="text-align:center;font-weight:800;margin-top:4px;">${ok===n?"💯 パーフェクト!":cleared?"✅ パート踏破!":"あと"+(13-ok)+"問で踏破。もう一回!"}　${acc.maxCombo>=2?`🔥 最大${acc.maxCombo}コンボ`:""}</div>
   <div class="xpsum">獲得経験値 <b>✨ ${acc.xp||0}</b>${bt?`　🍖 ${bt.fd}${bt.tk?`　🎟 ${bt.tk}`:""}　｜　残りライフ ${"♥".repeat(bt.lives)}`:""}</div>
   ${acc.wrong.length?`<div class="dcard" style="margin-top:14px;"><h3 style="font-size:14px;">間違えた科目</h3>${acc.wrong.map(w=>`<div class="prow" style="cursor:default;"><span style="flex:1;">${w[0]}</span><span class="pst ok">${ACCE[w[1]]}</span></div>`).join("")}</div>`:""}
   <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
     <button class="btn" onclick="accStart(${lv})">もう一回</button>
     ${lv<ACC_NLV?`<button class="btn" style="background:var(--blue);" onclick="accStart(${lv+1})">次のパートへ →</button>`:""}
-    <button class="btn gray" onclick="renderDrillSetup()">パート選択へ</button>
+    <button class="btn gray" onclick="renderDrillSetup()">修練場へもどる</button>
   </div></div>`;
   acc=null;
   window.scrollTo(0,0);
@@ -2718,7 +2745,7 @@ function renderDash(){
 }
 window.renderDash=renderDash;
 
-/* ---------- パターン網羅マップ ---------- */
+/* ---------- 討伐マップ ---------- */
 const KEY_P="b2_pat";
 function initPatMap(){
   if(PATMAP[0]._init)return;PATMAP[0]._init=1;
@@ -2756,11 +2783,12 @@ function renderPatMap(){
   let lv=patLv();
   if(!lv){lv=1;for(let k=1;k<=3;k++){if(!tierProg(k).done){lv=k;break;}lv=Math.min(k+1,3);}}
   const tabs=[1,2,3].map(k=>{
-    const p=tierProg(k);
-    return `<button class="ctab ${k===lv?"on":""}" onclick="setPatLv(${k})">${TIERS[k].icon} ${TIERS[k].n}${p.done?" ✓":""}</button>`;
+    const p=tierProg(k),T=TIERS[k];
+    return `<button class="ctab ${k===lv?"on":""}" onclick="setPatLv(${k})">${T.icon} ${T.n}<small>${T.sub}</small>${p.done?" ✓":""}</button>`;
   }).join("");
-  const pr=tierProg(lv);
+  const pr=tierProg(lv),T=TIERS[lv];
   const pct=pr.total?Math.round(pr.ok/pr.total*100):0;
+  const lives=dogLives();
   const groups=PATMAP.map((g,gi)=>{
     const rows=g.items.map((it,ii)=>{
       if(itemTier(it)>lv)return "";
@@ -2771,14 +2799,28 @@ function renderPatMap(){
     if(!rows)return "";
     return `<div class="dcard" style="margin-top:14px;"><h3 style="font-size:15px;">${g.g}</h3><p class="prog" style="margin-bottom:6px;">${g.note}</p>${rows}</div>`;
   }).join("");
-  main.innerHTML=`<div class="qpane"><h2>パターン網羅マップ</h2>
+  main.innerHTML=`<div class="qpane"><h2><span class="micon" data-icon="map"></span>討伐マップ</h2>
+  <p class="prog" style="margin-top:-4px;">本試験の出題パターンを、犬と一緒に討伐していくメインクエストです。</p>
   <div class="ctabs">${tabs}</div>
-  <p style="margin-top:10px;">${TIERS[lv].icon} <b>${TIERS[lv].n}</b> — ${TIERS[lv].d}</p>
-  <div class="cprog"><div class="cprog-bar"><div style="width:${pct}%;"></div></div><span class="prog"><b>${pr.ok} / ${pr.total}</b> クリア</span></div>
-  ${pr.done?`<div class="note" style="background:#dcfce7;border-color:var(--ok);">🎉 <b>${TIERS[lv].n} 修了!</b> ${lv<3?`次は「${TIERS[lv+1].n}」へ。 <a style="text-decoration:underline;cursor:pointer;font-weight:700;" onclick="setPatLv(${lv+1})">${TIERS[lv+1].n}をひらく →</a>`:"全パターン制覇! 仕上げに模試を通しで解いて時間配分を確認しましょう。"}</div>`:""}
-  <div class="note" style="font-size:12.5px;">ステータス: <b>未</b>=挑戦前 / <span class="pst mid" style="padding:1px 8px;">⚔</span>=挑戦中(挑戦回数を記録) / <span class="pst gd" style="padding:1px 8px;">△</span>=ガイドと一緒にクリア / <span class="pst ok" style="padding:1px 8px;">○</span>=自力でクリア。△も修了にカウント。自力で解き直すと○に昇格!</div>
+  <div class="dgate" style="background:${T.bg};border-color:${T.col};">
+    <div class="dgate-h"><span class="dgate-ic">${T.icon}</span><span><b style="color:${T.col};">${T.n}</b><small>${T.sub}編</small></span>
+      <span class="dgate-foe" id="dgatefoe"></span></div>
+    <p>${T.d}</p>
+    <div class="dgate-st">
+      <span>敵 <b>${T.foe}</b></span>
+      <span>攻撃力 <b style="color:${T.col};">${T.atk}</b></span>
+      <span>相棒のライフ <b>${"♥".repeat(lives)}</b></span>
+    </div>
+    ${lives<=T.atk?`<div class="dgate-warn">⚠️ いまの相棒は <b>一撃で倒されます</b>。犬を育てるか、やさしいエリアから攻めましょう。</div>`
+      :lives<T.atk*2?`<div class="dgate-warn" style="background:#fef3c7;color:#92400e;">⚠️ 被弾 <b>1回</b> で危険域です。慎重に。</div>`:""}
+  </div>
+  <div class="cprog"><div class="cprog-bar"><div style="width:${pct}%;"></div></div><span class="prog"><b>${pr.ok} / ${pr.total}</b> 討伐</span></div>
+  ${pr.done?`<div class="note" style="background:#dcfce7;border-color:var(--ok);">🎉 <b>${T.n} 踏破!</b> ${lv<3?`次は「${TIERS[lv+1].icon} ${TIERS[lv+1].n}」へ。 <a style="text-decoration:underline;cursor:pointer;font-weight:700;" onclick="setPatLv(${lv+1})">${TIERS[lv+1].n}にいどむ →</a>`:"全パターン制覇! 仕上げに決戦(模試)を通しで解いて時間配分を確認しましょう。"}</div>`:""}
+  <div class="note" style="font-size:12.5px;">ステータス: <b>未</b>=未討伐 / <span class="pst mid" style="padding:1px 8px;">⚔</span>=交戦中(挑戦回数を記録) / <span class="pst gd" style="padding:1px 8px;">△</span>=練習モードで討伐 / <span class="pst ok" style="padding:1px 8px;">○</span>=自力で討伐。△も踏破にカウント。自力で倒し直すと○に昇格!</div>
   ${groups}
   <div style="margin-top:14px;"><button class="btn gray" onclick="renderHome()">ホームへ</button></div></div>`;
+  try{const fe=document.getElementById("dgatefoe");if(fe)fe.appendChild(foeCanvas(T.atk,2.4));}catch(e){}
+  try{mountIcons(main);}catch(e){}
   window.scrollTo(0,0);
 }
 window.setPatLv=function(k){LS.set("b2_patlv",k);renderPatMap();};
@@ -2810,7 +2852,7 @@ function patRender(q,lock){
   pqCur=q;patLock=lock;
   const remain=lock?lock.filter(v=>!v).length:q.boxes.length;
   main.innerHTML=`<div class="qpane"><h2>${q.title}</h2>
-  ${(typeof PATTUT!=="undefined"&&PATTUT[q.id]&&!lock)?`<button class="btn" style="margin:2px 0 10px;font-size:13px;padding:9px 18px;background:var(--blue);" onclick="startPatTut()">🐶 犬と一緒に解き方を学ぶ(はじめての人向け)</button>`:""}
+  ${(typeof PATTUT!=="undefined"&&PATTUT[q.id]&&!lock)?`<button class="btn" style="margin:2px 0 10px;font-size:13px;padding:9px 18px;background:var(--blue);" onclick="startPatTut()">🐶 練習モード ─ 犬と一緒に解き方を学ぶ</button>`:""}
   ${btHTML()}
   ${lock?`<div class="note">前回正解した欄はロック済み(○)。<b>残り ${remain} 問だけ</b>解けばOKです。 <a style="text-decoration:underline;cursor:pointer;" onclick="patRender(pqCur,null)">最初から全部解き直す</a></div>`:""}
   <div class="qtext">${q.intro}</div>
@@ -3212,7 +3254,10 @@ let tut=null;
 window.startPatTut=function(){
   const q=pqCur;if(!q||!PATTUT[q.id])return;
   try{track("tut_start",{id:q.id})}catch(e){}
+  /* 練習モードは戦闘なし: 敵もライフも出さず、ゆっくり学べる */
+  const keep=BT;btEnd();
   patRender(q,null);
+  BT=keep;
   tut={q,sc:PATTUT[q.id].steps,i:-1,att:0,ph:PATTUT[q.id].ph||null};
   const gb=main.querySelector("#pq-grade");if(gb)gb.parentNode.style.display="none";
   main.querySelectorAll("input[data-pq],select[data-pqf]").forEach(el=>el.disabled=true);
@@ -3279,12 +3324,12 @@ function tutGuide(st){
      ${swT?`<div class="tg-row"><span class="tg-tag">📝 仕訳</span>${swT}</div>`:""}
      ${st.act?`<div class="tg-row tg-act" id="tgact"${st.ans!==undefined?' style="display:none;"':''}><span class="tg-tag" style="background:#b45309;">✍️ やる</span>${st.act}</div>`:""}
      ${st.why?`<details class="tg-why"><summary>🤔 なぜ? が気になったら</summary><div>${st.why}</div></details>`:""}`;
-  g.innerHTML=`<div class="tg-meta"><span style="display:flex;align-items:center;gap:7px;"><span id="tgdog" style="display:inline-flex;"></span>${nm}先生のガイド　${tut.i+1} / ${tut.sc.length}</span><a style="cursor:pointer;text-decoration:underline;" onclick="tutExit()">やめる</a></div>
+  g.innerHTML=`<div class="tg-meta"><span style="display:flex;align-items:center;gap:7px;"><span id="tgdog" style="display:inline-flex;"></span>${nm}先生の練習モード　${tut.i+1} / ${tut.sc.length}</span><a style="cursor:pointer;text-decoration:underline;" onclick="tutExit()">やめる</a></div>
     ${locT}
     <div>${body}<div class="tg-hint" id="tghint"></div></div>
     <div style="margin-top:10px;text-align:right;">
       ${st.box!==undefined?`<button class="btn" style="padding:9px 24px;font-size:13.5px;" onclick="tutCheck()">答え合わせ</button>`
-      :st.last?`<button class="btn" style="padding:9px 16px;font-size:13.5px;" onclick="tutRetry()">自力で解いて制覇する　→</button> <button class="btn gray" style="padding:9px 12px;font-size:13.5px;" onclick="tutExit(2)">マップへ</button>`
+      :st.last?`<button class="btn" style="padding:9px 16px;font-size:13.5px;" onclick="tutRetry()">自力で討伐する　→</button> <button class="btn gray" style="padding:9px 12px;font-size:13.5px;" onclick="tutExit(2)">マップへ</button>`
       :`<button class="btn" style="padding:9px 28px;font-size:13.5px;" onclick="tutNext()">次へ　→</button>`}
     </div>`;
   try{g.querySelector("#tgdog").appendChild(dogCanvas(d?dogStage(d.f||0):0,0.9,d?d.b:0));}catch(e){}
