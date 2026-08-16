@@ -804,6 +804,12 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
 .myprow:hover{background:var(--lt);border-radius:10px;}
 .myprow .arw{color:var(--tx2);font-weight:800;}
 #hud .hud-i,#hud .hud-lv{cursor:pointer;}
+/* アカウントボタンのレベル表示 */
+.acct-lv{display:inline-flex;align-items:center;gap:5px;margin-left:8px;vertical-align:middle;}
+.acct-lvn{font-size:11.5px;font-weight:900;color:#92400e;background:#fef3c7;border-radius:999px;padding:1px 7px;white-space:nowrap;}
+.acct-bar{width:46px;height:6px;background:var(--bd);border-radius:999px;overflow:hidden;}
+.acct-bar>i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+@media(max-width:640px){.acct-bar{display:none;}}
 body.dark .strow{background:var(--card);}
 .hchip{display:inline-flex;align-items:center;gap:5px;background:var(--card);border:1.5px solid var(--bd);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:800;color:var(--tx2);}
 .hchip.on{border-color:#f59e0b;background:#fff8e1;color:#b45309;}
@@ -829,14 +835,11 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
   <h1 id="hdr-title" style="cursor:pointer;display:flex;align-items:center;"><span class="nicon" data-icon="dog"></span>ボキイヌ 2級</h1>
   <div style="display:flex;gap:12px;align-items:center;">
     <div id="hud">
-      <span class="hud-i hud-st" id="hud-stam" onclick="openStamInfo()" title="スタミナ">⚡<b>30</b></span>
-      <span class="hud-i" id="hud-food" title="ごはん"><span class="sicon" data-icon="food" data-s="1"></span><b>0</b></span>
-      <span class="hud-lv" onclick="openMyPage()" title="レベル"><span class="hud-lvn">Lv.<b id="hud-lvv">1</b></span><span class="hud-bar"><i id="hud-barf"></i></span><span class="hud-exp" id="hud-expv">0/50</span></span>
       <span class="hud-i" id="hud-tk" onclick="renderGacha()" title="ガチャ券"><span class="sicon" data-icon="ticket" data-s="1"></span><b>0</b></span>
     </div>
     <div id="timer" class="hidden">90:00</div>
     <button class="hbtn danger hidden" id="btn-finish">試験終了</button>
-    <button class="hbtn" id="btn-invite" onclick="openInvite()" style="background:var(--lt);color:var(--navy);display:flex;align-items:center;gap:6px;">友達に紹介<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(21,42,82,.10);border-radius:8px;padding:2px 7px;font-size:11.5px;"><span class="sicon" data-icon="ticket" data-s="1" style="margin-right:2px;"></span>+1</span></button>
+    <button class="hbtn" id="btn-invite" onclick="openInvite()" style="background:var(--lt);color:var(--navy);display:flex;align-items:center;gap:6px;">友達に紹介<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(21,42,82,.10);border-radius:8px;padding:2px 7px;font-size:11.5px;"><span class="sicon" data-icon="ticket" data-s="1" style="margin-right:2px;"></span>+5</span></button>
     <button class="hbtn" id="btn-eod" onclick="showEOD()" style="background:var(--blue);color:#fff;display:flex;align-items:center;gap:6px;">進捗をXに投稿<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.22);border-radius:8px;padding:2px 7px;font-size:11.5px;"><span class="sicon" data-icon="ticket" data-s="1" style="margin-right:2px;"></span>+1</span></button>
     <button class="hbtn" id="btn-acct" onclick="openMyPage()" style="background:#efedf7;color:var(--navy);">記録を保存</button>
   </div>
@@ -1805,16 +1808,15 @@ window.stamHTML=stamHTML;
 
 /* ---- HUD ---- */
 function updHUD(){
-  const h=document.getElementById("hud");if(!h)return;
-  const L=userLv();
-  const f=h.querySelector("#hud-food b"),t=h.querySelector("#hud-tk b");
-  if(f)f.textContent=LS.get(KEY_F,0);
+  const h=document.getElementById("hud");
+  const t=h&&h.querySelector("#hud-tk b");
   if(t)t.textContent=LS.get(KEY_T,0);
-  const sp=h.querySelector("#hud-stam");
-  if(sp){const c=stam();sp.querySelector("b").textContent=c;sp.classList.toggle("low",c<STAM_COST.map1);sp.title="スタミナ "+c+" / "+stamMax();}
-  const lv=h.querySelector("#hud-lvv");if(lv)lv.textContent=L.lv;
-  const bf=h.querySelector("#hud-barf");if(bf)bf.style.width=Math.round(L.cur/L.need*100)+"%";
-  const ev=h.querySelector("#hud-expv");if(ev)ev.textContent=L.cur+"/"+L.need;
+  /* レベルはアカウントボタン側 */
+  const L=userLv();
+  const lv=document.querySelector("#btn-acct .acct-lvn");
+  if(lv)lv.textContent="Lv."+L.lv;
+  const bf=document.querySelector("#btn-acct .acct-bar>i");
+  if(bf)bf.style.width=Math.round(L.cur/L.need*100)+"%";
 }
 window.updHUD=updHUD;
 function hudPulse(sel){const e=document.querySelector(sel);if(!e)return;e.classList.remove("pulse");void e.offsetWidth;e.classList.add("pulse");}
@@ -1841,7 +1843,7 @@ function addExp(n,fromEl){
   if(!(n>0))return;
   const before=userLv().lv;
   LS.set(KEY_XP,LS.get(KEY_XP,0)+n);
-  for(let i=0;i<Math.min(3,Math.ceil(n/15));i++)flyTo(fromEl,"#hud .hud-lv",`<span style="color:#fbbf24;">✨</span>`,i*130);
+  for(let i=0;i<Math.min(3,Math.ceil(n/15));i++)flyTo(fromEl,"#btn-acct .acct-lv",`<span style="color:#fbbf24;">✨</span>`,i*130);
   setTimeout(updHUD,700);
   const after=userLv().lv;
   if(after>before)setTimeout(()=>showLvUp(before,after),1000);
@@ -1869,7 +1871,7 @@ function addFood(n,fromEl){
   if(!(n>0))return;
   LS.set(KEY_F,LS.get(KEY_F,0)+n);
   try{bumpDay("fd",n);}catch(e){}
-  const dogT=document.getElementById("btdog")?"#btdog":"#hud-food";
+  const dogT=document.getElementById("btdog")?"#btdog":(document.getElementById("homedog")?"#homedog":"#btn-acct");
   for(let i=0;i<Math.min(4,n);i++)flyTo(fromEl,dogT,`<span class="sicon" data-icon="food" data-s="1"></span>`,i*110);
   if(dogT==="#btdog")setTimeout(()=>{const dg=document.getElementById("btdog");if(dg){dg.classList.remove("munch");void dg.offsetWidth;dg.classList.add("munch");}},860);
   setTimeout(()=>{updHUD();autoFeed(fromEl);},760);
@@ -4835,7 +4837,7 @@ window.openInvite=async function(){
   const old=document.getElementById("cele-ovl");if(old)old.remove();
   const ovl=document.createElement("div");ovl.id="cele-ovl";ovl.onclick=e=>{if(e.target===ovl)ovl.remove();};
   ovl.innerHTML=`<div id="cele-box" class="pixf"><h2 style="color:var(--navy);font-size:20px;">友だちを招待</h2>
-    <p style="color:var(--tx2);font-size:13px;margin:8px 0;">招待リンクから登録した友だちが<b>10問正解</b>すると、<b>2人ともガチャ券1枚</b>もらえます。</p>
+    <p style="color:var(--tx2);font-size:13px;margin:8px 0;">招待リンクから登録した友だちが<b>10問正解</b>すると、<b>2人ともガチャ券5枚</b>もらえます。</p>
     <div id="inv-body" class="prog">読み込み中…</div>
     <button class="btn gray" style="margin-top:14px;" onclick="document.getElementById('cele-ovl').remove()">閉じる</button></div>`;
   document.body.appendChild(ovl);
@@ -5532,6 +5534,12 @@ function schedulePush(){if(!sbUser||!sb)return;clearTimeout(pushT);pushT=setTime
   try{tryClaimReferral();}catch(e){}
 },2000);}
 function sbName(){if(!sbUser)return"";const m=sbUser.user_metadata||{};return m.full_name||m.name||(sbUser.email?sbUser.email.split("@")[0]:"アカウント");}
+/* アカウントボタン。レベルはここに置く(ヘッダーからは外した) */
+function lvChipHTML(){
+  const L=userLv();
+  return `<span class="acct-lv"><span class="acct-lvn">Lv.${L.lv}</span><span class="acct-bar"><i style="width:${Math.round(L.cur/L.need*100)}%"></i></span></span>`;
+}
+window.lvChipHTML=lvChipHTML;
 function setAcctBtn(){
   const b=document.getElementById("btn-acct");if(!b)return;
   let deco="";
@@ -5540,10 +5548,11 @@ function setAcctBtn(){
     deco=(a.streak>0?strkHTML(a.streak,1.5):"")+(ta?`<span class="achb" title="${ta.ds}">${ta.nm}</span>`:"");
     if(deco)deco=`<span style="display:inline-flex;align-items:center;gap:5px;margin-left:7px;vertical-align:middle;" onclick="event.stopPropagation();openAch();">${deco}</span>`;
   }catch(e){}
+  const lv=lvChipHTML();
   if(sbUser){
     const m=sbUser.user_metadata||{};
-    b.innerHTML=(safeImg(m.avatar_url)?`<img src="${escapeHtml(safeImg(m.avatar_url))}" referrerpolicy="no-referrer" style="width:20px;height:20px;border-radius:50%;vertical-align:-5px;margin-right:7px;">`:"")+sbName()+deco;
-  }else b.innerHTML="記録を保存"+deco;
+    b.innerHTML=(safeImg(m.avatar_url)?`<img src="${escapeHtml(safeImg(m.avatar_url))}" referrerpolicy="no-referrer" style="width:20px;height:20px;border-radius:50%;vertical-align:-5px;margin-right:7px;">`:"")+sbName()+lv+deco;
+  }else b.innerHTML="記録を保存"+lv+deco;
   try{mountIcons(b);}catch(e){}
 }
 async function onLogin(user){
