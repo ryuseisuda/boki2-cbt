@@ -206,6 +206,37 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 #loadv .lt i:nth-child(3){animation-delay:.4s;}
 @keyframes blink{0%,60%{opacity:.25;}30%{opacity:1;}}
 #loadv .sub{color:rgba(255,255,255,.5);font-size:12px;}
+/* ===== 戦闘バー ===== */
+.btwrap{max-width:520px;margin:0 auto 16px;}
+.btmeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:12px;color:var(--tx2);}
+.btlives i{font-style:normal;font-size:17px;color:#e2e8f0;margin-right:1px;transition:color .3s,transform .3s;}
+.btlives i.on{color:#ef4444;}
+.btfoenm{font-weight:700;}
+.btfoenm b{color:#b45309;}
+.bttrack{position:relative;height:44px;}
+.btbar{position:absolute;left:0;right:0;bottom:3px;height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;}
+.btbar>i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#38bdf8,#3b82f6);border-radius:999px;}
+.btdog,.btfoe{position:absolute;bottom:9px;display:inline-flex;align-items:flex-end;line-height:0;}
+.btdog{left:2px;z-index:2;}
+.btfoe{left:calc(100% - 34px);z-index:1;}
+.btfoe canvas{animation:foebob .55s ease-in-out infinite;}
+@keyframes foebob{0%,100%{transform:translateY(0) scaleY(1);}50%{transform:translateY(-3px) scaleY(.93);}}
+@keyframes dogatk{0%{transform:translateX(0);}30%{transform:translateX(16px) scaleX(1.08);}100%{transform:translateX(0);}}
+.btdog.atk{animation:dogatk .38s cubic-bezier(.3,1.6,.5,1);}
+@keyframes foeatk{0%{transform:translateX(0);}35%{transform:translateX(-18px);}100%{transform:translateX(0);}}
+.btfoe.atk{animation:foeatk .34s ease-out;}
+@keyframes foedie{0%{transform:scale(1);opacity:1;}45%{transform:scale(1.35) rotate(8deg);opacity:.9;}100%{transform:scale(.1) translateY(6px);opacity:0;}}
+.btfoe.dead{animation:foedie .42s ease-in forwards;}
+@keyframes doghurt{0%,100%{filter:none;}25%,75%{filter:brightness(2.6) saturate(0);}50%{filter:brightness(.4);}}
+.btdog.hurt{animation:doghurt .42s steps(1);}
+@keyframes btshake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(3px);}}
+.bttrack.shake{animation:btshake .4s;}
+/* 敗走 */
+#btlose{position:fixed;inset:0;z-index:10000;background:rgba(8,6,14,.86);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadein .3s;}
+#btlose .box{background:linear-gradient(165deg,#2a1420,#3b1030);border:2px solid #be123c;border-radius:22px;padding:30px 34px;text-align:center;color:#fff;max-width:340px;}
+#btlose .ttl{font-size:26px;font-weight:900;letter-spacing:8px;color:#fb7185;font-family:'DotGothic16','Zen Kaku Gothic New',sans-serif;}
+#btlose .half{background:rgba(255,255,255,.08);border-radius:12px;padding:10px;font-weight:800;font-size:14.5px;}
+#btlose .half span{color:#fb7185;font-size:11.5px;margin-left:2px;}
 .ctabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
 .ctab{border:2px solid var(--bd);background:#fff;border-radius:999px;padding:8px 16px;font-size:13.5px;font-weight:800;cursor:pointer;color:var(--tx2);font-family:inherit;}
 .ctab.on{border-color:var(--blue);background:var(--blue);color:#fff;}
@@ -1150,6 +1181,131 @@ function rankBadge(res){
     +` <span class="rkr">✨+${res.xp}${res.fd?` 🍖+${res.fd}`:""}${res.tk?` 🎟+${res.tk}`:""}</span>`;
 }
 window.rankBadge=rankBadge;
+/* ================= 戦闘: 制限時間バー / 犬 vs スライム / ライフ ================= */
+let BT=null;
+/* 犬のライフ = 3 + 進化段階(最大6) */
+function dogLives(){
+  const d=getDogs()[getPartner()];
+  return 3+Math.min(3,d?dogStage(d.f||0):0);
+}
+window.dogLives=dogLives;
+/* 戦闘セッション開始。atk=敵の攻撃力(1:草原/修練場 2:樹海 3:遺跡/決戦) */
+function btStart(src,atk,onDefeat){
+  BT={src,atk:Math.min(3,Math.max(1,atk||1)),lives:dogLives(),max:dogLives(),
+      xp:0,fd:0,tk:0,onDefeat:onDefeat||null,dead:false};
+  return BT;
+}
+window.btStart=btStart;
+/* 戦闘バーのHTML(問題カードの上に置く) */
+function btHTML(){
+  if(!BT)return "";
+  return `<div class="btwrap">
+    <div class="btmeta">
+      <span class="btlives" id="btlives">${btHearts()}</span>
+      <span class="btfoenm">${FOE_NM[BT.atk]}　<b>攻撃力 ${BT.atk}</b></span>
+    </div>
+    <div class="bttrack" id="bttrack">
+      <div class="btbar"><i id="btbarf"></i></div>
+      <span class="btdog" id="btdog"></span>
+      <span class="btfoe" id="btfoe"></span>
+    </div>
+  </div>`;
+}
+window.btHTML=btHTML;
+function btHearts(){
+  if(!BT)return "";
+  let s="";
+  for(let i=0;i<BT.max;i++)s+=`<i class="${i<BT.lives?"on":""}">♥</i>`;
+  return s;
+}
+/* バーとキャラを描画して、limit秒のカウントダウンを開始 */
+function btMount(limit,onTimeout){
+  if(!BT)return;
+  const tr=document.getElementById("bttrack");if(!tr)return;
+  const dg=document.getElementById("btdog"),fo=document.getElementById("btfoe");
+  if(dg&&!dg.firstChild){try{const d=getDogs()[getPartner()];dg.appendChild(dogCanvas(d?dogStage(d.f||0):0,0.62,d?d.b:0));}catch(e){}}
+  if(fo&&!fo.firstChild)fo.appendChild(foeCanvas(BT.atk,2.6));
+  BT.limit=limit;BT.t0=Date.now();
+  const bar=document.getElementById("btbarf");
+  if(bar){bar.style.transition="none";bar.style.width="100%";void bar.offsetWidth;
+          bar.style.transition=`width ${limit}s linear`;bar.style.width="0%";}
+  if(fo){fo.style.transition="none";fo.style.left="calc(100% - 34px)";void fo.offsetWidth;
+         fo.style.transition=`left ${limit}s linear`;fo.style.left="46px";}
+  clearTimeout(BT.tm);
+  BT.tm=setTimeout(()=>{if(BT&&!BT.dead&&onTimeout)onTimeout();},limit*1000);
+}
+window.btMount=btMount;
+/* 残り時間の割合(0〜1) */
+function btPct(){
+  if(!BT||!BT.limit)return .5;
+  return Math.max(0,1-(Date.now()-BT.t0)/(BT.limit*1000));
+}
+window.btPct=btPct;
+function btFreeze(){
+  if(!BT)return;
+  clearTimeout(BT.tm);
+  ["btbarf","btfoe"].forEach(id=>{const e=document.getElementById(id);
+    if(e){const cs=getComputedStyle(e);const v=id==="btbarf"?cs.width:cs.left;e.style.transition="none";if(id==="btbarf")e.style.width=v;else e.style.left=v;}});
+}
+/* 正解 → 犬が攻撃、敵を倒す。報酬を返す */
+function btHit(fromEl,opts){
+  if(!BT)return null;
+  const pct=btPct();btFreeze();
+  const dg=document.getElementById("btdog"),fo=document.getElementById("btfoe");
+  if(dg){dg.classList.remove("atk");void dg.offsetWidth;dg.classList.add("atk");}
+  if(fo)setTimeout(()=>{fo.classList.add("dead");},170);
+  const res=grantBattle(BT.src,pct,fromEl||dg,opts);
+  BT.xp+=res.xp;BT.fd+=res.fd;BT.tk+=res.tk;
+  return res;
+}
+window.btHit=btHit;
+/* 不正解・時間切れ → 被弾。ライフ0なら敗走処理を呼ぶ */
+function btMiss(){
+  if(!BT||BT.dead)return null;
+  btFreeze();
+  const dg=document.getElementById("btdog"),fo=document.getElementById("btfoe"),tr=document.getElementById("bttrack");
+  if(fo){fo.classList.remove("atk");void fo.offsetWidth;fo.classList.add("atk");}
+  setTimeout(()=>{
+    if(dg){dg.classList.remove("hurt");void dg.offsetWidth;dg.classList.add("hurt");}
+    if(tr){tr.classList.remove("shake");void tr.offsetWidth;tr.classList.add("shake");}
+  },160);
+  BT.lives=Math.max(0,BT.lives-BT.atk);
+  setTimeout(()=>{const h=document.getElementById("btlives");if(h)h.innerHTML=btHearts();},300);
+  if(BT.lives<=0){BT.dead=true;const s=BT;setTimeout(()=>btDefeat(s),700);}
+  return {lives:BT.lives,dead:BT.dead};
+}
+window.btMiss=btMiss;
+/* 敗走: 獲得済み報酬を半分にして終了。s は敗走したセッション本体 */
+function btDefeat(s){
+  s=s||BT;
+  if(!s||s.paid)return;          /* 二重清算を防ぐ */
+  if(BT&&BT!==s)return;          /* すでに別のダンジョンに移っていたら無視 */
+  s.paid=1;
+  const lost={xp:Math.floor(s.xp/2),fd:Math.floor(s.fd/2),tk:Math.floor(s.tk/2)};
+  LS.set(KEY_XP,Math.max(0,LS.get(KEY_XP,0)-lost.xp));
+  LS.set(KEY_F,Math.max(0,LS.get(KEY_F,0)-lost.fd));
+  LS.set(KEY_T,Math.max(0,LS.get(KEY_T,0)-lost.tk));
+  updHUD();
+  const kept={xp:s.xp-lost.xp,fd:s.fd-lost.fd,tk:s.tk-lost.tk};
+  const cb=s.onDefeat;
+  try{track("defeat",{src:s.src,atk:s.atk});}catch(e){}
+  const old=document.getElementById("btlose");if(old)old.remove();
+  const o=document.createElement("div");o.id="btlose";
+  o.innerHTML=`<div class="box">
+    <div class="ttl">敗　走</div>
+    <div id="btlosedog" style="margin:10px 0;"></div>
+    <p style="font-size:13.5px;color:rgba(255,255,255,.8);margin:0 0 12px;">ライフが尽きて、犬とにげ帰りました。<br><b>持ち帰れた報酬は半分</b>です。</p>
+    <div class="half">✨ ${kept.xp}<span>(-${lost.xp})</span>　🍖 ${kept.fd}<span>(-${lost.fd})</span>${s.tk?`　🎟 ${kept.tk}<span>(-${lost.tk})</span>`:""}</div>
+    <p style="font-size:12px;color:rgba(255,255,255,.55);margin:12px 0 0;">犬を育てるとライフが増えます(いま ${s.max})。やさしいダンジョンから攻めるのも手。</p>
+    <button class="btn" style="margin-top:16px;padding:11px 36px;" id="btlosebtn">もどる</button>
+  </div>`;
+  document.body.appendChild(o);
+  try{const dg=getDogs()[getPartner()];o.querySelector("#btlosedog").appendChild(dogCanvas(dg?dogStage(dg.f||0):0,2.2,dg?dg.b:0));}catch(e){}
+  o.querySelector("#btlosebtn").onclick=()=>{o.remove();BT=null;if(cb)cb();else renderHome();};
+}
+function btEnd(){const r=BT?{xp:BT.xp,fd:BT.fd,tk:BT.tk,lives:BT.lives,max:BT.max}:null;if(BT)clearTimeout(BT.tm);BT=null;return r;}
+window.btEnd=btEnd;
+
 /* ---- ローディング: 犬が歩く ---- */
 const LOADMSG=["ダンジョンへ むかっています","犬が しっぽを ふっています","敵の 気配が します","そうびを ととのえています","ちずを ひろげています"];
 function showLoading(msg){
@@ -1564,6 +1720,7 @@ function roadmapHTML(){
     </div>`;}).join("")+`</div>`;
 }
 function renderHome(){
+  try{btEnd();acc=null;drill=null;}catch(e){}
   setMode("home");exState=null;setNav("home");
   const a=actInfo(),h=LS.get(KEY_H,[]),wrong=LS.get(KEY_W,[]);
   const best=h.length?Math.max(...h.map(x=>x.total)):null;
@@ -1965,7 +2122,7 @@ const ACC_NLV=ACCLV.length-1;
 function accClearedParts(){const st=LS.get(KEY_AC,{});let n=0;for(let l=1;l<=ACC_NLV;l++)if(st["p"+l]&&st["p"+l].best>=13)n++;return n;}
 let acc=null;
 function renderDrillSetup(){
-  setMode("home");setNav("study");
+  setMode("home");setNav("study");btEnd();acc=null;
   const st=LS.get(KEY_AC,{});
   main.innerHTML=`<div class="qpane"><h2>仕訳ドリル</h2>
   <p>勘定科目が出たら <b>資産・負債・純資産・費用・収益</b> のどれかを即タップ!<br>これが瞬時に判定できると、仕訳のスピードが一気に上がります。制限時間内にテンポよく答えよう。</p>
@@ -1980,6 +2137,7 @@ function renderDrillSetup(){
 window.accBegin=function(lv){
   const qs=ACC5.filter(a=>a[2]===lv).sort(()=>Math.random()-.5);
   acc={lv,qs,idx:0,ok:0,combo:0,maxCombo:0,xp:0,wrong:[]};
+  btStart("drill",1,()=>{acc=null;renderDrillSetup();});
   accQ();
 };
 window.accStart=function(lv){withLoading(()=>accBegin(lv),620,"修練場に むかっています");};
@@ -1988,7 +2146,7 @@ function accQ(){
   const q=acc.qs[acc.idx];
   main.innerHTML=`<div class="qpane accwrap">
   <div class="acchead"><span>問題 ${acc.idx+1} / ${acc.qs.length}</span><span>${ACCLV[acc.lv]}</span></div>
-  <div class="acctimer"><div id="accbar" style="width:100%;"></div></div>
+  ${btHTML()}
   <div class="acccard">
     <div class="accname">${q[0]}</div>
     <div class="accgrid">
@@ -2001,36 +2159,33 @@ function accQ(){
     <div class="acccombo" id="acccombo">${acc.combo>=2?`<b>🔥 ${acc.combo}コンボ!</b>`:""}</div>
   </div>
   <div style="margin-top:12px;text-align:center;"><button class="btn gray" style="font-size:12.5px;padding:8px 18px;" onclick="acc=null;renderDrillSetup()">やめる</button></div></div>`;
-  const bar=$("#accbar");
-  acc.t0=Date.now();
-  requestAnimationFrame(()=>{bar.style.transition="width 7s linear";bar.style.width="0%";});
-  acc.tm=setTimeout(()=>accAnswer(-1),7000);
+  btMount(7,()=>accAnswer(-1));
   window.scrollTo(0,0);
 }
 window.accAnswer=function(k){
   if(!acc||acc.done)return;
-  acc.done=true;clearTimeout(acc.tm);
+  acc.done=true;
   const q=acc.qs[acc.idx];
   const btns=main.querySelectorAll(".accbtn");
   btns.forEach(b=>{b.onclick=null;});
-  const bar=$("#accbar");if(bar){bar.style.transition="none";}
-  const pct=Math.max(0,1-(Date.now()-(acc.t0||Date.now()))/7000);
   const hit=k===q[1];
   if(hit){
     acc.ok++;acc.combo++;acc.maxCombo=Math.max(acc.maxCombo,acc.combo);
     btns[q[1]].classList.add("hit");
-    const res=grantBattle("drill",pct,btns[q[1]]);
-    acc.xp=(acc.xp||0)+res.xp;
+    const res=btHit(btns[q[1]]);
+    acc.xp=(acc.xp||0)+(res?res.xp:0);
     const c=$("#acccombo");
-    if(c)c.innerHTML=`<span class="rkb" style="background:${res.rank.cl};">${res.rank.k}</span><span class="rkn">${res.rank.nm}</span>${acc.combo>=2?` <b>🔥${acc.combo}</b>`:""}`;
+    if(c&&res)c.innerHTML=`<span class="rkb" style="background:${res.rank.cl};">${res.rank.k}</span><span class="rkn">${res.rank.nm}</span>${acc.combo>=2?` <b>🔥${acc.combo}</b>`:""}`;
     if(acc.combo===5||acc.combo===10||acc.combo===15){try{confettiBurst()}catch(e){}}
-    setTimeout(accNext,650);
+    setTimeout(accNext,700);
   }else{
     acc.combo=0;acc.wrong.push(q);
     btns.forEach((b,i)=>{if(i===q[1])b.classList.add("hit");else if(i===k)b.classList.add("miss");else b.classList.add("dim");});
+    const dm=btMiss();
     const c=$("#acccombo");
-    if(c)c.innerHTML=`<b style="color:var(--ng,#dc2626);">${k<0?"⏰ 時間切れ! ":""}正解は「${ACCE[q[1]]}」</b>`;
-    setTimeout(accNext,1500);
+    if(c)c.innerHTML=`<b style="color:#dc2626;">${k<0?"⏰ 時間切れ! ":""}正解は「${ACCE[q[1]]}」　-♥${BT?BT.atk:1}</b>`;
+    if(dm&&dm.dead)return;
+    setTimeout(accNext,1600);
   }
 };
 function accNext(){
@@ -2041,6 +2196,7 @@ function accNext(){
 }
 function accEnd(){
   const n=acc.qs.length,ok=acc.ok,lv=acc.lv;
+  const bt=btEnd();
   const st=LS.get(KEY_AC,{});const p=st["p"+lv]||{best:0,combo:0};
   p.best=Math.max(p.best,ok);p.combo=Math.max(p.combo,acc.maxCombo);st["p"+lv]=p;LS.set(KEY_AC,st);
   recordActivity(n,ok);
@@ -2050,7 +2206,7 @@ function accEnd(){
   <h2>${ACCLV[lv]}　結果</h2>
   <div class="res-big ${cleared?"pass":"fail"}">${ok} / ${n} 問正解</div>
   <div style="text-align:center;font-weight:800;margin-top:4px;">${ok===n?"💯 パーフェクト!":cleared?"✅ パートクリア!":"あと"+(13-ok)+"問でクリア。もう一回!"}　${acc.maxCombo>=2?`🔥 最大${acc.maxCombo}コンボ`:""}</div>
-  <div class="xpsum">獲得経験値 <b>✨ ${acc.xp||0}</b></div>
+  <div class="xpsum">獲得経験値 <b>✨ ${acc.xp||0}</b>${bt?`　🍖 ${bt.fd}${bt.tk?`　🎟 ${bt.tk}`:""}　｜　残りライフ ${"♥".repeat(bt.lives)}`:""}</div>
   ${acc.wrong.length?`<div class="dcard" style="margin-top:14px;"><h3 style="font-size:14px;">間違えた科目</h3>${acc.wrong.map(w=>`<div class="prow" style="cursor:default;"><span style="flex:1;">${w[0]}</span><span class="pst ok">${ACCE[w[1]]}</span></div>`).join("")}</div>`:""}
   <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
     <button class="btn" onclick="accStart(${lv})">もう一回</button>
@@ -2063,16 +2219,17 @@ function accEnd(){
 }
 
 let drill=null;
-function startDrill(qs,mode){
+function startDrill(qs,mode,atk){
   if(!qs.length){alert("問題がありません。");return;}
-  drill={qs,idx:0,ok:0,mode};
+  drill={qs,idx:0,ok:0,mode,xp:0};
+  if(!BT)btStart(mode==="review"?"expdun":"map",atk||1,()=>{drill=null;renderHome();});
   renderDrillQ();
 }
 function startReview(){
   const wrong=LS.get(KEY_W,[]);
   const qs=wrong.map(id=>QMAP[id]).filter(Boolean);
   if(!qs.length){alert("間違いリストは空です。模試やドリルで間違えた仕訳がここに追加されます。");return;}
-  startDrill([...qs].sort(()=>Math.random()-.5),"review");
+  withLoading(()=>{btStart("expdun",2,()=>{drill=null;renderHome();});startDrill([...qs].sort(()=>Math.random()-.5),"review",2);},620,"経験値ダンジョンへ むかっています");
 }
 window.renderDrillSetup=renderDrillSetup;window.startReview=startReview;
 window.retryWrongDrill=function(){const qs=[...(drill.wrong||[])];if(qs.length)startDrill(qs.sort(()=>Math.random()-.5),drill.mode);};
@@ -2083,7 +2240,8 @@ function renderDrillQ(){
   const a={dr:[["",""],["",""],["",""],["",""]],cr:[["",""],["",""],["",""],["",""]]};
   drill.cur=a;
   main.innerHTML=`<div class="qpane">
-  <div style="display:flex;justify-content:space-between;align-items:center;"><h2>${drill.mode==="review"?"復習":"ドリル"} ${drill.idx+1} / ${drill.qs.length}</h2><span class="prog">正解 ${drill.ok}${q.tag?" ｜ 分野: "+q.tag:""}</span></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;"><h2>${drill.mode==="review"?"経験値ダンジョン":"仕訳"} ${drill.idx+1} / ${drill.qs.length}</h2><span class="prog">正解 ${drill.ok}${q.tag?" ｜ 分野: "+q.tag:""}</span></div>
+  ${btHTML()}
   <div class="qtext" style="margin-top:10px;">${q.q}</div>
   <div style="font-size:12px;color:#64748b;">勘定科目: ${q.opts.join(" / ")}</div>
   <div id="dform">${journalFormHTML(0,0,0,q.opts,a)}</div>
@@ -2094,6 +2252,8 @@ function renderDrillQ(){
   </div></div>`;
   main.querySelectorAll("input[data-j]").forEach(inp=>inp.addEventListener("blur",()=>{const n=parseNum(inp.value);inp.value=n==null?"":fmt(n);}));
   $("#d-grade").onclick=()=>gradeDrill(q);
+  btMount(60,()=>{const m=btMiss();const r=$("#dres");
+    if(r&&(!m||!m.dead))r.innerHTML=`<div class="note" style="background:#fee2e2;border-color:#fca5a5;">⏰ 時間切れ! 敵の攻撃を受けました。</div>`;});
 }
 function gradeDrill(q){
   /* フォームから読み取り */
@@ -2106,13 +2266,10 @@ function gradeDrill(q){
   const ok=gradeJournal(q,a);
   if(ok)drill.ok++;
   recordActivity(1,ok?1:0);
-  /* 冒険報酬: 復習=経験値ダンジョン、それ以外=討伐マップ */
-  let dres=null;
-  if(ok){
-    const el=Math.max(1,(Date.now()-(drill.t0||Date.now()))/1000);
-    dres=grantBattle(drill.mode==="review"?"expdun":"map",Math.max(0,1-el/60),document.getElementById("d-grade"));
-    drill.xp=(drill.xp||0)+dres.xp;
-  }
+  /* 冒険報酬 / 被弾 */
+  let dres=null,ddmg=null;
+  if(ok){dres=btHit(document.getElementById("d-grade"));drill.xp=(drill.xp||0)+(dres?dres.xp:0);}
+  else ddmg=btMiss();
   /* 統計更新 */
   const st=LS.get(KEY_D,{});const s=st[q.id]||{t:0,o:0};s.t++;if(ok)s.o++;st[q.id]=s;LS.set(KEY_D,st);
   const wrong=LS.get(KEY_W,[]);
@@ -2124,16 +2281,17 @@ function gradeDrill(q){
     const tagQs=DRILLS.filter(d=>d.tag===q.tag);
     if(tagQs.length&&tagQs.every(d=>{const x=st[d.id];return x&&x.o>0;}))awardTicket("tag:"+q.tag,"仕訳: "+q.tag);
   }
-  $("#dres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${ok?"correct":"wrong"}">${ok?"○ 正解！":"× 不正解"}</div>${dres?`<div class="xpsum">${rankBadge(dres)}</div>`:""}
+  $("#dres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${ok?"correct":"wrong"}">${ok?"○ 正解！":"× 不正解"}</div>${dres?`<div class="xpsum">${rankBadge(dres)}</div>`:""}${ddmg&&!ddmg.dead?`<div class="xpsum" style="background:#fee2e2;border-color:#fca5a5;color:#b91c1c;">敵の攻撃! −♥${BT?BT.atk:1}　のこりライフ ${"♥".repeat(ddmg.lives)}</div>`:""}
   <div class="ans-cmp">あなた: <span class="u">${journalUserText(a)}</span><br>正解: <span class="a">${journalAnsText(q)}</span></div>
   <div class="exp">${q.exp}</div>`;
   const btn=$("#d-grade");
   if(drill.idx<drill.qs.length-1){btn.textContent="次の問題 →";btn.onclick=()=>{drill.idx++;renderDrillQ();};}
   else{btn.textContent="結果を見る";btn.onclick=()=>{
     const wr=drill.wrong||[];
-    main.innerHTML=`<div class="qpane" style="text-align:center;"><h2>ドリル終了</h2>
+    const bt=btEnd();
+    main.innerHTML=`<div class="qpane" style="text-align:center;"><h2>${drill.mode==="review"?"経験値ダンジョン":"討伐"} 終了</h2>
     <div class="res-big ${drill.ok/drill.qs.length>=0.8?"pass":"fail"}">${drill.ok} / ${drill.qs.length} 問正解</div>
-    ${drill.xp?`<div class="xpsum">獲得経験値 <b>✨ ${drill.xp}</b></div>`:""}
+    ${drill.xp?`<div class="xpsum">獲得経験値 <b>✨ ${drill.xp}</b>${bt?`　🍖 ${bt.fd}${bt.tk?`　🎟 ${bt.tk}`:""}　｜　残りライフ ${"♥".repeat(bt.lives)}`:""}</div>`:""}
     <p style="color:#64748b;">${wr.length?"間違えた問題だけすぐ解き直すのが一番効きます。":"全問正解です!"}</p>
     <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
     ${wr.length?`<button class="btn" onclick="retryWrongDrill()">間違えた${wr.length}問だけやり直す</button>`:""}
@@ -2221,7 +2379,7 @@ function tierProg(lv){
   return{total,ok,done:total>0&&ok===total};
 }
 function renderPatMap(){
-  setMode("home");setNav("study");initPatMap();
+  setMode("home");setNav("study");initPatMap();btEnd();
   let lv=patLv();
   if(!lv){lv=1;for(let k=1;k<=3;k++){if(!tierProg(k).done){lv=k;break;}lv=Math.min(k+1,3);}}
   const tabs=[1,2,3].map(k=>{
@@ -2262,7 +2420,8 @@ function resolvePat(item){
 window.enterPat=function(gi,ii){
   window._patPos={gi,ii};
   const item=PATMAP[gi].items[ii];
-  if(item.k==="tag"){startDrill([...DRILLS.filter(d=>d.tag===item.tag)].sort(()=>Math.random()-.5),"drill");return;}
+  btStart("map",itemTier(item),()=>renderPatMap());
+  if(item.k==="tag"){startDrill([...DRILLS.filter(d=>d.tag===item.tag)].sort(()=>Math.random()-.5),"drill",itemTier(item));return;}
   const q=resolvePat(item);
   const p=LS.get(KEY_P,{})[q.id];
   const lock=(p&&Array.isArray(p.ok)&&p.ok.length===q.boxes.length&&p.ok.some(v=>v)&&!p.ok.every(v=>v))?p.ok:null;
@@ -2279,6 +2438,7 @@ function patRender(q,lock){
   const remain=lock?lock.filter(v=>!v).length:q.boxes.length;
   main.innerHTML=`<div class="qpane"><h2>${q.title}</h2>
   ${(typeof PATTUT!=="undefined"&&PATTUT[q.id]&&!lock)?`<button class="btn" style="margin:2px 0 10px;font-size:13px;padding:9px 18px;background:var(--blue);" onclick="startPatTut()">🐶 犬と一緒に解き方を学ぶ(はじめての人向け)</button>`:""}
+  ${btHTML()}
   ${lock?`<div class="note">前回正解した欄はロック済み(○)。<b>残り ${remain} 問だけ</b>解けばOKです。 <a style="text-decoration:underline;cursor:pointer;" onclick="patRender(pqCur,null)">最初から全部解き直す</a></div>`:""}
   <div class="qtext">${q.intro}</div>
   ${q.boxes.map((b,i)=>{
@@ -2293,6 +2453,9 @@ function patRender(q,lock){
   main.querySelectorAll("input[data-pq]:not([disabled])").forEach(inp=>inp.addEventListener("blur",()=>{const n=parseNum(inp.value);inp.value=n==null?"":fmt(n);}));
   $("#pq-grade").onclick=()=>gradePat(q);
   window._patT0=Date.now();
+  /* 大問は時間切れでも自動採点はせず、被弾だけさせる */
+  btMount(patLimit(q),()=>{const m=btMiss();const r=$("#pqres");
+    if(r)r.innerHTML=`<div class="note" style="background:#fee2e2;border-color:#fca5a5;">⏰ 時間切れ! 敵の攻撃を受けました。落ち着いて解答を続けてください。</div>`+r.innerHTML;});
   window.scrollTo(0,0);
 }
 /* パターンの目安時間(秒): 欄1つあたり45秒、最低90秒 */
@@ -2332,18 +2495,15 @@ function gradePat(q){
   if(newTry>newOk)p.fail=(p.fail||0)+1;
   st[q.id]=p;LS.set(KEY_P,st);
   const wrong=q.boxes.length-got;
-  /* 冒険報酬: 正解した欄の数だけ、解答の速さに応じて付与 */
-  let res=null;
-  if(newOk>0){
-    const el=Math.max(1,(Date.now()-(window._patT0||Date.now()))/1000);
-    const sp=Math.max(0,1-el/patLimit(q));
-    const btn=document.getElementById("pq-grade");
-    res=grantBattle("map",sp,btn,{mult:newOk});
-  }
+  /* 冒険報酬: 正解した欄の数だけ、解答の速さに応じて付与。1つでも間違えたら被弾 */
+  let res=null,dmg=null;
+  const btn=document.getElementById("pq-grade");
+  if(newOk>0)res=btHit(btn,{mult:newOk});
+  if(newTry>newOk)dmg=btMiss();
   if(wrong===0)awardTicket(q.id,q.title);
-  $("#pqres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${pct>=80?"correct":"wrong"}">${got} / ${q.boxes.length} 正解 (${pct}%)${wrong===0?" — このパターン完全制覇!":(pct>=80?" — 制覇! あと少しで満点":"")}</div>${res?`<div class="xpsum">${rankBadge(res)}</div>`:""}<div class="exp">【解説】\n${q.exp}</div>`;
+  $("#pqres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${pct>=80?"correct":"wrong"}">${got} / ${q.boxes.length} 正解 (${pct}%)${wrong===0?" — このパターン完全制覇!":(pct>=80?" — 制覇! あと少しで満点":"")}</div>${res?`<div class="xpsum">${rankBadge(res)}</div>`:""}${dmg&&!dmg.dead?`<div class="xpsum" style="background:#fee2e2;border-color:#fca5a5;color:#b91c1c;">敵の攻撃! −♥${BT?BT.atk:1}　のこりライフ ${"♥".repeat(dmg.lives)}</div>`:""}<div class="exp">【解説】\n${q.exp}</div>`;
+  if(dmg&&dmg.dead)return;
   setTimeout(()=>flushEvo(),800);
-  const btn=$("#pq-grade");
   if(wrong>0){
     btn.textContent=`間違えた${wrong}問だけやり直す`;
     btn.onclick=()=>patRender(q,okFlags);
@@ -3128,6 +3288,24 @@ window.renderGarden=function(){
     dogs.forEach((dg,i)=>{const el=document.getElementById("dico"+i);if(el)el.appendChild(dogCanvas(dogStage(dg.f),2,dg.b));const nm=document.getElementById("dnm"+i);if(nm)nm.textContent=dg.n;});
   }
 };
+/* ===== 敵(スライム) 攻撃力1〜3で見た目が変わる ===== */
+const FOE_PAL=[null,
+ {K:"#1d3a2a",C:"#4ade80",D:"#16a34a",W:"#ffffff"},
+ {K:"#1e2a52",C:"#60a5fa",D:"#2563eb",W:"#ffffff"},
+ {K:"#3b1030",C:"#f472b6",D:"#be123c",W:"#ffffff"}];
+const FOE_SPR=[
+ "....CCCC....","..CCCCCCCC..",".CCCCCCCCCC.","CCCWKCCWKCCC","CCCWKCCWKCCC","CCCCCCCCCCCC","CDCCCCCCCCDC","CDDCCCCCCDDC",".DDDDDDDDDD.","..KDDDDDDK..","...KKKKKK..."];
+const FOE_NM=[null,"スライム","アイススライム","デススライム"];
+function foeCanvas(atk,scale){
+  const pal=FOE_PAL[Math.min(3,Math.max(1,atk||1))];
+  const w=12,h=FOE_SPR.length;
+  const c=document.createElement("canvas");c.width=w;c.height=h;
+  c.style.width=Math.round(w*scale)+"px";c.style.height=Math.round(h*scale)+"px";
+  c.style.imageRendering="pixelated";c.className="foec";
+  const x=c.getContext("2d");
+  FOE_SPR.forEach((row,y)=>{for(let i=0;i<row.length;i++){const p=pal[row[i]];if(p){x.fillStyle=p;x.fillRect(i,y,1,1);}}});
+  return c;
+}
 const EGG_PAL={K:"#28201c",W:"#fff6e4",S:"#ecd8a8",C:"#8a7a5a"};
 const EGG_SPR=[
 ["....KKKK....","..KKWWWWKK..",".KWWWWWWWWK.",".KWSWWWWSWK.","KWWWWSWWWWWK","KWWWWWWWWWWK","KWSWWWWWSWWK","KWWWWSWWWWWK",".KWWWWWWWWK.",".KWWSWWWSWK.","..KKWWWWKK..","....KKKK...."],
