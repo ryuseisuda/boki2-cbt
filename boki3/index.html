@@ -762,6 +762,12 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
   box-shadow:0 3px 0 var(--bd);border-radius:14px;padding:8px 12px;cursor:pointer;font-family:inherit;transition:.12s;}
 /* 受け取れる報酬があるときだけオレンジで主張する */
 .qrow-btn.ready{background:var(--golds);border-color:var(--gold);box-shadow:0 3px 0 var(--goldd);}
+.bonusline{margin-top:12px;font-size:13px;color:var(--tx2);cursor:pointer;display:inline-block;padding:6px 12px;border-radius:999px;border:1.5px dashed var(--gold);background:var(--golds);}
+.bonusline b{color:var(--goldd);}
+.bonusline:hover{filter:brightness(.97);}
+.hchip.risk{border-color:#e05656;animation:riskPulse 1.6s ease-in-out infinite;}
+.hchip .riskd{display:inline-block;width:7px;height:7px;border-radius:50%;background:#e05656;margin-left:4px;vertical-align:1px;}
+@keyframes riskPulse{0%,100%{box-shadow:0 0 0 0 rgba(224,86,86,.35);}50%{box-shadow:0 0 0 5px rgba(224,86,86,0);}}
 .qrow-btn.ready .qrow-h b{color:var(--goldd);}
 .qrow-btn.ready .qrow-h .prog{color:var(--goldd);font-weight:800;}
 .qrow-h{display:flex;align-items:baseline;gap:7px;}
@@ -1933,7 +1939,7 @@ window.openStudy=function(){
       const w=WORLD[r.k],lk=r.lock;
       return `<div class="strow ${lk?"lk":""} ${!lk&&r.k===hl?"go":""}" ${lk?"":`onclick="document.getElementById('studyv').remove();${r.go}"`}>
         <span class="stic"><span class="micon" data-icon="${w.ic}"></span></span>
-        <span class="stmid"><b>${w.n}</b><span class="prog">${lk?`Lv.${lk} で解禁`:w.sub}</span></span>
+        <span class="stmid"><b>${w.n}</b><span class="prog">${lk?`Lv.${lk} で解禁 (あと${Math.max(1,lk-userLv().lv)}レベル)`:w.sub}</span></span>
         <span class="stend">${lk?`<span class="dlock">🔒Lv.${lk}</span>`:`<span class="dcost">${r.cost}</span><span class="prog">${r.st}</span>`}</span>
       </div>`;}).join("")}
     </div>
@@ -2060,7 +2066,8 @@ window.openQuests=function(){
     document.body.appendChild(o);
   }
   o.innerHTML=`<div id="quest-box">${questCardHTML()}
-    <div style="text-align:center;margin-top:14px;"><button class="btn gray" style="font-size:13px;padding:9px 28px;" onclick="document.getElementById('quest-ovl').remove();try{updateBadges()}catch(e){}">とじる</button></div></div>`;
+    <p class="prog" style="text-align:center;margin:10px 0 0;font-size:11.5px;">クエストは毎日 0:00 にリセットされます</p>
+    <div style="text-align:center;margin-top:10px;"><button class="btn gray" style="font-size:13px;padding:9px 28px;" onclick="document.getElementById('quest-ovl').remove();try{updateBadges()}catch(e){}">とじる</button></div></div>`;
   mountIcons(o);
 };
 function questCardHTML(){
@@ -2314,7 +2321,7 @@ function railHTML(kind){
     <div class="rrowi"><span><span class="sicon" data-icon="pencil"></span>今日の問題</span><b>${a.today.q}問</b></div>
     <div class="rrowi"><span><span class="sicon" data-icon="map"></span>パターン制覇</span><b>${po} / ${pt}</b></div>
     <div class="rrowi"><span><span class="sicon" data-icon="trophy"></span>模試ベスト</span><b>${best==null?"—":best+"点"}</b></div>
-    <div class="rrowi"><span><span class="sicon" data-icon="pin"></span>間違い残</span><b>${wrong.length}問</b></div>
+    <div class="rrowi" ${wrong.length>0?'style="cursor:pointer;" onclick="startReview()" title="復習でとりもどす"':""}><span><span class="sicon" data-icon="pin"></span>間違い残</span><b>${wrong.length}問${wrong.length>0?'<span style="color:var(--blue);font-weight:800;">　→</span>':""}</b></div>
   </div>`;
 }
 /* ホームのランキングは順位だけ。詳細はランキング画面で */
@@ -2338,7 +2345,10 @@ async function loadRailRank(){
     const rows=(data||[]).filter(r=>r.nickname).map(r=>({...r,wk:r.week_start===ws?(r.week_solved||0):0})).sort((a,b)=>b.wk-a.wk).slice(0,5);
     if(!document.getElementById("rail-rank-list"))return;
     el.className="";
-    el.innerHTML=rows.length?rows.map((r,i)=>`<div class="rrowi"><span>${i+1}位 <b style="font-size:13px;">${escapeHtml(r.nickname)}</b></span><b>${r.wk}問</b></div>`).join(""):'<p class="prog">まだ参加者がいません</p>';
+    let html=rows.length?rows.map((r,i)=>`<div class="rrowi"><span>${i+1}位 <b style="font-size:13px;">${escapeHtml(r.nickname)}</b></span><b>${r.wk}問</b></div>`).join(""):'<p class="prog">まだ参加者がいません</p>';
+    if(rows.length<3){const mine=LS.get("b2_nick","");
+      html+=`<p class="prog" style="margin-top:6px;font-size:11.5px;">${mine?"上位には毎週 EXP・ガチャ券などの報酬":"ニックネーム登録で参加できます"}</p>`;}
+    el.innerHTML=html;
   }catch(e){}
 }
 function pageRaw(center,rail){
@@ -2446,13 +2456,15 @@ function renderHome(){
     <div style="position:relative;z-index:1;flex:1 1 52%;min-width:320px;">
       ${(()=>{try{const a=actInfo();const tq=a.today.q||0;
         return `<div class="hchips">
-          <span class="hchip ${a.streak>=3?"on":""}" title="連続日数">${a.streak>0?strkHTML(a.streak,1.4):"🔥"} ${a.streak}</span>
+          <span class="hchip ${a.streak>=3?"on":""} ${a.streak>0&&tq===0?"risk":""}" title="${a.streak>0&&tq===0?"今日1問とけば連続キープ!":"連続日数"}">${a.streak>0?strkHTML(a.streak,1.4):"🔥"} ${a.streak}${a.streak>0&&tq===0?'<i class="riskd"></i>':""}</span>
           <span class="hchip ${tq>=10?"gold":tq>=1?"on":""}" title="今日といた問題">✏️ ${tq}</span>
           <span class="hchip" id="rankchip" title="今週のランキング" onclick="event.stopPropagation();renderRank()" style="cursor:pointer;">🏆 —</span>
         </div>`;}catch(e){return ""}})()}
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
       <button class="btn go cta gobig" onclick="openStudy()">学習を始める　<span class="arrowa">→</span></button>
       <div class="qrow" id="qrow">${qrowHTML()}</div>
+      ${(()=>{try{const b=bonusPat();if(!b)return "";
+        return `<div class="bonusline" onclick="setPatLv(${b.tier});renderPatMap()">✨ 今日のEXP2倍ダンジョン: <b>${escapeHtml(b.label)}</b>　→</div>`;}catch(e){return ""}})()}
     </div>
     <div onclick="renderGarden()" style="cursor:pointer;text-align:center;flex:0 1 48%;min-width:0;">
       <div id="homedog" style="display:flex;align-items:flex-end;justify-content:center;"></div>
