@@ -797,8 +797,17 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
 .roadwrap{overflow:hidden;}
 .roadbadge{display:inline-block;background:linear-gradient(135deg,#ffb03a,#ff7847);color:#fff;border-radius:999px;padding:2px 12px;font-size:11.5px;font-weight:800;margin-left:8px;vertical-align:2px;animation:qb2pulse 2.2s ease-in-out infinite;}
 .roadtrack{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:8px 4px 14px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;}
-.rlink{flex:0 0 18px;height:5px;background:var(--bd);border-radius:99px;align-self:center;margin-top:14px;}
-.rnode{position:relative;flex:0 0 118px;border:2px solid var(--bd);border-radius:16px;background:#fff;padding:26px 8px 10px;text-align:center;box-shadow:0 3px 0 var(--bd);}
+.rlink{flex:0 0 18px;height:5px;background:var(--bd);border-radius:99px;align-self:flex-start;margin-top:78px;}
+.rcol{display:flex;flex-direction:column;flex:0 0 128px;}
+.rjoin{width:5px;height:12px;background:var(--bd);margin:0 auto;}
+.rtask{border:2px dashed var(--bd);border-radius:12px;background:var(--lt);padding:8px 8px;text-align:center;font-size:11px;font-weight:700;color:var(--tx2);cursor:pointer;line-height:1.4;flex:1;}
+.rtask .rt-nm{display:block;margin-top:3px;}
+.rtask.clr{border-style:solid;border-color:#bfe6cf;background:#f2fbf5;color:#5d8c72;}
+.rtask.clr .rt-ok{color:#0e7a5f;font-weight:900;}
+.rtask.cur{border-style:solid;border-color:var(--gold);background:var(--golds);color:var(--navy);box-shadow:0 3px 0 var(--goldd);}
+.rtask.cur .rt-go{display:block;color:var(--goldd);font-weight:900;margin-top:3px;}
+.rtask:hover{filter:brightness(.97);}
+.rnode{position:relative;flex:0 0 auto;border:2px solid var(--bd);border-radius:16px;background:#fff;padding:26px 8px 10px;text-align:center;box-shadow:0 3px 0 var(--bd);}
 .rnode .rn-pt{font-weight:900;font-size:15px;color:var(--navy);}
 .rnode .rn-pt span{font-size:10px;color:var(--tx2);margin-left:1px;}
 .rnode .rn-ic{font-size:26px;line-height:1.3;margin:2px 0;}
@@ -3294,21 +3303,21 @@ function ppGaugeHTML(cur,big){
 /* ---------- 合格ロード(バトルパス型・固定トラック) ----------
    5pt刻みで報酬。20/40/60/70/75pt は模試を解かないと開かない関所 */
 const ROAD=[
- {v:5, rw:{fd:10}},
- {v:10,rw:{tk:1}},
- {v:15,rw:{stampot:1}},
- {v:20,rw:{tk:2},mock:1},
- {v:25,rw:{fd:30}},
- {v:30,rw:{tk:2}},
- {v:35,rw:{stampot:2}},
- {v:40,rw:{mockt:1},mock:2},
- {v:45,rw:{tk:3}},
- {v:50,rw:{fd:50}},
- {v:55,rw:{tk:3}},
- {v:60,rw:{mockt:1,tk:3},mock:3},
- {v:65,rw:{stampot:3}},
- {v:70,rw:{tk:5,mockt:1},mock:4},
- {v:75,rw:{fd:100,tk:10},mock:5}
+ {v:5, rw:{fd:10},              t:{ic:"pencil",nm:"仕訳特訓で型をつくる",go:"renderDrillSetup()"}},
+ {v:10,rw:{tk:1},               t:{ic:"map",nm:"初級パターンを制覇",go:"setPatLv(1);renderPatMap()"}},
+ {v:15,rw:{stampot:1},          t:{ic:"map",nm:"初級をさらに制覇",go:"setPatLv(1);renderPatMap()"}},
+ {v:20,rw:{tk:2},mock:1,        t:{ic:"cap",nm:"模試 1回目を解く",go:"renderExams()"}},
+ {v:25,rw:{fd:30},              t:{ic:"repeat",nm:"復習で間違いを消す",go:"startReview()"}},
+ {v:30,rw:{tk:2},               t:{ic:"map",nm:"中級パターンを制覇",go:"setPatLv(2);renderPatMap()"}},
+ {v:35,rw:{stampot:2},          t:{ic:"map",nm:"中級をさらに制覇",go:"setPatLv(2);renderPatMap()"}},
+ {v:40,rw:{mockt:1},mock:2,     t:{ic:"cap",nm:"模試 2回目を解く",go:"renderExams()"}},
+ {v:45,rw:{tk:3},               t:{ic:"pencil",nm:"仕訳特訓を全部踏破",go:"renderDrillSetup()"}},
+ {v:50,rw:{fd:50},              t:{ic:"map",nm:"上級パターンに挑戦",go:"setPatLv(3);renderPatMap()"}},
+ {v:55,rw:{tk:3},               t:{ic:"repeat",nm:"復習+上級を制覇",go:"setPatLv(3);renderPatMap()"}},
+ {v:60,rw:{mockt:1,tk:3},mock:3,t:{ic:"cap",nm:"模試 3回目を解く",go:"renderExams()"}},
+ {v:65,rw:{stampot:3},          t:{ic:"repeat",nm:"間違い残をゼロに",go:"startReview()"}},
+ {v:70,rw:{tk:5,mockt:1},mock:4,t:{ic:"cap",nm:"模試 4回目を解く",go:"renderExams()"}},
+ {v:75,rw:{fd:100,tk:10},mock:5,t:{ic:"cap",nm:"模試 5回目で仕上げ",go:"renderExams()"}}
 ];
 function roadState(n){
   if(LS.get("b3_road",[]).includes(n.v))return "done";
@@ -3333,69 +3342,52 @@ window.roadClaim=function(v){
 };
 window.renderRoadmap=function(){
   setMode("home");exState=null;setNav("road");try{btEnd();}catch(e){}
-  const cur=estScore(),f=passForecast(),tg=ppTarget(),td=ppToday();
+  const cur=estScore(),f=passForecast();
   const mocks=LS.get(KEY_H,[]).length;
   const fx=f.done?`<b style="color:var(--green,#0e7a5f);">合格ライン到達! この調子で仕上げよう</b>`
     :f.date?`このペースなら <b>${f.date}</b> ごろに合格ライン`
     :f.stalled?`のびが止まっています。<b>復習</b>から立てなおそう`
     :`学習を続けると合格日の予測が出ます`;
-  /* トラック */
+  /* トラック: 上=報酬 / 下=そのマスを達成するためのタスク */
   const readyN=ROAD.filter(n=>roadState(n)==="ready").length;
-  const nodes=ROAD.map(n=>{
+  const curIdx=ROAD.findIndex(n=>roadState(n)==="lock");
+  const cols=ROAD.map((n,i)=>{
     const st=roadState(n);
     const need=n.mock&&mocks<n.mock;
-    return `<div class="rnode ${st} ${n.mock?"gate":""}" ${st==="ready"?`onclick="roadClaim(${n.v})"`:""}>
+    const isCur=i===curIdx;
+    const node=`<div class="rnode ${st} ${n.mock?"gate":""}" ${st==="ready"?`onclick="roadClaim(${n.v})"`:""}>
       ${n.mock?'<div class="rn-gate"><span class="sicon" data-icon="cap" data-s="1"></span> 関所</div>':""}
       <div class="rn-pt">${n.v}<span>pt</span></div>
       <div class="rn-ic">${st==="done"?"✅":st==="ready"?"🎁":"🔒"}</div>
       <div class="rn-rw">${roadRwText(n)}</div>
       <div class="rn-st">${st==="done"?"受取済み":st==="ready"?"タップで うけとる!":need?`模試 ${n.mock}回で開く`:"合格力 "+n.v+" で開く"}</div>
-    </div>`;}).join('<div class="rlink"></div>');
-  /* つぎの目標 */
-  const next=ROAD.find(n=>roadState(n)==="lock");
-  let todoCard="";
-  if(next){
-    const needMock=next.mock&&mocks<next.mock;
-    const acts=ppActions().filter(a=>!(needMock&&a.id==="mock")).slice(0,3);
-    const mockRow=needMock?`
-      <div class="rdrow" onclick="renderExams()">
-        <span class="stic"><span class="micon" data-icon="cap"></span></span>
-        <span class="stmid"><b>模試を解く (${mocks} / ${next.mock}回)</b><span class="prog">この関所は模試をクリアしないと開きません</span></span>
-        <span class="rdpt"><i>必須</i></span>
-      </div>`:"";
-    todoCard=`
-    <div class="qpane" style="margin-top:16px;">
-      <h3 style="margin:0 0 4px;color:var(--navy);">つぎの目標: <span style="color:var(--goldd);">${next.v}pt</span> <span class="prog">(あと ${Math.max(0,Math.round((next.v-cur)*10)/10)}pt)</span></h3>
-      <p class="prog" style="margin:0 0 10px;">達成すると ${roadRwText(next)} がもらえます。やることは上から順がおすすめ。</p>
-      <div class="stlist">${mockRow}${acts.map(a=>`
-        <div class="rdrow" onclick="${a.go}">
-          <span class="stic"><span class="micon" data-icon="${a.ic}"></span></span>
-          <span class="stmid"><b>${a.nm}</b><span class="prog">${a.sub}</span></span>
-          <span class="rdpt">${a.pt!=null?`+${a.pt}pt`:`<i>${a.ptTx}</i>`}</span>
-        </div>`).join("")}</div>
     </div>`;
-  }
+    const t=n.t||{};
+    const task=`<div class="rtask ${st!=="lock"?"clr":""} ${isCur?"cur":""}" onclick="${t.go||""}">
+      <span class="micon" data-icon="${t.ic||"pencil"}"></span>
+      <span class="rt-nm">${st!=="lock"?"<s>"+t.nm+"</s>":t.nm}</span>
+      ${st!=="lock"?'<span class="rt-ok">✓</span>':isCur?'<span class="rt-go">いまここ　→</span>':""}
+    </div>`;
+    return `<div class="rcol">${node}<div class="rjoin"></div>${task}</div>`;
+  }).join('<div class="rlink"></div>');
   const center=`
   <section class="hero2" style="margin-top:0;">
     <h1 class="disp" style="font-size:clamp(24px,4vw,34px);margin:2px 0 14px;">合格ロード。</h1>
     ${ppGaugeHTML(cur,true)}
     <p class="prog" style="margin:10px 0 0;">${fx}</p>
-    <div class="rdtoday"><span>きょうの収集</span><b>+${td}</b><span class="prog">/ 目標 +${tg}pt</span>
-      <div class="rdtbar"><i style="width:${Math.min(100,Math.round(td/tg*100))}%;"></i></div></div>
   </section>
   <div class="qpane roadwrap" style="margin-top:16px;">
     <h3 style="margin:0 0 2px;color:var(--navy);">報酬ロード ${readyN>0?`<span class="roadbadge">${readyN}件 うけとれます</span>`:""}</h3>
-    <p class="prog" style="margin:0 0 10px;">合格力が5ptすすむごとに報酬。<span class="sicon" data-icon="cap" data-s="1"></span>の関所は模試をクリアすると開きます。</p>
-    <div class="roadtrack" id="roadtrack">${nodes}</div>
+    <p class="prog" style="margin:0 0 10px;">上が報酬、下がそのための課題。<span class="sicon" data-icon="cap" data-s="1"></span>の関所は模試をクリアすると開きます。</p>
+    <div class="roadtrack" id="roadtrack">${cols}</div>
   </div>
-  ${todoCard}
   <p class="prog" style="margin:12px 0 0;font-size:11.5px;">合格力は「パターン制覇×本試験の配点」と「模試の実測」から計算しています。ゲームの報酬では増えません。</p>`;
   main.innerHTML=page(center,"road");
   mountIcons(main);
-  /* いま挑戦中のノードまで自動スクロール */
+  /* いま挑戦中のマスまで自動スクロール */
   try{
     const tr=document.getElementById("roadtrack");
-    const tgt=tr.querySelector(".rnode.ready")||tr.querySelector(".rnode.lock");
+    const tgt=tr.querySelector(".rnode.ready")||tr.querySelector(".rtask.cur");
     if(tgt)tr.scrollLeft=Math.max(0,tgt.offsetLeft-tr.clientWidth/2+60);
   }catch(e){}
 };
