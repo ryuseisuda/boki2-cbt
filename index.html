@@ -793,6 +793,8 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
 .rdtoday b{font-size:16px;color:var(--goldd);}
 .rdtbar{flex:0 0 100%;height:6px;border-radius:99px;background:var(--lt);overflow:hidden;}
 .rdtbar>i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.rrowi.mineR{background:var(--lt);border-radius:10px;padding:7px 10px;border-bottom:none;}
+.rrowi.mineR b{color:var(--blue);}
 #pushv{position:fixed;inset:0;background:rgba(28,26,58,.45);display:flex;align-items:center;justify-content:center;z-index:220;padding:20px;}
 #pushv .box{background:var(--card,#fff);border-radius:22px;padding:26px 24px;box-shadow:0 20px 50px rgba(0,0,0,.3);}
 .hchip.risk{border-color:#e05656;animation:riskPulse 1.6s ease-in-out infinite;}
@@ -2772,6 +2774,15 @@ function botRows(realN){
   });
 }
 window.botRows=botRows;
+/* wk降順の一覧の中での自分の順位。一覧に自分がいなければ地元の今週問題数から算出 */
+function myRankIn(all){
+  const nk=LS.get("b2_nick","");if(!nk)return null;
+  const i=all.findIndex(r=>r.nickname===nk&&!r.bot);
+  if(i>=0)return {i,wk:all[i].wk};
+  const wk=myWeekSolved();
+  return {i:all.filter(r=>(r.wk||0)>wk).length,wk};
+}
+window.myRankIn=myRankIn;
 /* ホームのランキングは順位だけ。詳細はランキング画面で */
 async function loadRankChip(){
   const el=document.getElementById("rankchip");if(!el||!sb)return;
@@ -2792,10 +2803,14 @@ async function loadRailRank(){
     const {data}=await sb.from("profiles").select("nickname,week_start,week_solved,streak,pat_done,pat_total,mock_best,ach,ach_top,dogs,partner").limit(200);
     const ws=weekStart();
     const real=(data||[]).filter(r=>r.nickname).map(r=>({...r,wk:r.week_start===ws?(r.week_solved||0):0}));
-    const rows=real.concat(botRows(real.length)).sort((a,b)=>b.wk-a.wk).slice(0,5);
+    const all=real.concat(botRows(real.length)).sort((a,b)=>b.wk-a.wk);
+    const rows=all.slice(0,5);
     if(!document.getElementById("rail-rank-list"))return;
     el.className="";
     let html=rows.length?rows.map((r,i)=>`<div class="rrowi"><span>${i+1}位 <b style="font-size:13px;">${escapeHtml(r.nickname)}</b></span><b>${r.wk}問</b></div>`).join(""):'<p class="prog">まだ参加者がいません</p>';
+    /* 自分が上位5位に入っていないときは、自分の順位を下に固定表示 */
+    const me=myRankIn(all);
+    if(me&&me.i>=5)html+=`<div class="rrowi mineR"><span>${me.i+1}位 <b style="font-size:13px;">あなた</b></span><b>${me.wk}問</b></div>`;
     if(real.length<3){const mine=LS.get("b2_nick","");
       html+=`<p class="prog" style="margin-top:6px;font-size:11.5px;">${mine?"上位には毎週 EXP・ガチャ券などの報酬":"ニックネーム登録で参加できます"}</p>`;}
     el.innerHTML=html;
@@ -5646,11 +5661,24 @@ async function loadRank(){
     window._rankRows=rows;
     const unit=rankTab==="week"?"問":rankTab==="streak"?"日":"";
     el.className="";
-    el.innerHTML=rows.length?rows.map((r,i)=>`<div class="rrow ${isMe(r)?"me":""}" onclick="showUserDogs(${i})">
+    /* 自分の現在順位を最上部に固定表示 */
+    let mineTop="";
+    {
+      const nk=LS.get("b2_nick","");
+      const meIdx=rows.findIndex(r=>isMe(r));
+      if(nk&&meIdx>=0){
+        const v=rankTab==="pat"?(rows[meIdx].pat_done||0)+" / "+(rows[meIdx].pat_total||47):(rows[meIdx][key]||0)+unit;
+        mineTop=`<div class="rrowi mineR" style="margin-bottom:10px;"><span>あなたは いま <b>${meIdx+1}位</b></span><b>${v}</b></div>`;
+      }else if(nk&&rankTab==="week"){
+        const m=myRankIn(rows);
+        if(m)mineTop=`<div class="rrowi mineR" style="margin-bottom:10px;"><span>あなたは いま <b>${m.i+1}位</b></span><b>${m.wk}問</b></div>`;
+      }
+    }
+    el.innerHTML=mineTop+(rows.length?rows.map((r,i)=>`<div class="rrow ${isMe(r)?"me":""}" onclick="showUserDogs(${i})">
       <span class="rnum2">${i+1}位</span><span class="ricon" id="ric${i}"></span><b style="color:var(--navy);">${escapeHtml(r.nickname)}</b>
       ${(r.streak||0)>0?strkHTML(r.streak,1.4):""}${r.ach_top?`<span class="achb">${escapeHtml(r.ach_top)}</span>`:""}
       <span class="rv">${rankTab==="pat"?(r.pat_done||0)+" / "+(r.pat_total||47):(r[key]||0)+unit}</span></div>`).join("")
-     :`<div class="qpane">まだ参加者がいません。今なら1位!</div>`;
+     :`<div class="qpane">まだ参加者がいません。今なら1位!</div>`);
     rows.forEach((r,i)=>{const ic=document.getElementById("ric"+i);if(ic){const dg=(r.dogs||[])[r.partner||0];ic.appendChild(dogCanvas(dg?dogStage(dg.f||0):0,2,dg?(dg.b||0):0));}});
     try{mountIcons(el);}catch(e){}
   }catch(e){const el=document.getElementById("rlist");if(el)el.textContent="読み込みエラー";}
