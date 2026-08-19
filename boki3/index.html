@@ -762,9 +762,39 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
   box-shadow:0 3px 0 var(--bd);border-radius:14px;padding:8px 12px;cursor:pointer;font-family:inherit;transition:.12s;}
 /* 受け取れる報酬があるときだけオレンジで主張する */
 .qrow-btn.ready{background:var(--golds);border-color:var(--gold);box-shadow:0 3px 0 var(--goldd);}
-.bonusline{margin-top:12px;font-size:13px;color:var(--tx2);cursor:pointer;display:inline-block;padding:6px 12px;border-radius:999px;border:1.5px dashed var(--gold);background:var(--golds);}
-.bonusline b{color:var(--goldd);}
-.bonusline:hover{filter:brightness(.97);}
+/* きょうのやること(ホーム) */
+.tdcard{margin-top:14px;background:#fff;border:2px solid var(--bd);border-radius:16px;padding:10px 12px;max-width:430px;box-shadow:0 3px 0 var(--bd);}
+.tdhead{display:flex;align-items:center;gap:8px;cursor:pointer;padding:2px 2px 8px;flex-wrap:wrap;}
+.tdhead b{font-size:13.5px;color:var(--navy);}
+.tdpp{margin-left:auto;font-size:12px;font-weight:800;color:var(--goldd);}
+.tdbar{flex:0 0 100%;height:5px;border-radius:99px;background:var(--lt);overflow:hidden;}
+.tdbar>i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.tdrow{display:flex;align-items:center;gap:9px;padding:8px 6px;border-top:1.5px dashed var(--bd);cursor:pointer;font-size:13px;}
+.tdrow b{color:var(--navy);font-size:12.5px;flex:1;text-align:left;}
+.tdrow:hover{background:var(--lt);border-radius:10px;}
+.tdrow .tdend{font-size:11.5px;font-weight:800;color:var(--goldd);white-space:nowrap;}
+.tdrow.gold{background:var(--golds);border-radius:10px;border-top:none;margin-top:2px;}
+.tdic{flex-shrink:0;display:flex;}
+.tdmore{border-top:1.5px dashed var(--bd);padding:7px 6px 2px;font-size:11.5px;color:var(--tx2);cursor:pointer;text-align:right;}
+/* 合格力ゲージ・ロードマップ */
+.ppg-bar{position:relative;height:12px;border-radius:99px;background:var(--lt);overflow:hidden;}
+.ppg.big .ppg-bar{height:18px;}
+.ppg-bar>i{display:block;height:100%;background:linear-gradient(90deg,#5b8def,#2563eb);border-radius:99px;transition:width .8s cubic-bezier(.2,.9,.3,1);}
+.ppg-line{position:absolute;top:0;bottom:0;left:70%;width:2px;background:var(--gold);}
+.ppg-lab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--tx2);margin-top:5px;}
+.ppg-lab b{font-size:15px;color:var(--blue);}
+.ppg.big .ppg-lab b{font-size:22px;}
+.rdrow{display:flex;align-items:center;gap:11px;padding:11px 8px;border-top:1.5px dashed var(--bd);cursor:pointer;text-align:left;}
+.rdrow:first-child{border-top:none;}
+.rdrow:hover{background:var(--lt);border-radius:12px;}
+.rdpt{font-size:13px;font-weight:900;color:var(--goldd);white-space:nowrap;}
+.rdpt i{font-style:normal;font-size:11px;color:var(--tx2);font-weight:700;}
+.rdtoday{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12.5px;color:var(--tx2);flex-wrap:wrap;max-width:430px;}
+.rdtoday b{font-size:16px;color:var(--goldd);}
+.rdtbar{flex:0 0 100%;height:6px;border-radius:99px;background:var(--lt);overflow:hidden;}
+.rdtbar>i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+#pushv{position:fixed;inset:0;background:rgba(28,26,58,.45);display:flex;align-items:center;justify-content:center;z-index:220;padding:20px;}
+#pushv .box{background:var(--card,#fff);border-radius:22px;padding:26px 24px;box-shadow:0 20px 50px rgba(0,0,0,.3);}
 .hchip.risk{border-color:#e05656;animation:riskPulse 1.6s ease-in-out infinite;}
 .hchip .riskd{display:inline-block;width:7px;height:7px;border-radius:50%;background:#e05656;margin-left:4px;vertical-align:1px;}
 @keyframes riskPulse{0%,100%{box-shadow:0 0 0 0 rgba(224,86,86,.35);}50%{box-shadow:0 0 0 5px rgba(224,86,86,0);}}
@@ -865,6 +895,7 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
 </div>
 <div id="nav">
   <button data-v="home"><span class="nicon" data-icon="home"></span>ホーム</button>
+  <button data-v="road"><span class="nicon" data-icon="pin"></span>ロードマップ</button>
   <button data-v="exams"><span class="nicon" data-icon="cap"></span>模試</button>
   <button data-v="dash"><span class="nicon" data-icon="chart"></span>分析</button>
   <button data-v="garden"><span class="nicon" data-icon="dog"></span>ペット</button>
@@ -2108,6 +2139,23 @@ function updateBadges(){
   }catch(e){}
 }
 /* 今日のミッション: 文字を出さずアイコンだけ並べる。押すと中身が開く */
+/* ホームの「きょうのやること」= 報酬受け取り + 合格力の集め方上位 */
+function homeTodoHTML(){
+  const td=ppToday(),tg=ppTarget();
+  const rows=[];
+  const cl=(()=>{try{return claimableCount();}catch(e){return 0;}})();
+  if(cl>0)rows.push(`<div class="tdrow gold" onclick="openQuests()"><span class="tdic"><span class="sicon" data-icon="gift" data-s="1"></span></span><b>クエスト報酬を受けとる</b><span class="tdend">${cl}件</span></div>`);
+  ppActions().slice(0,2).forEach(a=>{
+    rows.push(`<div class="tdrow" onclick="${a.go}"><span class="tdic"><span class="sicon" data-icon="${a.ic}" data-s="1"></span></span><b>${a.nm}</b><span class="tdend">${a.pt!=null?`+${a.pt}pt`:a.ptTx}</span></div>`);
+  });
+  return `<div class="tdcard" id="tdcard">
+    <div class="tdhead" onclick="renderRoadmap()"><b>きょうのやること</b>
+      <span class="tdpp">合格力 +${td} <span class="prog">/ +${tg}pt</span></span>
+      <span class="tdbar"><i style="width:${Math.min(100,Math.round(td/tg*100))}%;"></i></span></div>
+    ${rows.join("")}
+    <div class="tdmore" onclick="renderRoadmap()">ロードマップを見る　→</div>
+  </div>`;
+}
 function qrowHTML(){
   try{
     const qc=questClaims(),e=todayEntry(),cl=claimableCount();
@@ -2322,16 +2370,45 @@ function railHTML(kind){
     <div class="rrowi"><span><span class="sicon" data-icon="map"></span>パターン制覇</span><b>${po} / ${pt}</b></div>
     <div class="rrowi"><span><span class="sicon" data-icon="trophy"></span>模試ベスト</span><b>${best==null?"—":best+"点"}</b></div>
     <div class="rrowi" ${wrong.length>0?'style="cursor:pointer;" onclick="startReview()" title="復習でとりもどす"':""}><span><span class="sicon" data-icon="pin"></span>間違い残</span><b>${wrong.length}問${wrong.length>0?'<span style="color:var(--blue);font-weight:800;">　→</span>':""}</b></div>
-  </div>`;
+  </div>${(()=>{try{
+    const cur=estScore(),f=passForecast();
+    const fx=f.done?"合格ライン到達!":f.date?`このペースなら ${f.date} ごろ合格ライン`:f.stalled?"のびが停滞中。復習しよう":"学習すると予測が出ます";
+    return `<div class="rcard" style="cursor:pointer;" onclick="renderRoadmap()"><h3><span class="sicon" data-icon="pin"></span>合格力</h3>${ppGaugeHTML(cur)}<p class="prog" style="margin:8px 0 0;font-size:11.5px;">${fx}　→</p></div>`;
+  }catch(e){return ""}})()}`;
 }
+/* ---------- ランキングの初期メンバー(参加者が少ない間だけ表示・週ごとに決定論) ---------- */
+const RANK_BOTS=[["みさき@簿記べんきょ中",3],["カズ|リベンジ組",7],["ゆうと",11],["こつこつ簿記",17],["あやの📚",23],["Rin",29]];
+function myWeekSolved(){
+  const ws=weekStart(),d=LS.get(KEY_A,{});let n=0;
+  Object.keys(d).forEach(k=>{if(k>=ws)n+=(d[k].q||0);});
+  return n;
+}
+function botRows(realN){
+  if(realN>=8)return [];                       /* 実参加者が育ったら退場 */
+  const ws=weekStart();
+  const day=((new Date().getDay()+6)%7)+1;     /* 月=1 … 日=7 */
+  const my=myWeekSolved();
+  const H=s=>{let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h);};
+  let pt=47;try{pt=patCount().pt;}catch(e){}
+  return RANK_BOTS.map(([nm])=>{
+    const h=H(ws+nm);
+    const perDay=3+(h%11);
+    let wk=Math.round(perDay*day*(0.85+((h>>4)%31)/100));
+    if(day===7)wk=Math.min(wk,Math.max(0,my-1));   /* 日曜は必ずあなたが上 */
+    return {nickname:nm,wk,streak:2+(h%19),pat_done:Math.min(pt,5+((h>>3)%28)),pat_total:pt,mock_best:null,
+      dogs:[{b:(h>>2)%8,f:3+(h%9),n:nm.slice(0,4)}],partner:0,ach_top:null,bot:true};
+  });
+}
+window.botRows=botRows;
 /* ホームのランキングは順位だけ。詳細はランキング画面で */
 async function loadRankChip(){
   const el=document.getElementById("rankchip");if(!el||!sb)return;
   try{
     const {data}=await sb.from("profiles").select("nickname,week_start,week_solved").limit(200);
     const ws=weekStart(),nk=LS.get("b2_nick","");
-    const rows=(data||[]).filter(r=>r.nickname).map(r=>({...r,wk:r.week_start===ws?(r.week_solved||0):0})).sort((a,b)=>b.wk-a.wk);
-    const i=rows.findIndex(r=>r.nickname===nk);
+    const real=(data||[]).filter(r=>r.nickname).map(r=>({...r,wk:r.week_start===ws?(r.week_solved||0):0}));
+    const rows=real.concat(botRows(real.length)).sort((a,b)=>b.wk-a.wk);
+    const i=rows.findIndex(r=>r.nickname===nk&&!r.bot);
     if(!document.getElementById("rankchip"))return;
     el.innerHTML=i>=0?`🏆 ${i+1}位`:`🏆 ${rows.length}人`;
   }catch(e){}
@@ -2342,11 +2419,12 @@ async function loadRailRank(){
   try{
     const {data}=await sb.from("profiles").select("nickname,week_start,week_solved,streak,pat_done,pat_total,mock_best,ach,ach_top,dogs,partner").limit(200);
     const ws=weekStart();
-    const rows=(data||[]).filter(r=>r.nickname).map(r=>({...r,wk:r.week_start===ws?(r.week_solved||0):0})).sort((a,b)=>b.wk-a.wk).slice(0,5);
+    const real=(data||[]).filter(r=>r.nickname).map(r=>({...r,wk:r.week_start===ws?(r.week_solved||0):0}));
+    const rows=real.concat(botRows(real.length)).sort((a,b)=>b.wk-a.wk).slice(0,5);
     if(!document.getElementById("rail-rank-list"))return;
     el.className="";
     let html=rows.length?rows.map((r,i)=>`<div class="rrowi"><span>${i+1}位 <b style="font-size:13px;">${escapeHtml(r.nickname)}</b></span><b>${r.wk}問</b></div>`).join(""):'<p class="prog">まだ参加者がいません</p>';
-    if(rows.length<3){const mine=LS.get("b2_nick","");
+    if(real.length<3){const mine=LS.get("b2_nick","");
       html+=`<p class="prog" style="margin-top:6px;font-size:11.5px;">${mine?"上位には毎週 EXP・ガチャ券などの報酬":"ニックネーム登録で参加できます"}</p>`;}
     el.innerHTML=html;
   }catch(e){}
@@ -2463,8 +2541,7 @@ function renderHome(){
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
       <button class="btn go cta gobig" onclick="openStudy()">学習を始める　<span class="arrowa">→</span></button>
       <div class="qrow" id="qrow">${qrowHTML()}</div>
-      ${(()=>{try{const b=bonusPat();if(!b)return "";
-        return `<div class="bonusline" onclick="setPatLv(${b.tier});renderPatMap()">✨ 今日のEXP2倍ダンジョン: <b>${escapeHtml(b.label)}</b>　→</div>`;}catch(e){return ""}})()}
+      ${(()=>{try{return homeTodoHTML();}catch(e){return ""}})()}
     </div>
     <div onclick="renderGarden()" style="cursor:pointer;text-align:center;flex:0 1 48%;min-width:0;">
       <div id="homedog" style="display:flex;align-items:flex-end;justify-content:center;"></div>
@@ -2488,6 +2565,7 @@ function renderHome(){
   main.innerHTML=isNew?pageRaw(center,""):page(center,"home");
   mountIcons(main);if(!isNew){loadRailRank();loadRankChip();}
   try{checkAch();setAcctBtn();}catch(e){}
+  if(!isNew)try{maybePushPrompt();}catch(e){}
   try{if(document.getElementById("savecard")&&!sessionStorage.getItem("b2_sv_seen")){sessionStorage.setItem("b2_sv_seen","1");track("signup_view");}}catch(e){}
   if(isNew){
     const ev=document.getElementById("onbevo");
@@ -3121,6 +3199,93 @@ function bonusPat(){
 window.bonusPat=bonusPat;
 function isBonus(gi,ii){const b=bonusPat();return !!(b&&b.gi===gi&&b.ii===ii);}
 window.isBonus=isBonus;
+/* ---------- 合格力(ロードマップ) ----------
+   合格力 = estScore()。学習の実態(パターン制覇×配点・模試の実測)だけで増える。
+   ゲーム内の獲得物(EXP/ごはん/チケット)では一切増えない。 */
+function ppDayBase(){
+  const k=daysKey(new Date());let o=LS.get("b3_ppday",null);
+  if(!o||o.k!==k){o={k,v:estScore()};LS.set("b3_ppday",o);}
+  return o;
+}
+function ppToday(){return Math.max(0,Math.round((estScore()-ppDayBase().v)*10)/10);}
+function ppTarget(){
+  const cur=estScore();if(cur>=70)return 1;
+  const ed=examDate();let days=30;
+  if(ed){const t0=new Date();t0.setHours(0,0,0,0);days=Math.max(1,Math.round((ed-t0)/86400000));}
+  return Math.min(8,Math.max(1,Math.ceil((70-cur)/days)));
+}
+function ppWeights(){initPatMap();let w=0;PATMAP.forEach((g,gi)=>{if(g.items.length)w+=SEC_PTS[gi+1]||20;});return w||100;}
+/* このパターンを○にしたとき合格力が何pt上がるか(概算) */
+function ppItemDelta(gi,it){
+  const pts=SEC_PTS[gi+1]||20,n=Math.max(1,PATMAP[gi].items.length);
+  const st=patStat(it);
+  const cur= st.s==="○"?1 : st.s==="△"?0.6 : st.s==="⚔"?0.3 : 0;
+  let d=pts*(1-cur)/n*100/ppWeights();
+  if(LS.get(KEY_H,[]).length)d*=0.45;
+  return Math.round(d*10)/10;
+}
+/* ポイントの集め方。効率(期待pt)の高い順 */
+function ppActions(){
+  initPatMap();
+  const acts=[],wrong=LS.get(KEY_W,[]),h=LS.get(KEY_H,[]);
+  const revDone=LS.get("b3_expdd","")===daysKey(new Date());
+  const rec=(()=>{try{return recommendDungeon();}catch(e){return null;}})();
+  const bon=(()=>{try{return bonusPat();}catch(e){return null;}})();
+  if(wrong.length&&!revDone){
+    const d=Math.max(0.3,Math.round(Math.min(wrong.length,12)*8)/100);
+    acts.push({id:"rev",ic:"repeat",nm:`復習で ${wrong.length}問 とりもどす`,sub:"間違いを消すのが最短ルート ･ EXP3倍",pt:d,go:"startReview()"});
+  }
+  if(rec){
+    const d=ppItemDelta(rec.gi,rec.it);
+    const isB=bon&&bon.gi===rec.gi&&bon.ii===rec.ii;
+    acts.push({id:"weak",ic:"map",nm:`弱点パターン「${rec.label}」を制覇`,sub:(isB?"✨EXP2倍 ･ ":"")+"配点が大きいところから",pt:d,go:`setPatLv(${rec.tier});renderPatMap()`});
+  }
+  if(bon&&!(rec&&bon.gi===rec.gi&&bon.ii===rec.ii)){
+    const st=patStat(bon.it);
+    if(st.s!=="○")acts.push({id:"bonus",ic:"zap",nm:`「${bon.label}」を制覇`,sub:"✨今日のEXP2倍ダンジョン",pt:ppItemDelta(bon.gi,bon.it),go:`setPatLv(${bon.tier});renderPatMap()`});
+  }
+  acts.push(h.length===0
+    ?{id:"mock",ic:"cap",nm:"模試で現在地を実測する",sub:"実測が合格力に大きく反映されます",pt:null,ptTx:"実測",go:"renderExams()"}
+    :{id:"mock",ic:"cap",nm:"模試で実測を更新する",sub:"新しい弱点も見つかります",pt:null,ptTx:"実測",go:"renderExams()"});
+  try{if(accClearedParts()<ACC_NLV)acts.push({id:"drill",ic:"pencil",nm:"仕訳特訓で型を固める",sub:"第1問(20点)の土台になります",pt:null,ptTx:"基礎",go:"renderDrillSetup()"});}catch(e){}
+  return acts.sort((a,b)=>(b.pt||0)-(a.pt||0));
+}
+window.ppActions=ppActions;window.ppToday=ppToday;window.ppTarget=ppTarget;
+function ppGaugeHTML(cur,big){
+  const pc=Math.min(100,Math.round(cur/70*100));
+  return `<div class="ppg ${big?"big":""}"><div class="ppg-bar"><i style="width:${pc}%;"></i><span class="ppg-line"></span></div>
+    <div class="ppg-lab"><span>合格力 <b>${cur}</b> pt</span><span>合格ライン 70</span></div></div>`;
+}
+window.renderRoadmap=function(){
+  setMode("home");exState=null;setNav("road");try{btEnd();}catch(e){}
+  const cur=estScore(),f=passForecast(),tg=ppTarget(),td=ppToday();
+  const fx=f.done?`<b style="color:var(--green,#0e7a5f);">合格ライン到達! この調子で仕上げよう</b>`
+    :f.date?`このペースなら <b>${f.date}</b> ごろに合格ライン`
+    :f.stalled?`のびが止まっています。<b>復習</b>から立てなおそう`
+    :`学習を続けると合格日の予測が出ます`;
+  const rows=ppActions().map(a=>`
+    <div class="rdrow" onclick="${a.go}">
+      <span class="stic"><span class="micon" data-icon="${a.ic}"></span></span>
+      <span class="stmid"><b>${a.nm}</b><span class="prog">${a.sub}</span></span>
+      <span class="rdpt">${a.pt!=null?`+${a.pt}pt`:`<i>${a.ptTx}</i>`}</span>
+    </div>`).join("");
+  const center=`
+  <section class="hero2" style="margin-top:0;">
+    <h1 class="disp" style="font-size:clamp(24px,4vw,34px);margin:2px 0 14px;">合格までの<br>ロードマップ。</h1>
+    ${ppGaugeHTML(cur,true)}
+    <p class="prog" style="margin:10px 0 0;">${fx}</p>
+    <div class="rdtoday"><span>きょうの収集</span><b>+${td}</b><span class="prog">/ 目標 +${tg}pt</span>
+      <div class="rdtbar"><i style="width:${Math.min(100,Math.round(td/tg*100))}%;"></i></div></div>
+  </section>
+  <div class="qpane" style="margin-top:16px;">
+    <h3 style="margin:0 0 4px;color:var(--navy);">ポイントの集め方</h3>
+    <p class="prog" style="margin:0 0 10px;">効率のいい順。上からやれば最短で合格に近づきます。</p>
+    <div class="stlist">${rows}</div>
+    <p class="prog" style="margin:12px 0 0;font-size:11.5px;">合格力は「パターン制覇×本試験の配点」と「模試の実測」から計算しています。ゲームの報酬では増えません。</p>
+  </div>`;
+  main.innerHTML=page(center,"road");
+  mountIcons(main);
+};
 /* いま行くべきダンジョン(正解率が低く、配点の大きいところ) */
 function recommendDungeon(){
   initPatMap();
@@ -5101,7 +5266,8 @@ async function loadRank(){
     const el=document.getElementById("rlist");if(!el)return;
     if(error||!data){el.textContent="読み込みエラー("+(error?error.message:"")+")";return;}
     const ws=weekStart();
-    const rows=data.filter(r=>r.nickname).map(r=>({...r,wk:(r.week_start===ws?(r.week_solved||0):0)}));
+    const real=data.filter(r=>r.nickname).map(r=>({...r,wk:(r.week_start===ws?(r.week_solved||0):0)}));
+    const rows=real.concat(botRows(real.length));
     const key=rankTab==="week"?"wk":rankTab==="streak"?"streak":"pat_done";
     rows.sort((a,b)=>(b[key]||0)-(a[key]||0));
     window._rankRows=rows;
@@ -5186,7 +5352,7 @@ window.shareEOD=function(){
 document.querySelectorAll("#nav button[data-v]").forEach(b=>b.onclick=()=>{
   if(exState&&!confirm("試験を中断しますか？(解答は破棄されます)"))return;
   if(exState)stopExam();
-  ({home:renderHome,exams:renderExams,dash:renderDash,garden:renderGarden,gacha:renderGacha,rank:renderRank})[b.dataset.v]();
+  ({home:renderHome,road:renderRoadmap,exams:renderExams,dash:renderDash,garden:renderGarden,gacha:renderGacha,rank:renderRank})[b.dataset.v]();
 });
 window.shareX=function(total){
   const {po,pt}=patCount();
@@ -5217,6 +5383,68 @@ function track(ev,meta){
   }catch(e){}
 }
 track("visit",{screen:"home",app:"b3"});
+try{ppDayBase();}catch(e){}  /* きょうの合格力の基準を朝いちで記録 */
+/* ---------- Push通知(連続を守るリマインド・毎日19時) ---------- */
+const PUSH_PUB="BDi0mXyvt6yH7j6m2zv2rFZNYseGO4CKt1ceMU3GippqL8vZjb56c__I4cfPzNTlRWCjvQMpGwfArHw0zD_nHWQ";
+function pushB64(u){const p="=".repeat((4-u.length%4)%4);const b=atob((u+p).replace(/-/g,"+").replace(/_/g,"/"));const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+async function pushReg(){
+  if(!("serviceWorker" in navigator))return null;
+  try{return await navigator.serviceWorker.register("/boki2-cbt/sw.js",{scope:"/boki2-cbt/"});}catch(e){return null;}
+}
+function pushSave(sub){
+  try{
+    const ed=examDate();
+    const lv=(typeof KEY_XP!=="undefined"&&KEY_XP.indexOf("b3")===0)?"b3":"b2";
+    fetch(AN_URL.replace("site_events","push_subs"),{method:"POST",headers:{"apikey":AN_KEY,"Authorization":"Bearer "+AN_KEY,"Content-Type":"application/json","Prefer":"return=minimal"},
+      body:JSON.stringify({vid:anId(localStorage,"b2_vid"),sub:sub.toJSON?sub.toJSON():sub,streak:actInfo().streak,exam_date:ed?daysKey(ed):null,level:lv,active_on:daysKey(new Date())})}).catch(()=>{});
+  }catch(e){}
+}
+window.pushEnable=async function(){
+  try{
+    const reg=await pushReg();if(!reg)return false;
+    const perm=await Notification.requestPermission();
+    if(perm!=="granted")return false;
+    const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:pushB64(PUSH_PUB)});
+    LS.set("b2_pushed",1);pushSave(sub);
+    try{track("push_on")}catch(e){}
+    return true;
+  }catch(e){return false;}
+};
+/* 開いた日は購読情報を更新(streak・活動日を最新に保ち、活動済みの日は通知しない) */
+async function pushRefresh(){
+  try{
+    if(!LS.get("b2_pushed",0))return;
+    if(LS.get("b2_pushday","")===daysKey(new Date()))return;
+    const reg=await pushReg();if(!reg)return;
+    const sub=await reg.pushManager.getSubscription();if(!sub)return;
+    LS.set("b2_pushday",daysKey(new Date()));pushSave(sub);
+  }catch(e){}
+}
+function maybePushPrompt(){
+  try{
+    if(LS.get("b2_pushed",0))return;
+    if(!("Notification" in window)||!("PushManager" in window))return;
+    if(Notification.permission!=="default")return;
+    if(Date.now()-LS.get("b2_pushsnz",0)<3*86400000)return;
+    const tq=Object.values(LS.get(KEY_A,{})).reduce((s,e)=>s+(e.q||0),0);
+    if(tq<5)return;
+    if(sessionStorage.getItem("b2_pushask"))return;
+    sessionStorage.setItem("b2_pushask","1");
+    const d=document.createElement("div");d.id="pushv";
+    d.onclick=e=>{if(e.target===d)d.remove();};
+    d.innerHTML=`<div class="box" style="text-align:center;max-width:340px;">
+      <div style="font-size:38px;">🔔</div>
+      <h2 style="color:var(--navy);font-size:18px;margin:6px 0;">連続を守る通知</h2>
+      <p class="prog" style="margin:0 0 14px;">学習しなかった日の夜(19時ごろ)だけ、そっとお知らせします。1日1回まで。</p>
+      <button class="btn" style="width:100%;" onclick="pushEnable().then(ok=>{const v=document.getElementById('pushv');if(v)v.remove();if(ok)miniToast('🔔 通知をオンにしました');});">通知を受けとる</button>
+      <button class="btn gray" style="width:100%;margin-top:8px;font-size:13px;" onclick="LS.set('b2_pushsnz',Date.now());document.getElementById('pushv').remove();">あとで</button>
+    </div>`;
+    document.body.appendChild(d);
+    try{track("push_prompt")}catch(e){}
+  }catch(e){}
+}
+window.maybePushPrompt=maybePushPrompt;
+try{pushRefresh();}catch(e){}
 /* ---------- アカウント同期(Supabase) ---------- */
 const SB_URL="https://ijddujtdsvmbrwtboodt.supabase.co",SB_KEY="sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt";
 let sb=null,sbUser=null,pushT=null;
