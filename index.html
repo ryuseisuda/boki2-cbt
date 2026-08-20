@@ -833,6 +833,31 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
 .roadmore summary::-webkit-details-marker{display:none;}
 .roadmore summary::before{content:"▸ ";}
 .roadmore[open] summary::before{content:"▾ ";}
+/* 大問べつ得点プランのカード */
+.gcard{border:2px solid var(--bd);border-radius:16px;background:var(--card,#fff);margin-top:10px;overflow:hidden;box-shadow:0 3px 0 var(--bd);}
+.gcard summary{list-style:none;cursor:pointer;padding:13px 16px;}
+.gcard summary::-webkit-details-marker{display:none;}
+.gcard.ok{border-color:#8fd6ae;box-shadow:0 3px 0 #8fd6ae;background:linear-gradient(180deg,#f4fcf7,var(--card,#fff));}
+.gcard.warn{border-color:var(--gold);box-shadow:0 3px 0 var(--gold);}
+.gc-h{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.gc-h b{color:var(--navy);font-size:14.5px;}
+.gc-st{font-size:11.5px;font-weight:800;color:var(--goldd);white-space:nowrap;}
+.gc-st.ok{color:#0e9f6e;}
+.gc-gauge{position:relative;height:10px;border-radius:99px;background:var(--lt);margin-top:9px;}
+.gc-gauge>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#5b8def,#2563eb);transition:width .6s;}
+.gcard.ok .gc-gauge>i{background:linear-gradient(90deg,#34d399,#0e9f6e);}
+.gc-tgt{position:absolute;top:-3px;bottom:-3px;width:2.5px;background:var(--gold);border-radius:2px;}
+.gc-nums{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--tx2);margin-top:6px;}
+.gc-nums b{color:var(--navy);}
+.gc-body{border-top:1.5px dashed var(--bd);padding:10px 16px 14px;}
+.gq-plan{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--navy);padding:2px 0 8px;}
+.gq-plan button{border:1.5px solid var(--bd);background:var(--lt);border-radius:8px;padding:3px 11px;font-weight:800;cursor:pointer;color:var(--navy);font-size:12.5px;}
+.gqrow{display:flex;gap:10px;align-items:center;padding:9px 2px;border-top:1px dashed var(--bd);cursor:pointer;}
+.gqrow .gq-ic{width:22px;text-align:center;font-weight:900;color:var(--blue);flex-shrink:0;}
+.gqrow.done .gq-ic{color:#0e9f6e;}
+.gqrow.done b{text-decoration:line-through;color:var(--tx2);font-weight:600;}
+.gqrow.lk{opacity:.55;cursor:default;}
+body.dark .gcard.ok{background:linear-gradient(180deg,#12291c,var(--card));border-color:#1f5c3c;box-shadow:0 3px 0 #1f5c3c;}
 /* 初回アンケート(フルスクリーン) */
 #wiz{position:fixed;inset:0;z-index:8500;background:var(--bg,#f6f7f8);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center;overflow-y:auto;}
 .wizdots{display:flex;gap:7px;justify-content:center;margin-bottom:20px;}
@@ -2585,9 +2610,10 @@ function homeTodoHTML(){
   if(cl>0)rows.push(`<div class="tdrow gold" onclick="openQuests()"><span class="tdic"><span class="sicon" data-icon="gift" data-s="1"></span></span><b>クエスト報酬を受けとる</b><span class="tdend">${cl}件</span></div>`);
   const rr=(()=>{try{return ROAD.filter(n=>roadState(n)==="ready").length;}catch(e){return 0;}})();
   if(rr>0)rows.push(`<div class="tdrow gold" onclick="renderRoadmap()"><span class="tdic"><span class="sicon" data-icon="trophy" data-s="1"></span></span><b>合格ロードの報酬を受けとる</b><span class="tdend">${rr}件</span></div>`);
-  const ts=(()=>{try{return roadTasks().filter(t=>!t.locked);}catch(e){return [];}})();
-  ts.slice(0,3).forEach(t=>{
-    rows.push(`<div class="tdrow" onclick="startPat(${t.gi},${t.ii})"><span class="tdic"><span class="sicon" data-icon="map" data-s="1"></span></span><b>${escapeHtml(t.label)}${t.bonus?" ✨":""}</b><span class="tdend">+${t.pt}pt</span></div>`);
+  const ts=(()=>{try{return gquestTop(3);}catch(e){return [];}})();
+  ts.forEach(t=>{
+    const act=t.m>=0.8?"⏱仕上げ":t.m>=0.5?"🔁定着":"解く";
+    rows.push(`<div class="tdrow" onclick="startPat(${t.gi},${t.ii})"><span class="tdic"><span class="sicon" data-icon="map" data-s="1"></span></span><b>${escapeHtml(t.label)}</b><span class="tdend">${act}</span></div>`);
   });
   return `<div class="tdcard" id="tdcard">
     <div class="tdhead" onclick="renderRoadmap()"><b>ロードマップ</b>
@@ -3820,6 +3846,153 @@ window.roadClaim=function(v){
   miniToast("🎁 "+v+"pt達成! "+roadRwText(n)+" をうけとった");
   renderRoadmap();
 };
+/* ---------- 大問べつ得点プラン(配点戦略)と固定クエスト ----------
+   クリア判定は状態ベース(期待点>=目標点)。固定リストは発行時点の「最短の十分条件」で、
+   別ルートで解いてもゲージには即反映される。リストは並び替えも追加もしない(契約)。 */
+const PLAN_DEF={1:16,2:12,3:16,4:22,5:8};   /* 既定の目標点。合計74=合格70+予備4 */
+const GSEC={0:[1],1:[2],2:[3],3:[4],4:[5]}; /* カード→模試の大問番号 */
+function gplan(){
+  initPatMap();
+  const p=LS.get("b2_gplan",{})||{};const o={};
+  PATMAP.forEach((g,gi)=>{const no=gi+1;
+    const def=PLAN_DEF[no]!=null?PLAN_DEF[no]:Math.round((SEC_PTS[no]||20)*0.75);
+    o[no]=Math.max(0,Math.min(SEC_PTS[no]||20,typeof p[no]==="number"?p[no]:def));});
+  return o;
+}
+window.gplanSet=function(no,d){
+  const p=LS.get("b2_gplan",{})||{};
+  const cur=gplan()[no];
+  p[no]=Math.max(0,Math.min(SEC_PTS[no]||20,cur+d));
+  LS.set("b2_gplan",p);
+  const q=LS.get("b2_gquest",{});delete q[no];LS.set("b2_gquest",q);  /* 目標が変わったら契約を再発行 */
+  try{track("gplan_set",{no,v:p[no]});}catch(e){}
+  LS.set("b2_gopen",no);
+  renderRoadmap();
+};
+/* その大問のいまの期待点 */
+function secExp(gi){
+  initPatMap();
+  const g=PATMAP[gi],pts=SEC_PTS[gi+1]||20;
+  if(!g.items.length)return{exp:0,pts,n:0};
+  let s=0;g.items.forEach(it=>{s+=patMastery(it);});
+  return{exp:Math.round(pts*s/g.items.length*10)/10,pts,n:g.items.length};
+}
+/* 直近模試のこの大問の実測(got/max) */
+function secMock(gi){
+  const h=LS.get(KEY_H,[]);if(!h.length)return null;
+  const last=h[h.length-1];if(!last.secs)return null;
+  const nos=GSEC[gi]||[gi+1];
+  let got=0,max=0,found=false;
+  last.secs.forEach(s=>{if(nos.includes(s.no)&&typeof s.got==="number"){got+=s.got;max+=s.max||0;found=true;}});
+  return found?{got,max}:null;
+}
+/* 固定クエストの発行: 目標点に届くまで「広く解けた(50%)→全体を定着(80%)→時間内(100%)」の層で積む */
+function gquestIssue(gi){
+  initPatMap();
+  const no=gi+1,plan=gplan()[no],pts=SEC_PTS[no]||20;
+  const g=PATMAP[gi],n=g.items.length;
+  if(!n)return{target:plan,items:[],t:Date.now()};
+  const need=plan/pts*n;   /* 必要な習熟度の合計 */
+  const cur=g.items.map((it,ii)=>{
+    const tier=itemTier(it);
+    return{ii,m:patMastery(it),locked:tier>1&&!unlocked("tier"+tier),tier};
+  });
+  let sum=cur.reduce((a,x)=>a+x.m,0);
+  const order=[],goal={};
+  outer:
+  for(const lv of [MST.solved,MST.settled,MST.timed]){
+    const cand=cur.slice().sort((a,b)=>(a.locked-b.locked)||(a.m-b.m));
+    for(const c of cand){
+      if(sum>=need-1e-9)break outer;
+      const base=goal[c.ii]!=null?goal[c.ii]:c.m;
+      if(base>=lv)continue;
+      sum+=lv-base;
+      if(goal[c.ii]==null)order.push(c.ii);
+      goal[c.ii]=lv;
+    }
+  }
+  /* 表示順も発行時に固定: 解禁済み→ロック、その中では習熟度が低い順 */
+  const pos={};cur.forEach(c=>pos[c.ii]=c);
+  order.sort((a,b)=>(pos[a].locked-pos[b].locked)||(pos[a].m-pos[b].m)||(a-b));
+  return{target:plan,items:order.map(ii=>({ii,goal:goal[ii]})),t:Date.now()};
+}
+function gquestGet(gi){
+  const no=gi+1,plan=gplan()[no];
+  const store=LS.get("b2_gquest",{})||{};
+  let q=store[no];
+  if(!q||q.target!==plan||!Array.isArray(q.items)){
+    q=gquestIssue(gi);store[no]=q;LS.set("b2_gquest",store);
+  }
+  return q;
+}
+function mstName(m){return m>=MST.timed?"仕上げ":m>=MST.settled?"定着":m>=MST.solved?"解けた":m>0?"挑戦中":"未着手";}
+function mstIcon(m,goal){return m>=goal?"✓":m>=MST.settled?"◕":m>=MST.solved?"◐":"□";}
+/* 大問カード1枚 */
+function gcardHTML(gi){
+  const g=PATMAP[gi],no=gi+1;
+  const {exp,pts}=secExp(gi);
+  const plan=gplan()[no];
+  const cleared=exp>=plan-1e-9;
+  /* いったん達成したことは記録に残す(ゲージは正直に下がる) */
+  const best=LS.get("b2_gbest",{})||{};
+  if(cleared&&!(best[no]>=plan)){best[no]=plan;LS.set("b2_gbest",best);}
+  const wasCleared=best[no]>=plan;
+  const state=cleared?"ok":wasCleared?"warn":"";
+  const stTx=cleared?"✓ 達成":wasCleared?"⚠ 達成後に低下":"";
+  const mk=secMock(gi);
+  const q=gquestGet(gi);
+  const openNo=LS.get("b2_gopen",0);
+  const gname=(g.g||"").replace(/　/g," ");
+  const rows=q.items.map(o=>{
+    const it=g.items[o.ii];if(!it)return "";
+    const m=patMastery(it);
+    const done=m>=o.goal-1e-9;
+    const tier=itemTier(it);
+    const locked=tier>1&&!unlocked("tier"+tier);
+    return `<div class="gqrow ${done?"done":""} ${locked?"lk":""}" ${locked||done?"":`onclick="startPat(${gi},${o.ii})"`}>
+      <span class="gq-ic">${done?"✓":mstIcon(m,o.goal)}</span>
+      <span class="stmid"><b>${escapeHtml(it.label)}</b>
+      <span class="prog">${done?"完了":`いま: ${mstName(m)} ▸ 目標: ${mstName(o.goal)}`}${locked?` ･ 🔒Lv.${lvReq("tier"+tier)}で解禁`:""}</span></span>
+    </div>`;}).join("");
+  const doneN=q.items.filter(o=>{const it=g.items[o.ii];return it&&patMastery(it)>=o.goal-1e-9;}).length;
+  return `<details class="gcard ${state}" data-no="${no}" ${openNo===no?"open":""} ontoggle="if(this.open)LS.set('b2_gopen',${no})">
+    <summary>
+      <div class="gc-h"><b>${escapeHtml(gname)}</b><span class="gc-st ${cleared?"ok":""}">${stTx}</span></div>
+      <div class="gc-gauge"><i style="width:${Math.min(100,Math.round(exp/pts*100))}%;"></i><span class="gc-tgt" style="left:${Math.min(100,Math.round(plan/pts*100))}%;"></span></div>
+      <div class="gc-nums"><span>期待 <b>${exp}</b> / ${pts}点 ▸ 目標 <b>${plan}点</b></span><span>${mk?`模試実測 ${mk.got}/${mk.max}点`:""}</span></div>
+    </summary>
+    <div class="gc-body">
+      <div class="gq-plan"><span style="white-space:nowrap;">目標 <b>${plan}点</b> / ${pts}点</span>
+        <button onclick="event.preventDefault();gplanSet(${no},-2)">−2</button>
+        <button onclick="event.preventDefault();gplanSet(${no},2)">+2</button>
+        <span class="prog" style="margin-left:auto;white-space:nowrap;">${doneN} / ${q.items.length} 完了</span></div>
+      ${cleared
+        ?`<p class="prog" style="margin:4px 0 2px;">🎉 目標達成! ${q.items.length>doneN?"残りの項目は仕上げの上積みです。":""}目標を上げるか、ほかの大問へ。</p>${rows}`
+        :rows||`<p class="prog">発行時点で目標に達していました。目標を上げてみよう</p>`}
+    </div>
+  </details>`;
+}
+/* ホーム用: 未達成の大問から順に、未完了クエストを上位k件 */
+function gquestTop(k){
+  initPatMap();
+  const out=[];
+  for(let gi=0;gi<PATMAP.length&&out.length<k;gi++){
+    const {exp}=secExp(gi);
+    if(exp>=gplan()[gi+1]-1e-9)continue;
+    const q=gquestGet(gi),g=PATMAP[gi];
+    for(const o of q.items){
+      if(out.length>=k)break;
+      const it=g.items[o.ii];if(!it)continue;
+      const m=patMastery(it);
+      if(m>=o.goal-1e-9)continue;
+      const tier=itemTier(it);
+      if(tier>1&&!unlocked("tier"+tier))continue;
+      out.push({gi,ii:o.ii,label:it.label,goal:o.goal,m});
+    }
+  }
+  return out;
+}
+window.gquestTop=gquestTop;
 /* 目標ステップ: ロードのマスを押して選ぶ。未選択・達成済みなら次の未達マスに自動で進む */
 function roadSelV(){
   const saved=LS.get("b2_roadsel",0);
@@ -3858,33 +4031,17 @@ window.renderRoadmap=function(){
       <div class="rn-rw">${roadRwText(n)}</div>
       <div class="rn-st">${st==="done"?"受取済み":st==="ready"?"タップで うけとる!":isSel?(need?`模試 ${n.mock}回で開く`:"いまの目標"):"タップで目標に"}</div>
     </div>`;}).join('<div class="rlink"></div>');
-  /* やることリスト: 目標ステップまでに必要な問題だけを効率順に表示 */
-  const tasks=roadTasks();
-  const open=tasks.filter(t=>!t.locked);
-  const selN=ROAD.find(x=>x.v===selV)||null;
-  let listHead,listSub,listBody;
-  if(selN){
-    const need=Math.max(0,Math.round((selN.v-cur)*10)/10);
-    /* 目標までの道中にある関所の模試条件をすべて考慮(いちばん重い要求回数) */
-    const gateReq=ROAD.filter(x=>x.v<=selN.v&&x.mock).reduce((a,x)=>Math.max(a,x.mock),0);
-    const mockNeed=Math.max(0,gateReq-mocks);
-    let acc=0;const pick=[];
-    for(const t of tasks){if(acc>=need)break;pick.push(t);acc+=t.pt;}
-    const mockRow=mockNeed>0?`<div class="rdrow" onclick="renderExams()">
-      <span class="stic"><span class="micon" data-icon="cap"></span></span>
-      <span class="stmid"><b>模試を受ける</b><span class="prog">関所を開くのに あと${mockNeed}回 ･ 実測で合格力も動きます</span></span>
-      <span class="rdpt"><i>関所</i></span></div>`:"";
-    listBody=mockRow+pick.map(t=>roadTaskRow(t)).join("");
-    if(!listBody)listBody=`<p class="prog">目標を達成しています! 上の <b>${selN.v}pt</b> のマスから報酬をうけとろう</p>`;
-    const rest=tasks.length-pick.length;
-    if(rest>0)listBody+=`<details class="roadmore"><summary>この先の問題も見る (のこり${rest}問)</summary><div class="stlist" style="margin-top:9px;">${tasks.slice(pick.length).map(t=>roadTaskRow(t)).join("")}</div></details>`;
-    listHead=`やることリスト <span class="prog" style="font-weight:400;">🎯 ${selN.v}pt まで あと ${need}pt${mockNeed?` ･ 模試${mockNeed}回`:""}</span>`;
-    listSub=`目標の <b>${selN.v}pt</b> にとどくぶんだけ表示しています。上から解くのが最短。ロードのマスを押すと目標を変えられます。`;
-  }else{
-    listHead=`やることリスト <span class="prog" style="font-weight:400;">のこり ${open.length}問</span>`;
-    listSub=`解ける問題そのものを、合格力が上がる順にならべています。上から解くのが最短です。`;
-    listBody=tasks.map(t=>roadTaskRow(t)).join("")||'<p class="prog">全問題を制覇しました! あとは模試で仕上げよう</p>';
+  /* 大問べつ得点プラン: どの大問で何点取るか。カードごとに固定クエストを発行 */
+  initPatMap();
+  const plan=gplan();
+  const planSum=PATMAP.reduce((a,g,gi)=>a+plan[gi+1],0);
+  /* まだ開いたことがなければ、最初の未達成カードを開いておく */
+  if(!LS.get("b2_gopen",0)){
+    for(let gi=0;gi<PATMAP.length;gi++){if(secExp(gi).exp<plan[gi+1]-1e-9){LS.set("b2_gopen",gi+1);break;}}
   }
+  const cards=PATMAP.map((g,gi)=>gcardHTML(gi)).join("");
+  const gateReq=ROAD.filter(x=>x.mock&&estScore()>=x.v).reduce((a,x)=>Math.max(a,x.mock),0);
+  const mockNeed=Math.max(0,gateReq-mocks);
   const center=`
   <section class="hero2" style="margin-top:0;">
     <h1 class="disp" style="font-size:clamp(24px,4vw,34px);margin:2px 0 14px;">合格ロード。</h1>
@@ -3897,9 +4054,10 @@ window.renderRoadmap=function(){
     <div class="roadtrack" id="roadtrack">${nodes}</div>
   </div>
   <div class="qpane" style="margin-top:16px;">
-    <h3 style="margin:0 0 2px;color:var(--navy);">${listHead}</h3>
-    <p class="prog" style="margin:0 0 10px;">${listSub}</p>
-    <div class="stlist">${listBody}</div>
+    <h3 style="margin:0 0 2px;color:var(--navy);">大問べつ 得点プラン <span class="prog" style="font-weight:400;">合計 <b style="color:${planSum>=70?"var(--navy)":"var(--ng,#dc2626)"};">${planSum}点</b> = 合格70${planSum>=70?` + 予備${planSum-70}`:`(あと${70-planSum}点たりない)`}</span></h3>
+    <p class="prog" style="margin:0 0 6px;">どの大問で何点取るかの作戦。カードを開くと、目標までの道のりが<b>固定リスト</b>で出ます。別の解き方で進めてもゲージには反映されます。</p>
+    ${mockNeed>0?`<div class="rdrow" onclick="renderExams()" style="border:1.5px dashed var(--gold);border-radius:12px;margin-bottom:4px;"><span class="stic"><span class="micon" data-icon="cap"></span></span><span class="stmid"><b>模試を受ける</b><span class="prog">関所の報酬を開くのに あと${mockNeed}回 ･ 大問べつの実測も出ます</span></span><span class="rdpt"><i>関所</i></span></div>`:""}
+    ${cards}
   </div>
   <p class="prog" style="margin:12px 0 0;font-size:11.5px;">合格力は「パターンの習熟度(解けた50%→別日にもう一度で定着80%→時間内で100%)×本試験の配点」と「模試の実測」から計算しています。ゲームの報酬では増えません。</p>`;
   main.innerHTML=page(center,"road");
@@ -6306,7 +6464,7 @@ try{pushRefresh();}catch(e){}
 /* ---------- アカウント同期(Supabase) ---------- */
 const SB_URL="https://ijddujtdsvmbrwtboodt.supabase.co",SB_KEY="sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt";
 let sb=null,sbUser=null,pushT=null;
-const SYNC_KEYS=["b2_exp","b2_expmig","b2_gold","b2_rankwk","b2_stam","b2_nose","b2_plog","b2_dashp","b2_items","b2_wing","b2_collar","b2_mockt","b2_expdd","b2_road","b2_history","b2_drill","b2_wrong","b2_pat","b2_days","b2_qz","b2_exam","b2_onb","b2_acc","b2_patlv","b3_history","b3_drill","b3_wrong","b3_pat","b3_days","b3_qz","b3_exam","b3_onb","b3_acc","b3_patlv","b2_seen","b2_tickets","b2_cleared","b2_dogs","b2_food","b2_partner","b2_nick","b2_login","b2_xreward","b2_hungry","b2_away","b2_refdone","b2_regbonus","b2_dogv","b2_achseen"];
+const SYNC_KEYS=["b2_exp","b2_expmig","b2_gold","b2_rankwk","b2_stam","b2_nose","b2_plog","b2_dashp","b2_items","b2_wing","b2_collar","b2_mockt","b2_expdd","b2_road","b2_history","b2_drill","b2_wrong","b2_pat","b2_days","b2_qz","b2_exam","b2_onb","b2_gplan","b2_gquest","b2_gbest","b2_acc","b2_patlv","b3_history","b3_drill","b3_wrong","b3_pat","b3_days","b3_qz","b3_exam","b3_onb","b3_gplan","b3_gquest","b3_gbest","b3_acc","b3_patlv","b2_seen","b2_tickets","b2_cleared","b2_dogs","b2_food","b2_partner","b2_nick","b2_login","b2_xreward","b2_hungry","b2_away","b2_refdone","b2_regbonus","b2_dogv","b2_achseen"];
 function collectLocal(){const o={};SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)o[k]=v;});return o;}
 function tqOf(o){try{const d=JSON.parse(o[KEY_A]||"{}");let t=0;Object.values(d).forEach(e=>t+=e.q||0);return t;}catch(e){return 0;}}
 function applyData(o){SYNC_KEYS.forEach(k=>{if(o[k]!=null)localStorage.setItem(k,o[k]);});}
