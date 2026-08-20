@@ -83,7 +83,7 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 #garden{position:relative;height:440px;border-radius:26px;overflow:hidden;background:linear-gradient(#bfe3f7 0%,#e2f3fc 42%,#a6d88b 42%,#8cc973 100%);box-shadow:0 2px 14px rgba(28,23,51,.08);}
 #garden .sun{position:absolute;top:24px;right:36px;width:56px;height:56px;border-radius:50%;background:#ffd66b;box-shadow:0 0 30px #ffd66b;}
 #garden .cloud{position:absolute;background:#fff;border-radius:20px;opacity:.9;}
-.pixdog{image-rendering:pixelated;animation:pixBob 1s steps(1) infinite;}
+.pixdog{image-rendering:pixelated;}  /* 常時の上下ゆれは廃止(2026-08-20 本人の指示) */
 @keyframes pixBob{0%,49%{transform:translateY(0)}50%,100%{transform:translateY(-4px)}}
 .pixdog.paw{animation:pawTilt .5s;}
 @keyframes pawTilt{30%{transform:rotate(-10deg) translateY(-6px)}60%{transform:rotate(6deg)}}
@@ -204,7 +204,7 @@ h2.sect{margin:24px 0 10px;font-size:17px;color:var(--navy);}
 #loadv .track{position:relative;width:230px;height:64px;}
 #loadv .track .gnd{position:absolute;left:0;right:0;bottom:6px;height:3px;background:rgba(255,255,255,.2);border-radius:2px;}
 #loadv .walker{position:absolute;bottom:8px;left:0;animation:walkx 1.5s linear infinite;}
-#loadv .walker canvas{animation:hop .38s steps(2) infinite;}
+
 @keyframes walkx{from{left:-6px;}to{left:198px;}}
 @keyframes hop{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
 #loadv .lt{color:#fbbf24;font-weight:800;font-size:14px;letter-spacing:3px;font-family:inherit;}
@@ -242,7 +242,7 @@ body.dark .btbar-l>i{background:#334155;border-left-color:#94a3b8;}
 @keyframes munch{0%,100%{transform:translateY(0) scale(1);}30%{transform:translateY(-4px) scale(1.12);}60%{transform:translateY(0) scale(.96);}}
 .btdog.munch{animation:munch .45s ease-out;}
 .btfoe{position:absolute;bottom:7px;left:calc(100% - 30px);line-height:0;}
-.btfoe canvas{animation:foebob .55s ease-in-out infinite;}
+
 @keyframes foebob{0%,100%{transform:translateY(0) scaleY(1);}50%{transform:translateY(-3px) scaleY(.93);}}
 @keyframes dogatk{0%{transform:translateX(0);}30%{transform:translateX(14px) scaleX(1.08);}100%{transform:translateX(0);}}
 .btdog.atk{animation:dogatk .38s cubic-bezier(.3,1.6,.5,1);}
