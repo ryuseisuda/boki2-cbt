@@ -37,6 +37,8 @@ button{font-family:inherit;cursor:pointer;}
 @keyframes blink{50%{opacity:.6}}
 #hdr .hbtn{background:var(--navy);color:#fff;border:none;border-radius:999px;padding:8px 20px;font-weight:600;}
 #hdr .hbtn.danger{background:#b91c1c;color:#fff;}
+#btn-invite,#btn-eod{display:flex;align-items:center;gap:6px;}
+.hchip2{display:inline-flex;align-items:center;gap:3px;border-radius:8px;padding:2px 7px;font-size:11.5px;}
 /* home */
 .wrap{max-width:1000px;margin:0 auto;padding:20px 16px 60px;}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px;}
@@ -560,7 +562,8 @@ body.dark .hbtn{filter:none;}
   #nav button{padding:8px 14px;white-space:nowrap;}
   #nav #btn-theme{margin-top:0;}
   .wrap,#ftr{margin-left:0;}
-  .page{grid-template-columns:1fr;}
+  .page{grid-template-columns:minmax(0,1fr);}
+  .pgc{min-width:0;}
   .pgr{position:static;}
 }
 /* ===== v6 neutral bg / plain hero ===== */
@@ -602,14 +605,17 @@ body.onb #btn-invite,body.onb #btn-eod,body.onb .calcbtn{display:none!important;
 #hdr .hbtn{white-space:nowrap;flex-shrink:0;}
 #hdr h1{white-space:nowrap;}
 @media(max-width:640px){
-  body{overflow-x:hidden;}
-  #hdr{padding:10px 12px;gap:8px;}
+  html,body{overflow-x:clip;}
+  #hdr{padding:10px 12px;gap:8px;flex-wrap:wrap;row-gap:6px;}
   #hdr h1{font-size:14.5px;}
-  #hdr>div{gap:8px!important;min-width:0;}
+  #hdr>div{gap:6px!important;min-width:0;flex-wrap:wrap;row-gap:6px;justify-content:flex-end;}
   #hdr .hbtn{padding:7px 12px;font-size:12px;}
-  #btn-invite{display:none;}
+  #btn-invite{display:none!important;}
   #btn-eod .sicon{display:none;}
-  #btn-eod span{padding:2px 5px!important;font-size:10.5px!important;}
+  #btn-eod .hchip2{padding:2px 5px;font-size:10.5px;}
+  #btn-acct{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  #btn-acct .achb,#btn-acct .strk{display:none;}
+  #btn-acct .acct-lv{margin-left:4px;}
 }
 .onbcol{max-width:600px;margin:0 auto;text-align:center;}
 .onbh1{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:clamp(30px,7vw,44px);line-height:1.28;color:var(--navy);margin:14px 0 4px;letter-spacing:.01em;}
@@ -912,8 +918,8 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
     </div>
     <div id="timer" class="hidden">90:00</div>
     <button class="hbtn danger hidden" id="btn-finish">試験終了</button>
-    <button class="hbtn" id="btn-invite" onclick="openInvite()" style="background:var(--lt);color:var(--navy);display:flex;align-items:center;gap:6px;">友達に紹介<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(21,42,82,.10);border-radius:8px;padding:2px 7px;font-size:11.5px;"><span class="sicon" data-icon="ticket" data-s="1" style="margin-right:2px;"></span>+5</span></button>
-    <button class="hbtn" id="btn-eod" onclick="showEOD()" style="background:var(--blue);color:#fff;display:flex;align-items:center;gap:6px;">進捗をXに投稿<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.22);border-radius:8px;padding:2px 7px;font-size:11.5px;"><span class="sicon" data-icon="ticket" data-s="1" style="margin-right:2px;"></span>+1</span></button>
+    <button class="hbtn" id="btn-invite" onclick="openInvite()" style="background:var(--lt);color:var(--navy);">友達に紹介<span class="hchip2" style="background:rgba(21,42,82,.10);"><span class="sicon" data-icon="ticket" data-s="1" style="margin-right:2px;"></span>+5</span></button>
+    <button class="hbtn" id="btn-eod" onclick="showEOD()" style="background:var(--blue);color:#fff;">進捗をXに投稿<span class="hchip2" style="background:rgba(255,255,255,.22);"><span class="sicon" data-icon="ticket" data-s="1" style="margin-right:2px;"></span>+1</span></button>
     <button class="hbtn" id="btn-acct" onclick="openMyPage()" style="background:#efedf7;color:var(--navy);">記録を保存</button>
   </div>
 </div>
