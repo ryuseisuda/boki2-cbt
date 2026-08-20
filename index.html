@@ -385,7 +385,8 @@ details.kc[open] summary::before{content:"▾ ";}
 details.kc .kb{padding:0 16px 14px;line-height:1.9;white-space:pre-line;font-size:14px;border-top:1px dashed var(--bd);padding-top:10px;}
 .kcat{font-size:15px;font-weight:700;color:var(--navy);margin:18px 0 4px;border-left:5px solid var(--navy);padding-left:10px;}
 .calcbtn{position:fixed;right:18px;bottom:18px;background:var(--navy);color:#fff;border:none;border-radius:50%;width:54px;height:54px;font-size:22px;box-shadow:0 3px 10px rgba(0,0,0,.3);z-index:60;}
-#calc{position:fixed;right:18px;bottom:80px;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.25);padding:12px;z-index:60;width:230px;}
+#calc{position:fixed;right:18px;bottom:84px;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.25);padding:12px;z-index:70;width:240px;max-width:calc(100vw - 24px);}
+#calc-e{min-height:17px;font-size:12.5px;color:var(--tx2);text-align:right;margin-bottom:4px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #calc input{width:100%;text-align:right;font-size:20px;padding:8px;border:1px solid var(--bd);border-radius:6px;margin-bottom:8px;font-variant-numeric:tabular-nums;}
 #calc .cg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
 #calc button{padding:10px 0;font-size:16px;border:1px solid var(--bd);background:var(--lt);border-radius:6px;}
@@ -558,7 +559,10 @@ body.dark #timer{background:var(--blue);}
 body.dark #btn-acct{background:var(--lt)!important;color:var(--navy)!important;}
 body.dark .hbtn{filter:none;}
 @media(max-width:900px){
-  #nav{position:sticky;top:56px;left:auto;right:auto;bottom:auto;width:auto;flex-direction:row;align-items:center;gap:4px;padding:8px 10px;border-right:none;border-bottom:2px solid var(--bd);overflow-x:auto;}
+  #hdr{position:static;}                        /* ヘッダーはスクロールで流す(2段組で高さが読めないため) */
+  body.exam #hdr{position:sticky;top:0;}        /* 模試中はタイマーがあるので固定 */
+  #nav{position:sticky;top:0;left:auto;right:auto;bottom:auto;width:auto;flex-direction:row;align-items:center;gap:4px;padding:8px 10px;border-right:none;border-bottom:2px solid var(--bd);overflow-x:auto;}
+  body.bton #hdr,body.bton #nav{position:static;}  /* 問題を解いている間はヘッダーもメニューも流して、戦闘バーだけ上に残す */
   #nav button{padding:8px 14px;white-space:nowrap;}
   #nav #btn-theme{margin-top:0;}
   .wrap,#ftr{margin-left:0;}
@@ -1040,8 +1044,9 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
 <div style="text-align:center;margin-top:16px;"><button class="btn" onclick="document.getElementById('tos-ovl').classList.add('hidden')">閉じる</button></div>
 </div>
 </div>
-<button class="calcbtn" id="btn-calc" title="電卓">🖩</button>
+<button class="calcbtn" id="btn-calc" title="電卓">🧮</button>
 <div id="calc" class="hidden">
+  <div id="calc-e"></div>
   <input id="calc-d" readonly value="0">
   <div class="cg">
     <button data-k="C">C</button><button data-k="←">←</button><button data-k="%" class="op">%</button><button data-k="÷" class="op">÷</button>
@@ -1630,6 +1635,7 @@ let exState=null; /* 進行中の試験 */
 /* ---------- 共通UI ---------- */
 function setMode(m){ /* home|exam|other */
   document.body.classList.remove("onb");
+  document.body.classList.toggle("exam",m==="exam");
   tabs.classList.toggle("hidden",m!=="exam");
   timerEl.classList.toggle("hidden",m!=="exam");
   btnFinish.classList.toggle("hidden",m!=="exam");
@@ -2096,6 +2102,8 @@ function btMountBar(){
   document.body.classList.add("bton");
   btPlaceBar();
   window.addEventListener("resize",btPlaceBar);
+  window.addEventListener("scroll",btPlaceBar,{passive:true});
+  document.addEventListener("scroll",btPlaceBar,{passive:true,capture:true});
   try{
     const d=getDogs()[getPartner()];
     const st=d?dogStage(d.f||0):0;
@@ -2109,10 +2117,16 @@ window.btMountBar=btMountBar;
 function btPlaceBar(){
   const el=document.getElementById("btbar");if(!el)return;
   try{
-    const h=document.getElementById("hdr"),nv=document.getElementById("nav");
-    let top=h?Math.round(h.getBoundingClientRect().height):56;
-    const rowNav=nv&&!nv.classList.contains("hidden")&&innerWidth<=900;
-    if(rowNav)top+=Math.round(nv.getBoundingClientRect().height);
+    let top;
+    if(innerWidth<=900){
+      /* モバイル: ヘッダー/ナビは流れていくので、その実際の下端に追従(スクロールすると0で吸着) */
+      const nv=document.getElementById("nav"),h=document.getElementById("hdr");
+      const anchor=(nv&&nv.offsetHeight>0)?nv:(h&&h.offsetHeight>0?h:null);
+      top=anchor?Math.max(0,Math.round(anchor.getBoundingClientRect().bottom)):0;
+    }else{
+      const h=document.getElementById("hdr");
+      top=h?Math.round(h.getBoundingClientRect().height):56;
+    }
     el.style.top=top+"px";
     document.body.style.setProperty("--btbarh",(el.getBoundingClientRect().height||58)+"px");
   }catch(e){}
@@ -2121,6 +2135,8 @@ window.btPlaceBar=btPlaceBar;
 function btRemoveBar(){
   const e=document.getElementById("btbar");if(e)e.remove();
   window.removeEventListener("resize",btPlaceBar);
+  window.removeEventListener("scroll",btPlaceBar);
+  document.removeEventListener("scroll",btPlaceBar,{capture:true});
   document.body.classList.remove("bton");
 }
 window.btRemoveBar=btRemoveBar;
@@ -6129,21 +6145,54 @@ window.shareEOD=function(){
     try{track("x_reward",{});}catch(e){}
   }
 };
-/* ---------- 電卓 ---------- */
+/* ---------- 電卓(式表示つき) ---------- */
 (function(){
-  const panel=$("#calc"),disp=$("#calc-d");let cur="0",prev=null,op=null,fresh=true;
+  const panel=$("#calc"),disp=$("#calc-d"),ex=$("#calc-e");
+  let cur="0",prev=null,op=null,fresh=true,hist="";
   $("#btn-calc").onclick=()=>panel.classList.toggle("hidden");
-  const calc=()=>{const a=parseFloat(prev),b=parseFloat(cur);let r=0;
-    if(op==="+")r=a+b;else if(op==="-")r=a-b;else if(op==="×")r=a*b;else if(op==="÷")r=b===0?0:a/b;else if(op==="%")r=a%b;
-    return String(Math.round(r*10000)/10000);};
+  /* "0."や長い小数もそのまま出せる整形(toLocaleStringは"0."を潰す) */
+  const fmt=s=>{
+    if(s==="Error")return s;
+    const neg=s.charAt(0)==="-";if(neg)s=s.slice(1);
+    const p=s.split(".");
+    return (neg?"-":"")+(p[0]||"0").replace(/\B(?=(\d{3})+(?!\d))/g,",")+(p.length>1?"."+p[1]:"");
+  };
+  const calc=(a,o,b)=>{
+    a=parseFloat(a);b=parseFloat(b);let r=0;
+    if(o==="+")r=a+b;else if(o==="-")r=a-b;else if(o==="×")r=a*b;
+    else if(o==="÷"){if(b===0)return "Error";r=a/b;}
+    else if(o==="%")r=a*b/100;   /* 500,000 % 30 = 150,000 (aのb%) */
+    if(!isFinite(r))return "Error";
+    return String(Math.round(r*10000)/10000);
+  };
+  const show=()=>{
+    disp.value=fmt(cur);
+    disp.style.fontSize=disp.value.length>11?"15px":"20px";
+    /* いま何を計算しているか: 途中式を常に上に出す */
+    ex.textContent=op&&prev!=null?fmt(prev)+" "+op+(fresh?"":" "+fmt(cur)):hist;
+  };
   panel.querySelectorAll(".cg button").forEach(b=>b.onclick=()=>{
     const k=b.dataset.k;
-    if(k>="0"&&k<="9"||k==="00"||k==="."){if(fresh){cur=k==="."?"0.":k;fresh=false;}else if(!(k==="."&&cur.includes(".")))cur+=k;if(cur==="00")cur="0";}
-    else if(k==="C"){cur="0";prev=null;op=null;fresh=true;}
-    else if(k==="←"){cur=cur.length>1?cur.slice(0,-1):"0";}
-    else if(k==="="){if(op&&prev!=null){cur=calc();prev=null;op=null;fresh=true;}}
-    else{if(op&&prev!=null&&!fresh)cur=calc();prev=cur;op=k;fresh=true;}
-    disp.value=Number(cur).toLocaleString("ja-JP",{maximumFractionDigits:4});
+    if(cur==="Error"&&k!=="C"){cur="0";fresh=true;}
+    if(k>="0"&&k<="9"||k==="00"||k==="."){
+      if(fresh){cur=k==="."?"0.":k;fresh=false;hist=op?hist:"";}
+      else if(cur.replace(/[-.]/g,"").length>=12){/* 12桁まで */}
+      else if(!(k==="."&&cur.includes(".")))cur+=k;
+      if(cur==="00")cur="0";
+    }
+    else if(k==="C"){cur="0";prev=null;op=null;fresh=true;hist="";}
+    else if(k==="←"){if(!fresh)cur=cur.length>1?cur.slice(0,-1):"0";}
+    else if(k==="="){
+      if(op&&prev!=null){
+        hist=fmt(prev)+" "+op+" "+fmt(cur)+" =";
+        cur=calc(prev,op,cur);prev=null;op=null;fresh=true;
+      }
+    }
+    else{ /* 演算子 */
+      if(op&&prev!=null&&!fresh)cur=calc(prev,op,cur);
+      if(cur!=="Error"){prev=cur;op=k;fresh=true;hist="";}
+    }
+    show();
   });
 })();
 
