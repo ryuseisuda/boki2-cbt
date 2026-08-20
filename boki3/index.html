@@ -820,6 +820,15 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
 .rnode.ready:active{transform:translateY(3px);box-shadow:0 1px 0 var(--goldd);}
 .rnode .rn-gate{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;font-size:9.5px;font-weight:800;border-radius:0 0 8px 8px;padding:2px 10px;white-space:nowrap;}
 .rnode.gate{border-style:dashed;}
+.rnode.lock{cursor:pointer;}
+.rnode.sel{opacity:1;border-color:var(--blue);box-shadow:0 3px 0 var(--blue);background:#fff;}
+.rnode.sel .rn-st{color:var(--blue);font-weight:800;}
+.rn-tgt{position:absolute;top:-9px;right:-6px;background:var(--blue);color:#fff;font-size:9.5px;font-weight:900;border-radius:999px;padding:2px 8px;box-shadow:0 2px 6px rgba(37,99,235,.4);white-space:nowrap;}
+.roadmore{margin-top:6px;}
+.roadmore summary{cursor:pointer;color:var(--blue);font-size:12.5px;font-weight:700;padding:8px 4px;list-style:none;}
+.roadmore summary::-webkit-details-marker{display:none;}
+.roadmore summary::before{content:"▸ ";}
+.roadmore[open] summary::before{content:"▾ ";}
 .rnode.gate.done,.rnode.gate.ready{border-style:solid;}
 .rrowi.mineR{background:var(--lt);border-radius:10px;padding:7px 10px;border-bottom:none;}
 .rrowi.mineR b{color:var(--blue);}
@@ -3367,6 +3376,20 @@ window.roadClaim=function(v){
   miniToast("🎁 "+v+"pt達成! "+roadRwText(n)+" をうけとった");
   renderRoadmap();
 };
+/* 目標ステップ: ロードのマスを押して選ぶ。未選択・達成済みなら次の未達マスに自動で進む */
+function roadSelV(){
+  const saved=LS.get("b3_roadsel",0);
+  const n=ROAD.find(x=>x.v===saved);
+  if(n&&roadState(n)!=="done")return n.v;
+  const nx=ROAD.find(x=>roadState(x)!=="done");
+  return nx?nx.v:0;
+}
+window.roadSelect=function(v){
+  const n=ROAD.find(x=>x.v===v);if(!n||roadState(n)==="done")return;
+  LS.set("b3_roadsel",v);
+  try{track("road_sel",{v});}catch(e){}
+  renderRoadmap();
+};
 window.renderRoadmap=function(){
   setMode("home");exState=null;setNav("road");try{btEnd();}catch(e){}
   const cur=estScore(),f=passForecast();
@@ -3375,22 +3398,47 @@ window.renderRoadmap=function(){
     :f.date?`このペースなら <b>${f.date}</b> ごろに合格ライン`
     :f.stalled?`のびが止まっています。<b>復習</b>から立てなおそう`
     :`学習を続けると合格日の予測が出ます`;
-  /* トラック: 報酬だけを一列に。関所は模試クリアで開く */
+  /* トラック: 報酬だけを一列に。関所は模試クリアで開く。マスを押すと目標に設定 */
   const readyN=ROAD.filter(n=>roadState(n)==="ready").length;
+  const selV=roadSelV();
   const nodes=ROAD.map(n=>{
     const st=roadState(n);
     const need=n.mock&&mocks<n.mock;
-    return `<div class="rnode ${st} ${n.mock?"gate":""}" ${st==="ready"?`onclick="roadClaim(${n.v})"`:""}>
+    const isSel=n.v===selV&&st!=="done";
+    const click=st==="ready"?`onclick="roadClaim(${n.v})"`:st==="lock"?`onclick="roadSelect(${n.v})"`:"";
+    return `<div class="rnode ${st}${isSel?" sel":""} ${n.mock?"gate":""}" ${click}>
       ${n.mock?'<div class="rn-gate"><span class="sicon" data-icon="cap" data-s="1"></span> 関所</div>':""}
+      ${isSel?'<div class="rn-tgt">🎯目標</div>':""}
       <div class="rn-pt">${n.v}<span>pt</span></div>
       <div class="rn-ic">${st==="done"?"✅":st==="ready"?"🎁":"🔒"}</div>
       <div class="rn-rw">${roadRwText(n)}</div>
-      <div class="rn-st">${st==="done"?"受取済み":st==="ready"?"タップで うけとる!":need?`模試 ${n.mock}回で開く`:"合格力 "+n.v+" で開く"}</div>
+      <div class="rn-st">${st==="done"?"受取済み":st==="ready"?"タップで うけとる!":isSel?(need?`模試 ${n.mock}回で開く`:"いまの目標"):"タップで目標に"}</div>
     </div>`;}).join('<div class="rlink"></div>');
-  /* やることリスト: 実際の問題を効率順に列挙 */
+  /* やることリスト: 目標ステップまでに必要な問題だけを効率順に表示 */
   const tasks=roadTasks();
   const open=tasks.filter(t=>!t.locked);
-  const rows=tasks.map(t=>roadTaskRow(t)).join("");
+  const selN=ROAD.find(x=>x.v===selV)||null;
+  let listHead,listSub,listBody;
+  if(selN){
+    const need=Math.max(0,Math.round((selN.v-cur)*10)/10);
+    const mockNeed=selN.mock?Math.max(0,selN.mock-mocks):0;
+    let acc=0;const pick=[];
+    for(const t of tasks){if(acc>=need)break;pick.push(t);acc+=t.pt;}
+    const mockRow=mockNeed>0?`<div class="rdrow" onclick="renderExams()">
+      <span class="stic"><span class="micon" data-icon="cap"></span></span>
+      <span class="stmid"><b>模試を受ける</b><span class="prog">関所を開くのに あと${mockNeed}回 ･ 実測で合格力も動きます</span></span>
+      <span class="rdpt"><i>関所</i></span></div>`:"";
+    listBody=mockRow+pick.map(t=>roadTaskRow(t)).join("");
+    if(!listBody)listBody=`<p class="prog">目標を達成しています! 上の <b>${selN.v}pt</b> のマスから報酬をうけとろう</p>`;
+    const rest=tasks.length-pick.length;
+    if(rest>0)listBody+=`<details class="roadmore"><summary>この先の問題も見る (のこり${rest}問)</summary><div class="stlist" style="margin-top:9px;">${tasks.slice(pick.length).map(t=>roadTaskRow(t)).join("")}</div></details>`;
+    listHead=`やることリスト <span class="prog" style="font-weight:400;">🎯 ${selN.v}pt まで あと ${need}pt${mockNeed?` ･ 模試${mockNeed}回`:""}</span>`;
+    listSub=`目標の <b>${selN.v}pt</b> にとどくぶんだけ表示しています。上から解くのが最短。ロードのマスを押すと目標を変えられます。`;
+  }else{
+    listHead=`やることリスト <span class="prog" style="font-weight:400;">のこり ${open.length}問</span>`;
+    listSub=`解ける問題そのものを、合格力が上がる順にならべています。上から解くのが最短です。`;
+    listBody=tasks.map(t=>roadTaskRow(t)).join("")||'<p class="prog">全問題を制覇しました! あとは模試で仕上げよう</p>';
+  }
   const center=`
   <section class="hero2" style="margin-top:0;">
     <h1 class="disp" style="font-size:clamp(24px,4vw,34px);margin:2px 0 14px;">合格ロード。</h1>
@@ -3399,23 +3447,28 @@ window.renderRoadmap=function(){
   </section>
   <div class="qpane roadwrap" style="margin-top:16px;">
     <h3 style="margin:0 0 2px;color:var(--navy);">報酬ロード ${readyN>0?`<span class="roadbadge">${readyN}件 うけとれます</span>`:""}</h3>
-    <p class="prog" style="margin:0 0 10px;">合格力が5ptすすむごとに報酬。<span class="sicon" data-icon="cap" data-s="1"></span>の関所は模試をクリアすると開きます。</p>
+    <p class="prog" style="margin:0 0 10px;">合格力が5ptすすむごとに報酬。<span class="sicon" data-icon="cap" data-s="1"></span>の関所は模試をクリアすると開きます。マスを押すと目標に設定できます。</p>
     <div class="roadtrack" id="roadtrack">${nodes}</div>
   </div>
   <div class="qpane" style="margin-top:16px;">
-    <h3 style="margin:0 0 2px;color:var(--navy);">やることリスト <span class="prog" style="font-weight:400;">のこり ${open.length}問</span></h3>
-    <p class="prog" style="margin:0 0 10px;">解ける問題そのものを、合格力が上がる順にならべています。上から解くのが最短です。</p>
-    <div class="stlist">${rows||'<p class="prog">全問題を制覇しました! あとは模試で仕上げよう</p>'}</div>
+    <h3 style="margin:0 0 2px;color:var(--navy);">${listHead}</h3>
+    <p class="prog" style="margin:0 0 10px;">${listSub}</p>
+    <div class="stlist">${listBody}</div>
   </div>
   <p class="prog" style="margin:12px 0 0;font-size:11.5px;">合格力は「パターン制覇×本試験の配点」と「模試の実測」から計算しています。ゲームの報酬では増えません。</p>`;
   main.innerHTML=page(center,"road");
   mountIcons(main);
-  /* いま挑戦中のマスまで自動スクロール */
-  try{
-    const tr=document.getElementById("roadtrack");
-    const tgt=tr.querySelector(".rnode.ready")||tr.querySelector(".rnode.lock");
-    if(tgt)tr.scrollLeft=Math.max(0,tgt.offsetLeft-tr.clientWidth/2+60);
-  }catch(e){}
+  /* 目標のマスまで自動スクロール。描画直後は幅が確定していないことがあるので1tick遅らせて即時スクロール */
+  setTimeout(()=>{try{
+    const tr=document.getElementById("roadtrack");if(!tr)return;
+    const tgt=tr.querySelector(".rnode.sel")||tr.querySelector(".rnode.ready")||tr.querySelector(".rnode.lock");
+    if(tgt){
+      tr.style.scrollBehavior="auto";
+      const x=tgt.getBoundingClientRect().left-tr.getBoundingClientRect().left+tr.scrollLeft;
+      tr.scrollLeft=Math.max(0,x-tr.clientWidth/2+60);
+      setTimeout(()=>{tr.style.scrollBehavior="";},50);
+    }
+  }catch(e){}},0);
 };
 /* いま行くべきダンジョン(正解率が低く、配点の大きいところ) */
 function recommendDungeon(){
