@@ -890,6 +890,12 @@ body.dark .gcard.ok{background:linear-gradient(180deg,#12291c,var(--card));borde
 .stampgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .stampc.empty{border-style:dashed;background:transparent;box-shadow:none;opacity:.5;justify-content:center;}
 .stampc.empty .stampi{opacity:.35;font-size:20px;color:var(--tx2);}
+/* 庭(犬を置くだけ) */
+#yard{position:relative;min-height:112px;border-radius:14px;background:linear-gradient(180deg,#cfe9ff 0%,#e2f4d2 45%,#b7dd9a 100%);border:2px solid var(--bd);display:flex;align-items:flex-end;justify-content:space-evenly;gap:6px;padding:10px 8px 6px;overflow:hidden;flex-wrap:wrap;}
+.yarddog{display:flex;flex-direction:column;align-items:center;cursor:pointer;line-height:0;gap:2px;}
+.ydnm{font-size:9.5px;line-height:1.2;color:#3c5a2e;font-weight:700;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body.dark #yard{background:linear-gradient(180deg,#16233c 0%,#1e3627 45%,#254528 100%);border-color:var(--bd);}
+body.dark .ydnm{color:#a8caa0;}
 .stampc{background:var(--card,#fff);border:2px dashed var(--bd);border-radius:13px;padding:8px 3px 6px;text-align:center;transform:rotate(var(--rot,0deg));display:flex;flex-direction:column;gap:2px;align-items:center;height:104px;overflow:hidden;justify-content:flex-start;}
 .stampc .stampi{font-size:29px;line-height:1.2;display:flex;align-items:center;justify-content:center;min-height:36px;}
 .stampc b{font-size:10px;color:var(--navy);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
@@ -5309,13 +5315,22 @@ window.renderGarden=function(){
     ${(()=>{const pages=[];for(let p=0;p<stampPages();p++){pages.push(`<div class="prog" style="margin:${p?14:0}px 0 4px;font-weight:700;">${p+1}まいめ</div><div class="stampgrid book-${bt.k}">${cellArr.slice(p*20,p*20+20).join("")}</div>`);}return pages.join("");})()}
     ${stamps.length?"":`<p class="prog" style="margin-top:8px;">まだ1まいもない。ノルマ達成のカプセルとガチャで貼っていこう</p>`}
   </div>`;
+  /* 庭: 犬たちを置くだけ(動かない)。ゆくゆくはスタンプと合体した庭に */
+  const zombY=(()=>{try{return isSlacking();}catch(e){return false;}})();
+  const yard=dogs.length?`<div class="qpane pixf" style="padding:10px 14px;margin-bottom:2px;">
+    <div id="yard">${dogs.map((dg,i)=>`<span class="yarddog" onclick="pickDog(${i})"><span id="yd${i}"></span><span class="ydnm">${escapeHtml(dg.n||"")}${i===pi?" ●":""}</span></span>`).join("")}</div>
+  </div>`:"";
   main.innerHTML=pageRaw(`<div class="sechead" style="margin-top:4px;"><h2 class="disp2">スタンプ帳</h2></div>
-  ${book}${card}`,rail);
+  ${yard}${book}${card}`,rail);
   /* 犬スタンプの画像を差し込む */
   stamps.forEach((s,oi)=>{
     if(s.k!=="dog"&&s.k!=="zomb")return;
     const el=document.getElementById("stmpd"+oi);
     if(el)el.appendChild(dogCanvas(2,1.4,s.b||0,false,s.k==="zomb"));
+  });
+  dogs.forEach((dg,i)=>{
+    const el=document.getElementById("yd"+i);
+    if(el)el.appendChild(dogCanvas(dogStage(dg.f||0),2.4,dg.b||0,false,zombY));
   });
   mountIcons(main);
   if(dogs.length){
