@@ -858,6 +858,20 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
 .gqrow.done b{text-decoration:line-through;color:var(--tx2);font-weight:600;}
 .gqrow.lk{opacity:.55;cursor:default;}
 body.dark .gcard.ok{background:linear-gradient(180deg,#12291c,var(--card));border-color:#1f5c3c;box-shadow:0 3px 0 #1f5c3c;}
+/* 合格プラン(ホーム)のペースバーと学習ログ */
+.pbar-row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--tx2);padding:2px 6px;}
+.pbl{width:40px;font-weight:700;flex-shrink:0;}
+.pbar{flex:1;height:7px;border-radius:99px;background:var(--lt);overflow:hidden;}
+.pbar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#5b8def,#2563eb);transition:width .5s;}
+.pbar>i.full{background:linear-gradient(90deg,#34d399,#0e9f6e);}
+.pbn{min-width:56px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+#plog-ovl{position:fixed;inset:0;background:rgba(28,23,51,.55);z-index:120;display:flex;align-items:center;justify-content:center;padding:20px;}
+#plog-box{background:var(--card,#fff);border-radius:18px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto;padding:18px 18px 14px;}
+.plog-day{border-top:1.5px dashed var(--bd);padding:10px 2px;}
+.plog-day:first-of-type{border-top:none;}
+.plog-day>b{color:var(--navy);font-size:13.5px;}
+.plog-r{display:flex;gap:7px;align-items:center;font-size:12.5px;color:var(--navy);padding:3px 0;}
+.plog-b{color:var(--blue);font-weight:800;font-style:normal;font-size:11.5px;white-space:nowrap;}
 /* 初回アンケート(フルスクリーン) */
 #wiz{position:fixed;inset:0;z-index:8500;background:var(--bg,#f6f7f8);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center;overflow-y:auto;}
 .wizdots{display:flex;gap:7px;justify-content:center;margin-bottom:20px;}
@@ -2610,16 +2624,39 @@ function homeTodoHTML(){
   if(cl>0)rows.push(`<div class="tdrow gold" onclick="openQuests()"><span class="tdic"><span class="sicon" data-icon="gift" data-s="1"></span></span><b>クエスト報酬を受けとる</b><span class="tdend">${cl}件</span></div>`);
   const rr=(()=>{try{return ROAD.filter(n=>roadState(n)==="ready").length;}catch(e){return 0;}})();
   if(rr>0)rows.push(`<div class="tdrow gold" onclick="renderRoadmap()"><span class="tdic"><span class="sicon" data-icon="trophy" data-s="1"></span></span><b>合格ロードの報酬を受けとる</b><span class="tdend">${rr}件</span></div>`);
-  const ts=(()=>{try{return gquestTop(3);}catch(e){return [];}})();
-  ts.forEach(t=>{
-    const act=t.m>=0.8?"⏱仕上げ":t.m>=0.5?"🔁定着":"解く";
-    rows.push(`<div class="tdrow" onclick="startPat(${t.gi},${t.ii})"><span class="tdic"><span class="sicon" data-icon="map" data-s="1"></span></span><b>${escapeHtml(t.label)}</b><span class="tdend">${act}</span></div>`);
-  });
+  let pace=null;try{pace=planPace();}catch(e){}
+  const todayLeft=pace?Math.max(0,pace.quotaToday-pace.doneToday):0;
+  let body="";
+  if(pace){
+    if(pace.remain===0){
+      body=`<div class="tdrow" onclick="renderExams()"><span class="tdic"><span class="sicon" data-icon="cap" data-s="1"></span></span><b>クエスト完了! 模試で仕上げよう</b><span class="tdend">→</span></div>`;
+    }else if(todayLeft===0){
+      body=`<div class="tdrow" style="cursor:default;"><span class="tdic">🎉</span><b>きょうのノルマ達成!</b><span class="tdend">おつかれさま</span></div>`;
+    }else{
+      const list=(()=>{try{return gquestTop(Math.min(5,todayLeft));}catch(e){return [];}})();
+      body=list.map(t=>{
+        const act=t.m>=0.8?"⏱仕上げ":t.m>=0.5?"🔁定着":"解く";
+        return `<div class="tdrow" onclick="startPat(${t.gi},${t.ii})"><span class="tdic"><span class="sicon" data-icon="map" data-s="1"></span></span><b>${escapeHtml(t.label)}</b><span class="tdend">${act}</span></div>`;}).join("");
+    }
+    const mockNeed=(()=>{try{const mocks=LS.get(KEY_H,[]).length;const gr=ROAD.filter(x=>x.mock&&cur>=x.v).reduce((a,x)=>Math.max(a,x.mock),0);return Math.max(0,gr-mocks);}catch(e){return 0;}})();
+    if(mockNeed>0)body+=`<div class="tdrow" onclick="renderExams()"><span class="tdic"><span class="sicon" data-icon="cap" data-s="1"></span></span><b>模試を受ける(今週中)</b><span class="tdend">関所</span></div>`;
+  }
+  const bar=(lab,done,quota)=>{
+    const pc=quota>0?Math.min(100,Math.round(done/quota*100)):100;
+    return `<div class="pbar-row"><span class="pbl">${lab}</span><span class="pbar"><i class="${pc>=100?"full":""}" style="width:${pc}%;"></i></span><span class="pbn">${done} / ${quota}問</span></div>`;};
+  const paceHtml=pace?`
+    <div class="prog" style="padding:0 6px 6px;font-size:12px;">${pace.hasExam?`試験まで <b style="color:var(--navy);">あと${pace.days}日</b>`:`<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">試験日を設定</a>すると正確に(いまは${pace.days}日で仮定)`}${pace.remain>0?` ･ 1日 <b style="color:var(--navy);">${pace.perDay}問</b> で間に合うペース`:` ･ のこりは模試だけ`}</div>
+    ${bar("きょう",pace.doneToday,pace.quotaToday)}
+    ${bar("今週",pace.doneWeek,pace.quotaWeek)}
+    ${bar("今月",pace.doneMonth,pace.quotaMonth)}
+    <div class="prog" style="text-align:right;padding:2px 6px 6px;font-size:11.5px;"><a style="cursor:pointer;text-decoration:underline;" onclick="showPlanLog()">📖 学習ログを見る</a></div>`:"";
   return `<div class="tdcard" id="tdcard">
-    <div class="tdhead" onclick="renderRoadmap()"><b>ロードマップ</b>
+    <div class="tdhead" onclick="renderRoadmap()"><b>合格プラン</b>
       <span class="tdpp">合格力 ${cur} <span class="prog">/ 70pt</span></span>
       <span class="tdbar"><i style="width:${Math.min(100,Math.round(cur/70*100))}%;"></i></span></div>
     ${rows.join("")}
+    ${paceHtml}
+    ${body}
     <div class="tdmore" onclick="renderRoadmap()">つづきを見る　→</div>
   </div>`;
 }
@@ -3996,6 +4033,109 @@ function gquestTop(k){
   return out;
 }
 window.gquestTop=gquestTop;
+/* ---------- 合格プラン(ホーム): ペース計算と学習ログ ---------- */
+/* そのパターンが「解けた/定着/仕上げ」に到達した時刻を挑戦ログから復元 */
+function masteryTimes(id){
+  const logs=LS.get(KEY_LOG,[]).filter(x=>x.id===id&&x.n>0).sort((a,b)=>a.t-b.t);
+  let s=null,d=null,ti=null;
+  for(const x of logs){
+    if(x.ok/x.n>=0.8){
+      if(s==null)s=x.t;
+      else if(x.t>=s+MST_GAP){
+        if(d==null)d=x.t;
+        if(ti==null&&x.sec<=Math.max(90,(x.n||1)*45))ti=x.t;
+      }
+    }
+  }
+  return{s,d,t:ti};
+}
+function questItemIds(it){
+  return it.k==="tag"?DRILLS.filter(dd=>dd.tag===it.tag).map(q=>q.id):[it.k==="pq"?it.id:refId(it)];
+}
+/* パターン(項目)が 解けた/定着/仕上げ の各レベルに到達した時刻の列 */
+function itemCrossTimes(gi,ii){
+  const it=PATMAP[gi].items[ii];if(!it)return[];
+  const qs=questItemIds(it),per=1/qs.length,ev=[];
+  qs.forEach(id=>{const m=masteryTimes(id);
+    if(m.s)ev.push([m.s,MST.solved*per]);
+    if(m.d)ev.push([m.d,(MST.settled-MST.solved)*per]);
+    if(m.t)ev.push([m.t,(MST.timed-MST.settled)*per]);});
+  ev.sort((a,b)=>a[0]-b[0]);
+  const out=[];let sum=0;const LVs=[MST.solved,MST.settled,MST.timed];let li=0;
+  for(const e of ev){sum+=e[1];while(li<LVs.length&&sum>=LVs[li]-1e-9){out.push(e[0]);li++;}}
+  return out;
+}
+/* 試験日から逆算した1日ノルマと、今日/今週/今月の消化実績 */
+function planPace(){
+  initPatMap();
+  const plan=gplan();
+  const t0=new Date();t0.setHours(0,0,0,0);
+  const day0=t0.getTime();
+  const wk=new Date(weekStart()+"T00:00:00").getTime();
+  const mo=new Date(t0.getFullYear(),t0.getMonth(),1).getTime();
+  const ed=examDate();
+  let days;
+  if(ed)days=Math.max(1,Math.round((ed-t0)/86400000));
+  else{const ex=(LS.get("b2_onb",null)||{}).exam;days=ex==="3m"?75:30;}
+  const reserve=Math.min(5,Math.floor(days*0.15));   /* 直前は模試と総復習にあてる予備日 */
+  const work=Math.max(1,days-reserve);
+  /* 単位は「1ステップ = 1パターンを1段階すすめる(解く/定着させる/仕上げる)」。
+     実績は全パターンのレベル到達イベントで数える(クエスト外の別ルートも乗る) */
+  let remain=0,doneToday=0,doneWeek=0,doneMonth=0;
+  PATMAP.forEach((g,gi)=>{
+    g.items.forEach((it,ii)=>{
+      itemCrossTimes(gi,ii).forEach(t=>{
+        if(t>=day0)doneToday++;if(t>=wk)doneWeek++;if(t>=mo)doneMonth++;});
+    });
+    const q=gquestGet(gi);if(!q)return;
+    const cleared=secExp(gi).exp>=plan[gi+1]-1e-9;
+    if(!cleared)q.items.forEach(o=>{
+      const it=g.items[o.ii];if(!it)return;
+      const m=patMastery(it);
+      [MST.solved,MST.settled,MST.timed].forEach(lv=>{if(lv<=o.goal+1e-9&&m<lv-1e-9)remain++;});
+    });
+  });
+  const perDay=remain>0?Math.max(1,Math.ceil(remain/work)):0;
+  return{days,hasExam:!!ed,perDay,remain,doneToday,doneWeek,doneMonth,
+    quotaToday:perDay,
+    quotaWeek:remain>0?Math.min(remain+doneWeek,perDay*7):doneWeek,
+    quotaMonth:remain>0?Math.min(remain+doneMonth,perDay*Math.min(30,days)):doneMonth};
+}
+window.planPace=planPace;
+/* 学習ログ: 日別に「何を解いて、どこまで到達したか」 */
+window.showPlanLog=function(){
+  const logs=LS.get(KEY_LOG,[]).slice().sort((a,b)=>b.t-a.t);
+  const byDay={};
+  logs.forEach(x=>{const k=daysKey(new Date(x.t));(byDay[k]=byDay[k]||[]).push(x);});
+  const times={};
+  const days=Object.keys(byDay).sort().reverse().slice(0,14);
+  const html=days.map(k=>{
+    const arr=byDay[k];
+    const day0=new Date(k+"T00:00:00").getTime(),day1=day0+86400000;
+    const ids={};
+    arr.forEach(x=>{const e=ids[x.id]=ids[x.id]||{ttl:x.ttl,c:0,ok:false};e.c++;if(x.ok/x.n>=0.8)e.ok=true;});
+    let reach=0;
+    const rows=Object.keys(ids).map(id=>{
+      const e=ids[id];
+      const m=times[id]=times[id]||masteryTimes(id);
+      const b=m.t!=null&&m.t>=day0&&m.t<day1?"⏱ 仕上げ":m.d!=null&&m.d>=day0&&m.d<day1?"◕ 定着":m.s!=null&&m.s>=day0&&m.s<day1?"○ 解けた":null;
+      if(b)reach++;
+      return `<div class="plog-r"><span style="width:16px;">${e.ok?"○":"×"}</span><span>${escapeHtml(e.ttl||id)}</span>${b?`<b class="plog-b">${b}</b>`:""}<span class="prog" style="margin-left:auto;">${e.c}回</span></div>`;
+    }).join("");
+    return `<div class="plog-day"><b>${k.slice(5).replace("-","/")}</b><span class="prog"> ･ ${arr.length}回挑戦 ･ 到達 ${reach}件</span>${rows}</div>`;
+  }).join("")||'<p class="prog" style="padding:10px 0;">まだ記録がありません。問題を解くとここに積み上がっていきます</p>';
+  let o=document.getElementById("plog-ovl");if(o)o.remove();
+  o=document.createElement("div");o.id="plog-ovl";
+  o.onclick=e=>{if(e.target===o)o.remove();};
+  o.innerHTML=`<div id="plog-box">
+    <h2 style="color:var(--navy);font-size:17px;margin-bottom:2px;">📖 学習ログ</h2>
+    <p class="prog" style="margin-bottom:8px;">解いた問題と、その日に到達した段階(直近14日)</p>
+    ${html}
+    <div style="text-align:center;margin-top:10px;"><button class="btn gray" style="font-size:13px;padding:9px 28px;" onclick="document.getElementById('plog-ovl').remove()">とじる</button></div>
+  </div>`;
+  document.body.appendChild(o);
+  try{track("plan_log_view");}catch(e){}
+};
 /* 実績(直近2模試の大問別正答率60% + 現在の習熟率40%)から、合計74点のおすすめ配分を作る */
 function gplanSuggest(){
   const h=LS.get(KEY_H,[]).slice(-2);
