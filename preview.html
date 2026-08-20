@@ -3014,10 +3014,12 @@ window.tutGacha=function(){
 const AN_URL="https://ijddujtdsvmbrwtboodt.supabase.co/rest/v1/site_events";
 const AN_KEY="sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt";
 function anId(store,key){let v=store.getItem(key);if(!v){v=Math.random().toString(36).slice(2)+Date.now().toString(36);store.setItem(key,v);}return v;}
+/* preview は検証用ページなので、常に開発者イベントとして記録する */
+const AN_DEV=true;
 function track(ev,meta){
   try{
     fetch(AN_URL,{method:"POST",headers:{"apikey":AN_KEY,"Authorization":"Bearer "+AN_KEY,"Content-Type":"application/json","Prefer":"return=minimal"},
-      body:JSON.stringify({vid:anId(localStorage,"b2_vid"),sid:anId(sessionStorage,"b2_sid"),ev,meta:meta||{},ref:document.referrer?new URL(document.referrer).hostname:null,ua:navigator.userAgent.slice(0,120)}),
+      body:JSON.stringify({vid:anId(localStorage,"b2_vid"),sid:anId(sessionStorage,"b2_sid"),ev,meta:meta||{},ref:document.referrer?new URL(document.referrer).hostname:null,ua:navigator.userAgent.slice(0,120),dev:AN_DEV}),
       keepalive:true}).catch(()=>{});
   }catch(e){}
 }
