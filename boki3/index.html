@@ -3421,7 +3421,9 @@ window.renderRoadmap=function(){
   let listHead,listSub,listBody;
   if(selN){
     const need=Math.max(0,Math.round((selN.v-cur)*10)/10);
-    const mockNeed=selN.mock?Math.max(0,selN.mock-mocks):0;
+    /* 目標までの道中にある関所の模試条件をすべて考慮(いちばん重い要求回数) */
+    const gateReq=ROAD.filter(x=>x.v<=selN.v&&x.mock).reduce((a,x)=>Math.max(a,x.mock),0);
+    const mockNeed=Math.max(0,gateReq-mocks);
     let acc=0;const pick=[];
     for(const t of tasks){if(acc>=need)break;pick.push(t);acc+=t.pt;}
     const mockRow=mockNeed>0?`<div class="rdrow" onclick="renderExams()">
