@@ -3188,6 +3188,46 @@ window.logsIn=logsIn;
 /* 大問ごとの配点(2級)。3級など構成が違う場合も、中身のある大問だけで100点に正規化する */
 const SEC_PTS={1:20,2:20,3:20,4:28,5:12};
 /* いまの実力を推定(パターンの到達度 × 大問配点) */
+/* ---------- 習熟度(0〜1): 「解けた」だけでは満点にしない ----------
+   解けた(80%を1回)=0.5 → 定着(12時間以上あけてもう一度80%)=0.8 → 時間内(その解き直しが目安時間内)=1.0
+   直近の挑戦で崩れた(80%未満)・間違いリスト入り中は「解けた」まで戻る */
+const MST={try:0.15,half:0.3,solved:0.5,settled:0.8,timed:1};
+const MST_GAP=12*3600*1000;   /* 「別日」とみなす間隔 */
+function masteryFromLogs(id,fallback){
+  const logs=LS.get(KEY_LOG,[]).filter(x=>x.id===id&&x.n>0);
+  const succ=logs.filter(x=>x.ok/x.n>=0.8).sort((a,b)=>a.t-b.t);
+  if(!succ.length)return fallback;
+  let v=MST.solved;
+  const settled=succ.filter(x=>x.t>=succ[0].t+MST_GAP);
+  if(settled.length){
+    v=MST.settled;
+    if(settled.some(x=>x.sec<=Math.max(90,(x.n||1)*45)))v=MST.timed;
+  }
+  const last=logs.reduce((a,b)=>a.t>b.t?a:b);
+  if(last.ok/last.n<0.8)v=Math.min(v,MST.solved);
+  return v;
+}
+function patMastery(it){
+  if(it.k==="tag"){
+    const qs=DRILLS.filter(d=>d.tag===it.tag);if(!qs.length)return 0;
+    const st=LS.get(KEY_D,{}),wrong=LS.get(KEY_W,[]);
+    let s=0;
+    qs.forEach(q=>{
+      const e=st[q.id];
+      let v=!e?0:(e.o>0?masteryFromLogs(q.id,MST.solved):(e.t>0?MST.try:0));
+      if(wrong.includes(q.id))v=Math.min(v,MST.solved);
+      s+=v;
+    });
+    return s/qs.length;
+  }
+  const stt=patStat(it);
+  if(stt.s==="未")return 0;
+  if(stt.s==="⚔")return MST.try;
+  if(stt.s==="△")return MST.half;
+  const id=it.k==="pq"?it.id:refId(it);
+  return masteryFromLogs(id,MST.solved);   /* ○だがログに成功が残っていない(古いデータ)→解けた扱い */
+}
+window.patMastery=patMastery;
 function estScore(){
   initPatMap();
   let total=0,wsum=0;
@@ -3197,10 +3237,7 @@ function estScore(){
     if(!items.length)return;
     wsum+=pts;
     let s=0;
-    items.forEach(it=>{
-      const st=patStat(it);
-      s+= st.s==="○"?1 : st.s==="△"?0.6 : st.s==="⚔"?0.3 : 0;
-    });
+    items.forEach(it=>{s+=patMastery(it);});
     total+=pts*(s/items.length);
   });
   if(wsum>0)total=total*100/wsum;    /* 満点=100点にそろえる */
@@ -3273,8 +3310,7 @@ function ppWeights(){initPatMap();let w=0;PATMAP.forEach((g,gi)=>{if(g.items.len
 /* このパターンを○にしたとき合格力が何pt上がるか(概算) */
 function ppItemDelta(gi,it){
   const pts=SEC_PTS[gi+1]||20,n=Math.max(1,PATMAP[gi].items.length);
-  const st=patStat(it);
-  const cur= st.s==="○"?1 : st.s==="△"?0.6 : st.s==="⚔"?0.3 : 0;
+  const cur=patMastery(it);
   let d=pts*(1-cur)/n*100/ppWeights();
   if(LS.get(KEY_H,[]).length)d*=0.45;
   return Math.round(d*10)/10;
@@ -3336,10 +3372,12 @@ function roadTasks(){
   const list=[];
   PATMAP.forEach((g,gi)=>g.items.forEach((it,ii)=>{
     const st=patStat(it);
-    if(st.s==="○")return;
+    const m=patMastery(it);
+    if(m>=1)return;
     const tier=itemTier(it);
     const locked=tier>1&&!unlocked("tier"+tier);
-    list.push({gi,ii,label:it.label,sec:gi+1,tier,locked,pt:ppItemDelta(gi,it),st:st.s,
+    const act=st.s==="○"?(m<0.8?"settle":"timed"):null;
+    list.push({gi,ii,label:it.label,sec:gi+1,tier,locked,pt:ppItemDelta(gi,it),st:st.s,act,
       bonus:(()=>{try{return isBonus(gi,ii);}catch(e){return false;}})()});
   }));
   return list.sort((a,b)=>(a.locked-b.locked)||(b.pt-a.pt));
@@ -3352,7 +3390,7 @@ function roadTaskRow(t,compact){
     <span class="rdpt"><i>+${t.pt}pt</i></span></div>`;
   return `<div class="rdrow" onclick="startPat(${t.gi},${t.ii})">
     <span class="stic"><span class="micon" data-icon="map"></span></span>
-    <span class="stmid"><b>${escapeHtml(t.label)}</b><span class="prog">第${t.sec}問 ･ ${tn}${t.st==="⚔"?" ･ ⚔挑戦中":""}${t.bonus?" ･ ✨EXP2倍":""}</span></span>
+    <span class="stmid"><b>${escapeHtml(t.label)}</b><span class="prog">第${t.sec}問 ･ ${tn}${t.st==="⚔"?" ･ ⚔挑戦中":""}${t.act==="settle"?" ･ 🔁解けた→別日にもう一度で定着":t.act==="timed"?" ･ ⏱目安時間内に解き直して仕上げ":""}${t.bonus?" ･ ✨EXP2倍":""}</span></span>
     <span class="rdpt">+${t.pt}pt</span></div>`;
 }
 function roadState(n){
@@ -3457,7 +3495,7 @@ window.renderRoadmap=function(){
     <p class="prog" style="margin:0 0 10px;">${listSub}</p>
     <div class="stlist">${listBody}</div>
   </div>
-  <p class="prog" style="margin:12px 0 0;font-size:11.5px;">合格力は「パターン制覇×本試験の配点」と「模試の実測」から計算しています。ゲームの報酬では増えません。</p>`;
+  <p class="prog" style="margin:12px 0 0;font-size:11.5px;">合格力は「パターンの習熟度(解けた50%→別日にもう一度で定着80%→時間内で100%)×本試験の配点」と「模試の実測」から計算しています。ゲームの報酬では増えません。</p>`;
   main.innerHTML=page(center,"road");
   mountIcons(main);
   /* 目標のマスまで自動スクロール。描画直後は幅が確定していないことがあるので1tick遅らせて即時スクロール */
@@ -3479,9 +3517,9 @@ function recommendDungeon(){
   PATMAP.forEach((g,gi)=>{
     const pts=SEC_PTS[gi+1]||20;
     g.items.forEach((it,ii)=>{
-      const st=patStat(it);
-      if(st.s==="○")return;
-      const lack= st.s==="△"?0.4 : st.s==="⚔"?0.7 : 1;
+      const m=patMastery(it);
+      if(m>=1)return;
+      const lack=1-m;
       const tier=itemTier(it);
       if(tier>1&&!unlocked("tier"+tier))return;      /* まだ入れないエリアは薦めない */
       const score=lack*pts;
