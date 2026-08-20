@@ -829,6 +829,17 @@ body.dark .qbtn{color:#dfe7f5;box-shadow:0 4px 0 #0a111f;}
 .roadmore summary::-webkit-details-marker{display:none;}
 .roadmore summary::before{content:"▸ ";}
 .roadmore[open] summary::before{content:"▾ ";}
+/* 初回アンケート(フルスクリーン) */
+#wiz{position:fixed;inset:0;z-index:8500;background:var(--bg,#f6f7f8);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center;overflow-y:auto;}
+.wizdots{display:flex;gap:7px;justify-content:center;margin-bottom:20px;}
+.wizdots i{width:8px;height:8px;border-radius:50%;background:var(--bd);}
+.wizdots i.on{background:var(--blue);}
+.wizq{font-size:clamp(21px,5.5vw,27px);font-weight:900;color:var(--navy);line-height:1.45;font-family:'Zen Kaku Gothic New',sans-serif;}
+.wizsub{font-size:13px;color:var(--tx2);margin-top:8px;}
+.wizopts{display:flex;flex-direction:column;gap:11px;margin-top:22px;width:100%;max-width:340px;}
+.wizopt{background:var(--card,#fff);border:2px solid var(--bd);box-shadow:0 3px 0 var(--bd);border-radius:16px;padding:15px 18px;font-size:15.5px;font-weight:700;color:var(--navy);cursor:pointer;display:flex;align-items:center;gap:10px;transition:.1s;text-align:left;}
+.wizopt:active{transform:translateY(3px);box-shadow:0 0 0 var(--bd);}
+.wizskip{margin-top:20px;font-size:12px;color:#8a84a3;cursor:pointer;text-decoration:underline;}
 .rnode.gate.done,.rnode.gate.ready{border-style:solid;}
 .rrowi.mineR{background:var(--lt);border-radius:10px;padding:7px 10px;border-bottom:none;}
 .rrowi.mineR b{color:var(--blue);}
@@ -2539,6 +2550,9 @@ function renderHome(){
   const totalQ=Object.values(LS.get(KEY_A,{})).reduce((s,e)=>s+(e.q||0),0);
   const isNew=totalQ===0||location.search.indexOf("onbpreview")>=0||location.hash.indexOf("onbpreview")>=0;
   document.body.classList.toggle("onb",isNew);
+  if(((isNew&&!LS.get("b3_onb",null))||location.search.indexOf("wiz=1")>=0)&&!window._wizShown){
+    window._wizShown=true;setTimeout(()=>{try{wizStart()}catch(e){}},350);
+  }
   const onbCenter=`
   <section class="hero2" style="margin-top:0;padding:clamp(12px,2.4vw,26px) clamp(10px,2vw,22px);">
     <div class="onbcol">
@@ -5177,6 +5191,104 @@ function fteBox(html){
   o.innerHTML=`<div id="cele-box" class="pixf" style="text-align:left;">${html}</div>`;
   document.body.appendChild(o);mountIcons(o);return o;
 }
+/* ---------- 初回アンケート: 出題パーソナライズ+分析用。全画面・1問1タップ ---------- */
+const WIZQ=[
+ {id:"exam",q:"簿記3級の試験、\nいつ受ける予定?",sub:"あとから変えられます",opts:[
+   {v:"date",t:"📅 日付が決まっている",date:true},
+   {v:"1m",t:"⚡ だいたい1ヶ月以内"},
+   {v:"3m",t:"🗓 2〜3ヶ月以内"},
+   {v:"none",t:"🤔 まだ決めていない"}]},
+ {id:"mins",q:"1日どれくらい\n勉強できそう?",opts:[
+   {v:15,t:"🍃 すきま時間(〜15分)"},
+   {v:30,t:"☕ 30分くらい"},
+   {v:60,t:"🔥 1時間くらい"},
+   {v:120,t:"🚀 2時間以上"}]},
+ {id:"level",q:"3級の勉強は\nどこまで進んでる?",opts:[
+   {v:"fresh",t:"🌱 これから始める"},
+   {v:"mid",t:"📖 テキストで勉強中"},
+   {v:"done",t:"💪 ひと通り終わった(仕上げ)"},
+   {v:"retry",t:"🔁 受験したことがある"}]},
+ {id:"src",q:"このアプリは\nどこで知った?",opts:[
+   {v:"x",t:"🐦 X(Twitter)"},
+   {v:"search",t:"🔍 検索"},
+   {v:"friend",t:"👋 友だち・紹介"},
+   {v:"other",t:"📱 その他"}]}
+];
+let wizAns=null;
+window.wizStart=function(){
+  wizAns={};
+  try{track("onb_view",{app:"b3"})}catch(e){}
+  wizStep(0);
+};
+function wizStep(i){
+  if(i>=WIZQ.length)return wizDone();
+  const Q=WIZQ[i];
+  let o=document.getElementById("wiz");
+  if(!o){o=document.createElement("div");o.id="wiz";document.body.appendChild(o);}
+  o.innerHTML=`
+    <div style="max-width:360px;width:100%;">
+    <div class="wizdots">${WIZQ.map((_,k)=>`<i class="${k<=i?"on":""}"></i>`).join("")}</div>
+    <div class="wizq">${Q.q.replace(/\n/g,"<br>")}</div>
+    ${Q.sub?`<div class="wizsub">${Q.sub}</div>`:""}
+    <div class="wizopts" style="margin-left:auto;margin-right:auto;">${Q.opts.map((op,k)=>op.date
+      ?`<div class="wizopt" id="wizdate" onclick="wizDateOpen()">${op.t}</div>`
+      :`<div class="wizopt" onclick="wizAnswer(${i},${k})">${op.t}</div>`).join("")}</div>
+    <div class="wizskip" onclick="wizSkip(${i})">スキップ</div></div>`;
+  window.scrollTo(0,0);
+}
+window.wizDateOpen=function(){
+  const el=document.getElementById("wizdate");if(!el)return;
+  el.onclick=null;
+  el.innerHTML=`<input type="date" id="wizd" style="border:none;background:none;font-family:inherit;font-size:15px;flex:1;min-width:0;">
+    <button class="btn" style="padding:8px 18px;font-size:13px;flex-shrink:0;" onclick="wizDateSet()">決定</button>`;
+  const inp=document.getElementById("wizd");if(inp)inp.focus();
+};
+window.wizDateSet=function(){
+  const v=document.getElementById("wizd").value;
+  if(!v)return;
+  LS.set("b3_exam",v);
+  wizRecord(0,"date:"+v);
+  wizStep(1);
+};
+window.wizAnswer=function(i,k){
+  wizRecord(i,WIZQ[i].opts[k].v);
+  wizStep(i+1);
+};
+function wizRecord(i,v){
+  const Q=WIZQ[i];
+  wizAns[Q.id]=v;
+  try{track("onb_q",{q:Q.id,a:String(v),app:"b3"})}catch(e){}
+}
+window.wizSkip=function(i){
+  try{track("onb_skip",{at:WIZQ[i].id,app:"b3"})}catch(e){}
+  wizStep(i+1);
+};
+function wizDone(){
+  wizAns.t=Date.now();wizAns.app="b3";
+  LS.set("b3_onb",wizAns);
+  try{track("onb_done",wizAns)}catch(e){}
+  const ed=examDate();
+  const pace=(()=>{try{return ppTarget();}catch(e){return 3;}})();
+  const mins=wizAns.mins;
+  const lines=[];
+  if(ed){const t0=new Date();t0.setHours(0,0,0,0);const d=Math.max(0,Math.round((ed-t0)/86400000));lines.push(`📅 試験まで <b>あと ${d}日</b>`);}
+  else if(wizAns.exam==="1m")lines.push(`📅 目標: <b>1ヶ月で合格ライン</b>`);
+  else if(wizAns.exam==="3m")lines.push(`📅 目標: <b>2〜3ヶ月で合格ライン</b>`);
+  lines.push(`🎯 合格力70ptへ、1日 <b>+${pace}pt</b> ペース`);
+  if(mins)lines.push(`⏰ 1日${mins>=120?"2時間":mins+"分"}ペースを、犬と一緒にキープ`);
+  const exp=wizAns.level==="done"||wizAns.level==="retry";
+  const cta=exp
+    ?`<button class="btn cta" style="width:100%;margin-top:18px;font-size:16px;" onclick="wizClose();renderExams()">模試で現在地を測る　→</button>
+      <button class="btn gray" style="width:100%;margin-top:10px;" onclick="wizClose();startFTE()">まず30秒で1問解く</button>`
+    :`<button class="btn cta" style="width:100%;margin-top:18px;font-size:16px;" onclick="wizClose();startFTE()">30秒で1問解いてみる　→</button>`;
+  const o=document.getElementById("wiz");if(!o)return;
+  o.innerHTML=`<div style="max-width:340px;width:100%;">
+    <div class="wizq">きみ専用の<br>合格プランができた!</div>
+    <div style="background:var(--card,#fff);border:2px solid var(--bd);border-radius:18px;padding:16px 18px;margin-top:18px;text-align:left;font-size:14.5px;line-height:2.1;color:var(--navy);">${lines.join("<br>")}</div>
+    ${cta}
+    <div class="wizskip" onclick="wizClose()">とじる</div></div>`;
+}
+window.wizClose=function(){const o=document.getElementById("wiz");if(o)o.remove();};
 window.startFTE=function(){
   try{track("fte_start")}catch(e){}
   const order=FTEQ.c.map((c,i)=>({c,i})).sort(()=>Math.random()-.5);
@@ -5321,6 +5433,7 @@ window.fteFeed=function(){
 };
 window.fteExam=function(){
   LS.set("b2_tut",4);
+  if(LS.get("b3_exam",null)||LS.get("b3_onb",null))return fteSignup();  /* 初回アンケートで回答済みなら聞き直さない */
   try{track("fte_exam_view")}catch(e){}
   const d=getDogs()[getPartner()],nm=d?escapeHtml(d.n):"相棒";
   fteBox(`<div style="text-align:center;">
@@ -5696,7 +5809,7 @@ try{pushRefresh();}catch(e){}
 /* ---------- アカウント同期(Supabase) ---------- */
 const SB_URL="https://ijddujtdsvmbrwtboodt.supabase.co",SB_KEY="sb_publishable_N3GvtF02I23y7BUG8XzLLw_f2jPXTxt";
 let sb=null,sbUser=null,pushT=null;
-const SYNC_KEYS=["b2_exp","b3_exp","b2_expmig","b3_expmig","b2_gold","b2_rankwk","b2_stam","b2_nose","b2_plog","b3_plog","b2_dashp","b2_items","b2_wing","b2_collar","b2_mockt","b2_expdd","b3_expdd","b2_road","b3_road","b2_history","b2_drill","b2_wrong","b2_pat","b2_days","b2_qz","b2_exam","b2_acc","b2_patlv","b3_history","b3_drill","b3_wrong","b3_pat","b3_days","b3_qz","b3_exam","b3_acc","b3_patlv","b2_seen","b2_tickets","b2_cleared","b2_dogs","b2_food","b2_partner","b2_nick","b2_login","b2_xreward","b2_hungry","b2_away","b2_refdone","b2_regbonus","b2_dogv","b2_achseen"];
+const SYNC_KEYS=["b2_exp","b3_exp","b2_expmig","b3_expmig","b2_gold","b2_rankwk","b2_stam","b2_nose","b2_plog","b3_plog","b2_dashp","b2_items","b2_wing","b2_collar","b2_mockt","b2_expdd","b3_expdd","b2_road","b3_road","b2_history","b2_drill","b2_wrong","b2_pat","b2_days","b2_qz","b2_exam","b2_onb","b2_acc","b2_patlv","b3_history","b3_drill","b3_wrong","b3_pat","b3_days","b3_qz","b3_exam","b3_onb","b3_acc","b3_patlv","b2_seen","b2_tickets","b2_cleared","b2_dogs","b2_food","b2_partner","b2_nick","b2_login","b2_xreward","b2_hungry","b2_away","b2_refdone","b2_regbonus","b2_dogv","b2_achseen"];
 function collectLocal(){const o={};SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)o[k]=v;});return o;}
 function tqOf(o){try{const d=JSON.parse(o[KEY_A]||"{}");let t=0;Object.values(d).forEach(e=>t+=e.q||0);return t;}catch(e){return 0;}}
 function applyData(o){SYNC_KEYS.forEach(k=>{if(o[k]!=null)localStorage.setItem(k,o[k]);});}
