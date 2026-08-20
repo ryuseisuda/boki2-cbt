@@ -590,6 +590,17 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
 .pixwalk{image-rendering:pixelated;}
 .heroflex{display:flex;gap:10px;align-items:center;min-height:0;}
 .cta{position:relative;animation:ctaPulse 1.8s ease-in-out infinite;}
+/* 学習を始める(オレンジのボタン)はエフェクトもオレンジで揃える */
+.btn.gobig.cta{animation:ctaPulseO 1.8s ease-in-out infinite;}
+@keyframes ctaPulseO{0%,100%{transform:translateY(0);box-shadow:0 5px 0 #c75b28,0 0 0 0 rgba(255,140,60,.5);}50%{transform:translateY(-3px);box-shadow:0 8px 0 #c75b28,0 0 0 14px rgba(255,140,60,0);}}
+/* Snapchat風のでか連続日数 */
+.strkbig{display:flex;align-items:baseline;gap:6px;margin:0 0 4px;}
+.strkbig .strkfire{font-size:34px;line-height:1;}
+.strkbig b{font-size:30px;font-weight:900;color:#f59e0b;font-family:'Zen Kaku Gothic New',sans-serif;}
+.strkbig .strku{font-size:14px;font-weight:800;color:#f59e0b;}
+.strkbig .strkw{font-size:11.5px;color:var(--ng,#dc2626);font-weight:800;margin-left:6px;animation:blink 1.2s infinite;}
+/* ランキング行の報酬チップ */
+.rwsm{font-size:10.5px;color:var(--goldd);font-weight:800;white-space:nowrap;margin-left:6px;}
 @keyframes ctaPulse{0%,100%{transform:translateY(0);box-shadow:0 4px 0 rgba(28,23,51,.35),0 0 0 0 rgba(43,108,234,.45);}50%{transform:translateY(-3px);box-shadow:0 7px 0 rgba(28,23,51,.35),0 0 0 14px rgba(43,108,234,0);}}
 .cta .arrowa{display:inline-block;animation:ctaArrow 1.2s ease-in-out infinite;}
 @keyframes ctaArrow{0%,100%{transform:translateX(0);}50%{transform:translateX(5px);}}
@@ -2884,17 +2895,12 @@ function railHTML(kind){
   const best=h.length?Math.max(...h.map(x=>x.total)):null;
   const {po,pt}=patCount();
   const rankCard=kind==="home"?`<div class="rcard" style="cursor:pointer;" onclick="renderRank()"><h3><span class="sicon" data-icon="trophy"></span>今週のランキング</h3><div id="rail-rank-list" class="prog">読み込み中…</div></div>`:"";
-  return rankCard+`<div class="rcard"><h3>ステータス</h3>
-    <div class="rrowi"><span><span class="sicon" data-icon="fire"></span>連続日数</span><b>${a.streak}日</b></div>
-    <div class="rrowi"><span><span class="sicon" data-icon="pencil"></span>今日の問題</span><b>${a.today.q}問</b></div>
-    <div class="rrowi"><span><span class="sicon" data-icon="map"></span>パターン制覇</span><b>${po} / ${pt}</b></div>
-    <div class="rrowi"><span><span class="sicon" data-icon="trophy"></span>模試ベスト</span><b>${best==null?"—":best+"点"}</b></div>
-    <div class="rrowi" ${wrong.length>0?'style="cursor:pointer;" onclick="startReview()" title="復習でとりもどす"':""}><span><span class="sicon" data-icon="pin"></span>間違い残</span><b>${wrong.length}問${wrong.length>0?'<span style="color:var(--blue);font-weight:800;">　→</span>':""}</b></div>
-  </div>${(()=>{try{
+  const ppCard=(()=>{try{
     const cur=estScore(),f=passForecast();
     const fx=f.done?"合格ライン到達!":f.date?`このペースなら ${f.date} ごろ合格ライン`:f.stalled?"のびが停滞中。復習しよう":"学習すると予測が出ます";
     return `<div class="rcard" style="cursor:pointer;" onclick="renderRoadmap()"><h3><span class="sicon" data-icon="pin"></span>合格力</h3>${ppGaugeHTML(cur)}<p class="prog" style="margin:8px 0 0;font-size:11.5px;">${fx}　→</p></div>`;
-  }catch(e){return ""}})()}`;
+  }catch(e){return ""}})();
+  return ppCard+rankCard;
 }
 /* ---------- ランキングの初期メンバー(参加者が少ない間だけ表示・週ごとに決定論) ---------- */
 const RANK_BOTS=[["みさき@簿記べんきょ中",3],["カズ|リベンジ組",7],["ゆうと",11],["こつこつ簿記",17],["あやの📚",23],["Rin",29]];
@@ -3069,11 +3075,8 @@ function renderHome(){
     <div class="heroflex">
     <div style="position:relative;z-index:1;flex:1 1 52%;min-width:320px;">
       ${(()=>{try{const a=actInfo();const tq=a.today.q||0;
-        return `<div class="hchips">
-          <span class="hchip ${a.streak>=3?"on":""} ${a.streak>0&&tq===0?"risk":""}" title="${a.streak>0&&tq===0?"今日1問とけば連続キープ!":"連続日数"}">${a.streak>0?strkHTML(a.streak,1.4):"🔥"} ${a.streak}${a.streak>0&&tq===0?'<i class="riskd"></i>':""}</span>
-          <span class="hchip ${tq>=10?"gold":tq>=1?"on":""}" title="今日といた問題">✏️ ${tq}</span>
-          <span class="hchip" id="rankchip" title="今週のランキング" onclick="event.stopPropagation();renderRank()" style="cursor:pointer;">🏆 —</span>
-        </div>`;}catch(e){return ""}})()}
+        if(!a.streak)return "";
+        return `<div class="strkbig ${tq===0?"risk":""}"><span class="strkfire">🔥</span><b>${a.streak}</b><span class="strku">日連続</span>${tq===0?'<span class="strkw">今日1問で継続!</span>':""}</div>`;}catch(e){return ""}})()}
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
       <button class="btn go cta gobig" onclick="openStudy()">学習を始める　<span class="arrowa">→</span></button>
       <div class="qrow" id="qrow">${qrowHTML()}</div>
@@ -6477,7 +6480,10 @@ window.renderRank=async function(){
     <button class="rtab ${rankTab==="week"?"act":""}" onclick="setRankTab('week')">今週の問題数</button>
     <button class="rtab ${rankTab==="streak"?"act":""}" onclick="setRankTab('streak')">連続日数</button>
     <button class="rtab ${rankTab==="pat"?"act":""}" onclick="setRankTab('pat')">パターン制覇</button>
-  </div><div id="rlist" class="prog">読み込み中…</div>`,"none");
+  </div>
+  ${(()=>{const ws=new Date(weekStart()+"T00:00:00");const end=new Date(ws.getTime()+7*86400000);const left=Math.max(1,Math.ceil((end-Date.now())/86400000));
+    return `<div class="prog" style="margin:-4px 0 10px;font-size:12.5px;">⏳ 今週の集計まで <b style="color:var(--navy);">あと${left}日</b>(月曜0時に確定) ･ その週に<b>20問以上</b>で参加賞🎟</div>`;})()}
+  <div id="rlist" class="prog">読み込み中…</div>`,"none");
   mountIcons(main);
   if(sbUser&&nick)pushProfile();
   loadRank();
@@ -6508,10 +6514,11 @@ async function loadRank(){
         if(m)mineTop=`<div class="rrowi mineR" style="margin-bottom:10px;"><span>あなたは いま <b>${m.i+1}位</b></span><b>${m.wk}問</b></div>`;
       }
     }
+    const rwFor=i=>rankTab!=="week"?"":i===0?"🎟10 📜3":i===1?"🎟7 📜2":i===2?"🎟5 📜2":i<10?"🎟3 📜1":i<30?"🎟1":"";
     el.innerHTML=mineTop+(rows.length?rows.map((r,i)=>`<div class="rrow ${isMe(r)?"me":""}" onclick="showUserDogs(${i})">
       <span class="rnum2">${i+1}位</span><span class="ricon" id="ric${i}"></span><b style="color:var(--navy);">${escapeHtml(r.nickname)}</b>
       ${(r.streak||0)>0?strkHTML(r.streak,1.4):""}${r.ach_top?`<span class="achb">${escapeHtml(r.ach_top)}</span>`:""}
-      <span class="rv">${rankTab==="pat"?(r.pat_done||0)+" / "+(r.pat_total||47):(r[key]||0)+unit}</span></div>`).join("")
+      <span class="rv">${rankTab==="pat"?(r.pat_done||0)+" / "+(r.pat_total||47):(r[key]||0)+unit}${rwFor(i)?`<span class="rwsm">${rwFor(i)}</span>`:""}</span></div>`).join("")
      :`<div class="qpane">まだ参加者がいません。今なら1位!</div>`);
     rows.forEach((r,i)=>{const ic=document.getElementById("ric"+i);if(ic){const dg=(r.dogs||[])[r.partner||0];ic.appendChild(dogCanvas(dg?dogStage(dg.f||0):0,2,dg?(dg.b||0):0));}});
     try{mountIcons(el);}catch(e){}
