@@ -3260,6 +3260,9 @@ function estScore(){
   if(h.length){
     const rec=h.slice(-2).reduce((a,b)=>a+b.total,0)/Math.min(2,h.length);
     total=total*0.45+rec*0.55;
+  }else{
+    /* 模試前は、初回の実力チェック結果をスタート地点(下限)として使う。模試を受けたら実測が上書き */
+    try{const dg=(LS.get("b3_onb",null)||{}).diag;if(typeof dg==="number")total=Math.max(total,dg);}catch(e){}
   }
   return Math.max(0,Math.min(100,Math.round(total)));
 }
@@ -5214,6 +5217,77 @@ const WIZQ=[
    {v:"friend",t:"👋 友だち・紹介"},
    {v:"other",t:"📱 その他"}]}
 ];
+/* ---------- 初回ミニテスト: 5問で仮の現在地を測る(スキップ可) ---------- */
+const DIAGQ=[
+ {q:"決算になっても現金過不足2,000円(実際有高が帳簿より少ない)の原因が判明しなかった。振り替える勘定科目は?",
+  c:["雑損","雑益","現金","未収入金"],a:0,
+  x:"原因不明の不足額は決算で「雑損」に振り替えます"},
+ {q:"掛けで仕入れた商品のうち5,000円分を返品した。正しい仕訳は?",
+  c:["買掛金 5,000 / 仕入 5,000","仕入 5,000 / 買掛金 5,000","売掛金 5,000 / 売上 5,000","仕入 5,000 / 現金 5,000"],a:0,
+  x:"仕入戻しは、仕入れたときの仕訳(仕入/買掛金)の逆仕訳です"},
+ {q:"備品600,000円(耐用年数5年・残存価額ゼロ・定額法)の1年分の減価償却費は?",
+  c:["120,000円","100,000円","600,000円","60,000円"],a:0,
+  x:"600,000円 ÷ 5年 = 120,000円"},
+ {q:"売掛金100,000円に対して2%の貸倒引当金を設定する。引当金残高は500円(差額補充法)。繰入額は?",
+  c:["1,500円","2,000円","500円","2,500円"],a:0,
+  x:"設定額2,000円 − 残高500円 = 繰入1,500円"},
+ {q:"株式会社の決算で、当期純利益は損益勘定からどの勘定へ振り替える?",
+  c:["繰越利益剰余金","資本金","利益準備金","現金"],a:0,
+  x:"当期純利益は「繰越利益剰余金」勘定へ振り替えます"}
+];
+const DIAG_PTS=[0,5,15,25,35,45];   /* 正解数→スタート合格力 */
+let diagState=null;
+window.wizDiagOffer=function(){
+  const o=document.getElementById("wiz");if(!o)return wizDone();
+  o.innerHTML=`<div style="max-width:360px;width:100%;">
+    <div class="wizq">さいごに、30秒の<br>実力チェック(5問)</div>
+    <div class="wizsub">タップで答えるだけ。結果からスタート地点の合格力を推定します</div>
+    <div class="wizopts" style="margin-left:auto;margin-right:auto;">
+      <div class="wizopt" style="justify-content:center;background:var(--navy);color:#fff;border-color:var(--navy);" onclick="wizDiagStart()">やってみる　→</div>
+    </div>
+    <div class="wizskip" onclick="try{track('onb_diag_skip',{app:'b3'})}catch(e){};wizDone()">スキップ</div></div>`;
+};
+window.wizDiagStart=function(){
+  try{track("onb_diag_start",{app:"b3"})}catch(e){}
+  diagState={n:0,i:0};
+  wizDiagQ(0);
+};
+function wizDiagQ(i){
+  if(i>=DIAGQ.length)return wizDiagDone();
+  const Q=DIAGQ[i];
+  const order=Q.c.map((c,k)=>({c,k})).sort(()=>Math.random()-.5);
+  diagState.order=order;diagState.i=i;
+  const o=document.getElementById("wiz");if(!o)return;
+  o.innerHTML=`<div style="max-width:360px;width:100%;">
+    <div class="wizsub" style="margin-bottom:10px;">実力チェック ${i+1} / ${DIAGQ.length}</div>
+    <div class="wizq" style="font-size:16.5px;line-height:1.7;text-align:left;">${Q.q}</div>
+    <div class="wizopts" id="dgopts" style="margin-left:auto;margin-right:auto;">${order.map((op,k)=>`<div class="wizopt" onclick="wizDiagAnswer(${k})">${op.c}</div>`).join("")}</div>
+    <div id="dgres"></div>
+    <div class="wizskip" onclick="try{track('onb_diag_skip',{at:${i},app:'b3'})}catch(e){};wizDiagDone()">ここでやめる</div></div>`;
+  window.scrollTo(0,0);
+}
+window.wizDiagAnswer=function(k){
+  const i=diagState.i,Q=DIAGQ[i],ok=diagState.order[k].k===Q.a;
+  if(ok)diagState.n++;
+  try{track("onb_diag_q",{i,ok,app:"b3"})}catch(e){}
+  document.querySelectorAll("#dgopts .wizopt").forEach((el,j)=>{
+    el.onclick=null;el.style.opacity=".55";
+    if(diagState.order[j].k===Q.a){el.style.opacity="1";el.style.borderColor="var(--ok,#16a34a)";el.style.boxShadow="0 3px 0 var(--ok,#16a34a)";}
+    else if(j===k){el.style.opacity="1";el.style.borderColor="var(--ng,#dc2626)";el.style.boxShadow="0 3px 0 var(--ng,#dc2626)";}
+  });
+  const r=document.getElementById("dgres");
+  if(r)r.innerHTML=`<div style="margin-top:14px;font-weight:900;font-size:17px;color:${ok?"var(--ok,#16a34a)":"var(--ng,#dc2626)"};">${ok?"○ 正解!":"× おしい!"}</div>
+    <div style="font-size:12.5px;color:var(--tx2);margin-top:4px;line-height:1.6;">${Q.x}</div>
+    <button class="btn cta" style="width:100%;margin-top:12px;font-size:15px;" onclick="wizDiagQ(${i+1})">${i+1>=DIAGQ.length?"結果を見る":"つぎへ"}　→</button>`;
+};
+function wizDiagDone(){
+  const n=diagState?diagState.n:0;
+  const answered=diagState?diagState.i+(document.getElementById("dgres")&&document.getElementById("dgres").innerHTML?1:0):0;
+  const score=DIAG_PTS[Math.min(n,DIAG_PTS.length-1)];
+  wizAns.diagN=n;wizAns.diag=score;
+  try{track("onb_diag_done",{n,answered,score,app:"b3"})}catch(e){}
+  wizDone();
+}
 let wizAns=null;
 window.wizStart=function(){
   wizAns={};
@@ -5221,7 +5295,7 @@ window.wizStart=function(){
   wizStep(0);
 };
 function wizStep(i){
-  if(i>=WIZQ.length)return wizDone();
+  if(i>=WIZQ.length)return wizDiagOffer();
   const Q=WIZQ[i];
   let o=document.getElementById("wiz");
   if(!o){o=document.createElement("div");o.id="wiz";document.body.appendChild(o);}
@@ -5274,6 +5348,7 @@ function wizDone(){
   if(ed){const t0=new Date();t0.setHours(0,0,0,0);const d=Math.max(0,Math.round((ed-t0)/86400000));lines.push(`📅 試験まで <b>あと ${d}日</b>`);}
   else if(wizAns.exam==="1m")lines.push(`📅 目標: <b>1ヶ月で合格ライン</b>`);
   else if(wizAns.exam==="3m")lines.push(`📅 目標: <b>2〜3ヶ月で合格ライン</b>`);
+  if(typeof wizAns.diag==="number"&&wizAns.diagN!=null)lines.push(`📊 実力チェック <b>${wizAns.diagN} / 5問</b> → スタート合格力 <b>${wizAns.diag}pt</b>`);
   lines.push(`🎯 合格力70ptへ、1日 <b>+${pace}pt</b> ペース`);
   if(mins)lines.push(`⏰ 1日${mins>=120?"2時間":mins+"分"}ペースを、犬と一緒にキープ`);
   const exp=wizAns.level==="done"||wizAns.level==="retry";
