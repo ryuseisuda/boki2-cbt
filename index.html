@@ -904,6 +904,10 @@ body.dark .ydnm{color:#a8caa0;}
 .stampc.dog{border-style:solid;border-color:#c9bef0;background:linear-gradient(180deg,#f6f3ff,var(--card,#fff));}
 body.dark .stampc.ach{background:linear-gradient(180deg,#3a3115,var(--card));}
 body.dark .stampc.dog{background:linear-gradient(180deg,#2a2542,var(--card));}
+.stampc.sec{border-style:solid;border-color:#a855f7;background:linear-gradient(180deg,#faf5ff,var(--card,#fff));}
+body.dark .stampc.sec{background:linear-gradient(180deg,#2d1f42,var(--card));}
+#ghostbar{position:sticky;top:0;z-index:49;background:rgba(28,23,51,.88);color:#e8e4f5;font-size:12.5px;padding:6px 16px;text-align:center;backdrop-filter:blur(4px);}
+#ghostbar b{color:#cfc4f5;}
 .stampc.zomb{border-style:solid;border-color:#4b4560;background:linear-gradient(180deg,#2c2838,#3a3450);}
 .stampc.zomb b,.stampc.zomb .prog{color:#cfc9e8;}
 .stampgrid{border-radius:14px;padding:10px;}
@@ -1055,8 +1059,10 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
   <button id="btn-eod" onclick="showEOD()"><span class="nicon" data-icon="zap"></span>進捗をXに投稿<span class="hchip2 navchip"><span class="sicon" data-icon="ticket" data-s="1"></span>+1</span></button>
   <button id="btn-invite" onclick="openInvite()"><span class="nicon" data-icon="gift"></span>友達に紹介<span class="hchip2 navchip"><span class="sicon" data-icon="ticket" data-s="1"></span>+5</span></button>
   <button id="btn-theme" onclick="toggleTheme()"><span class="nicon" data-icon="moon"></span>ダークモード</button>
+  <button id="btn-snd" onclick="toggleSnd()"><span class="nicon" data-icon="zap"></span>効果音: オン</button>
 </div>
 <div id="tabs" class="hidden"></div>
+<div id="ghostbar" class="hidden"></div>
 <div class="wrap" id="main"></div>
 <footer id="ftr">
   <div><b>ボキイヌ 2級</b> ｜ 2026年度試験範囲対応 ｜ <b>ベータ版</b>(2026/9/30まで全機能無料) ｜ <a id="lvlink" href="https://ryuseisuda.github.io/boki2-cbt/boki3/" style="color:var(--blue);font-weight:700;">3級版はこちら</a></div>
@@ -1735,6 +1741,7 @@ let exState=null; /* 進行中の試験 */
 function setMode(m){ /* home|exam|other */
   document.body.classList.remove("onb");
   document.body.classList.toggle("exam",m==="exam");
+  try{if(m!=="exam")document.getElementById("ghostbar").classList.add("hidden");}catch(e){}
   tabs.classList.toggle("hidden",m!=="exam");
   timerEl.classList.toggle("hidden",m!=="exam");
   btnFinish.classList.toggle("hidden",m!=="exam");
@@ -2074,6 +2081,7 @@ function showLvUp(from,to){
 /* ---- ごはん券の付与 + 自動で犬にあげる ---- */
 function addFood(n,fromEl){
   if(!(n>0))return;
+  try{SND.coin();}catch(e){}
   LS.set(KEY_F,LS.get(KEY_F,0)+n);
   try{bumpDay("fd",n);}catch(e){}
   const dogT=document.getElementById("btdog")?"#btdog":(document.getElementById("homedog")?"#homedog":"#btn-acct");
@@ -2140,6 +2148,7 @@ window.hatchNewDog=function(i){
     </div></div>`;
   document.body.appendChild(ovl);
   ovl.querySelector("#gdog").appendChild(dogCanvas(0,5,d.b));
+  try{SND.fanfare();}catch(e){}
   const inp=ovl.querySelector("#hname");inp.focus();
   inp.onkeydown=e=>{if(e.key==="Enter")hatchName(i);};
   try{confettiBurst();}catch(e){}
@@ -2176,6 +2185,7 @@ window.flushEvo=flushEvo;
 /* ---- チケット付与 ---- */
 function addTicket(n,fromEl){
   if(!(n>0))return;
+  try{SND.coin();}catch(e){}
   LS.set(KEY_T,LS.get(KEY_T,0)+n);
   for(let i=0;i<n;i++)flyTo(fromEl,"#hud-tk",`<span class="sicon" data-icon="ticket" data-s="1"></span>`,i*140);
   setTimeout(updHUD,780);
@@ -2622,6 +2632,8 @@ function recordActivity(n,o){
   e.q+=n;e.o+=o;
   try{e.est=estScore();}catch(x){}      /* その日の推定点を残して、伸びを測れるようにする */
   d[k]=e;LS.set(KEY_A,d);
+  try{if(n>0){if(o>0)SND.ok();else SND.ng();}}catch(x){}
+  try{checkSecrets(o);}catch(x){}
   try{setTimeout(maybeGrantCapsule,450);}catch(x){}   /* 挑戦ログが書かれた後にノルマ判定 */
   if(n===1){
     if(o>0){combo++;}else{combo=0;}
@@ -3165,6 +3177,7 @@ function renderHome(){
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
       <button class="btn go cta gobig" onclick="openStudy()">学習を始める　<span class="arrowa">→</span></button>
       <div class="qrow" id="qrow">${qrowHTML()}</div>
+      ${(()=>{try{return homeDailyHTML();}catch(e){return ""}})()}
     </div>
     <div onclick="renderGarden()" style="cursor:pointer;text-align:center;flex:0 1 48%;min-width:0;">
       <div id="homedog" style="display:flex;align-items:flex-end;justify-content:center;"></div>
@@ -3287,6 +3300,17 @@ function startExam(id){
       :p.boxes.map(()=>({v:"",f:""})));
   });
   exState={ex,answers,cur:1,remain:ex.minutes*60,times:{},secStart:Date.now()};
+  /* ゴースト: 前回(同じ模試優先)の大問別タイムを持ち込む */
+  try{
+    const h=LS.get(KEY_H,[]);
+    const prev=h.slice().reverse().find(a=>a.examId===ex.id&&a.secs&&a.secs.length)||h.slice().reverse().find(a=>a.secs&&a.secs.length);
+    const gb=document.getElementById("ghostbar");
+    if(prev){
+      let acc=0;
+      exState.ghost={total:prev.total,cum:prev.secs.map(s=>{acc+=(s.time||0);return{no:s.no,end:acc};})};
+      if(gb){gb.classList.remove("hidden");gb.innerHTML="👻 <b>前回のキミ</b>と ならんで走行中…";}
+    }else if(gb)gb.classList.add("hidden");
+  }catch(e){}
   ex.sections.forEach(s=>exState.times[s.no]=0);
   setMode("exam");
   $("#hdr-title").textContent=ex.title;
@@ -3296,6 +3320,7 @@ function startExam(id){
 }
 function tick(){
   exState.remain--;updateTimer();
+  try{if(exState.remain%5===0)updateGhost();}catch(e){}
   if(exState.remain<=0){finishExam(true);}
 }
 function updateTimer(){
@@ -3439,6 +3464,7 @@ function finishExam(auto){
 const mmss=s=>Math.floor(s/60)+"分"+(s%60)+"秒";
 function renderResult(ex,secRes,total,detail,auto){
   const pass=total>=70;
+  try{if(total>=100)grantSecret("perf");}catch(e){}
   /* 前回の模試とくらべた伸び */
   let grow="";
   try{
@@ -3465,7 +3491,7 @@ function renderResult(ex,secRes,total,detail,auto){
   <table class="rtable"><tr><th>大問</th><th>分野</th><th>得点</th><th>所要時間</th></tr>
   ${secRes.map(r=>`<tr><td>${r.name}</td><td>${r.tag}</td><td class="${r.got>=r.max*0.7?"correct":"wrong"}">${r.got} / ${r.max}</td><td>${mmss(r.time)}</td></tr>`).join("")}
   <tr><th>合計</th><th></th><th>${total} / 100</th><th>${mmss(secRes.reduce((s,r)=>s+r.time,0))}</th></tr></table>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;"><button class="btn" onclick="shareX(${total})">結果をXでシェア</button><button class="btn gray" onclick="renderDash()">分析を見る</button><button class="btn gray" onclick="renderHome()">ホームへ</button></div></div>`;
+  <div style="display:flex;gap:10px;flex-wrap:wrap;"><button class="btn" onclick="makeReportCard()">📜 成績通知書を作ってシェア</button><button class="btn gray" onclick="renderDash()">分析を見る</button><button class="btn gray" onclick="renderHome()">ホームへ</button></div></div>`;
   detail.forEach(d=>{
     html+=`<div class="qpane"><h2>${d.sec.name} の解答・解説</h2>`;
     d.items.forEach(it=>{
@@ -3477,7 +3503,107 @@ function renderResult(ex,secRes,total,detail,auto){
     });
     html+=`</div>`;
   });
-  main.innerHTML=html;window.scrollTo(0,0);
+  /* 発表演出: ドラムロール→結果 */
+  const reveal=document.createElement("div");
+  reveal.id="cele-ovl";
+  reveal.innerHTML=`<div id="cele-box" style="text-align:center;"><h2 style="color:var(--navy);font-size:22px;">けっか はっぴょう</h2><div id="rvdots" style="font-size:34px;letter-spacing:6px;margin:14px 0;">・</div></div>`;
+  document.body.appendChild(reveal);
+  try{SND.drum();}catch(e){}
+  let dots=1;
+  const iv=setInterval(()=>{dots++;const el=document.getElementById("rvdots");if(el)el.textContent="・".repeat(Math.min(dots,5));},220);
+  setTimeout(()=>{
+    clearInterval(iv);
+    const o=document.getElementById("cele-ovl");if(o)o.remove();
+    if(pass){try{SND.fanfare();}catch(e){}try{confettiBurst();}catch(e){}}
+    main.innerHTML=html;window.scrollTo(0,0);
+    window._lastResult={ex,secRes,total,pass};
+  },1400);
+}
+/* 成績通知書(画像)を作ってシェア */
+window.makeReportCard=async function(){
+  const R=window._lastResult;if(!R)return;
+  const W=900,H=520;
+  const c=document.createElement("canvas");c.width=W;c.height=H;
+  const x=c.getContext("2d");
+  x.fillStyle="#f6f4ee";x.fillRect(0,0,W,H);
+  x.strokeStyle="#152a52";x.lineWidth=6;x.strokeRect(12,12,W-24,H-24);
+  x.fillStyle="#152a52";x.fillRect(12,12,W-24,74);
+  x.fillStyle="#fff";x.font="900 34px 'Zen Kaku Gothic New',sans-serif";
+  x.fillText("成 績 通 知 書",40,62);
+  x.font="700 16px sans-serif";x.textAlign="right";
+  x.fillText("ボキイヌ "+((typeof EXAM_SEC!=="undefined"&&EXAM_SEC===3600)?"3級":"2級")+" CBT模試",W-40,60);
+  x.textAlign="left";
+  x.fillStyle="#152a52";x.font="700 20px sans-serif";
+  x.fillText(R.ex.title,44,126);
+  x.font="900 92px 'Zen Kaku Gothic New',sans-serif";
+  x.fillText(R.total+"点",44,232);
+  x.font="700 17px sans-serif";x.fillStyle="#5a6478";
+  x.fillText(new Date().toLocaleDateString("ja-JP"),44,266);
+  if(R.pass){
+    x.save();x.translate(320,190);x.rotate(-0.18);
+    x.strokeStyle="#d33";x.lineWidth=5;x.beginPath();x.arc(0,0,56,0,7);x.stroke();
+    x.fillStyle="#d33";x.font="900 34px serif";x.textAlign="center";x.fillText("合格",0,12);x.restore();x.textAlign="left";
+  }
+  let y=132;
+  x.font="700 16px sans-serif";
+  R.secRes.forEach(r=>{
+    x.fillStyle="#5a6478";x.fillText(r.name,470,y);
+    x.fillStyle="#152a52";x.fillText(r.got+" / "+r.max,600,y);
+    x.fillStyle="#e4e1d4";x.fillRect(680,y-13,170,14);
+    x.fillStyle=r.got>=r.max*0.7?"#2b8a4a":"#d9a13a";
+    x.fillRect(680,y-13,170*Math.min(1,r.got/Math.max(1,r.max)),14);
+    y+=40;
+  });
+  try{
+    const d=getDogs()[getPartner()];
+    if(d&&!d.egg){
+      await new Promise(res=>{getStageSheet(d.b||0,0,sheet=>{
+        const fr=dogFrame(dogStage(d.f||0));
+        x.imageSmoothingEnabled=false;
+        x.drawImage(sheet,fr*64,0,64,64,60,300,180,180);res();});});
+      x.fillStyle="#5a6478";x.font="700 14px sans-serif";
+      x.fillText((d.title?d.title+"の":"")+(d.n||""),70,496);
+    }
+  }catch(e){}
+  x.fillStyle="#8a90a4";x.font="700 15px sans-serif";x.textAlign="right";
+  x.fillText("ryuseisuda.github.io/boki2-cbt",W-40,H-38);
+  x.textAlign="left";
+  const url=c.toDataURL("image/png");
+  const old=document.getElementById("cele-ovl");if(old)old.remove();
+  const ovl=document.createElement("div");ovl.id="cele-ovl";
+  ovl.onclick=e=>{if(e.target===ovl)ovl.remove();};
+  ovl.innerHTML=`<div id="cele-box" style="max-width:560px;">
+    <img src="${url}" style="width:100%;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.25);">
+    <p class="prog" style="margin:8px 0;">長おしで保存できます</p>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn" id="rc-share">画像をシェア</button>
+      <button class="btn gray" onclick="shareX(${R.total})">Xでテキスト投稿</button>
+      <button class="btn gray" onclick="document.getElementById('cele-ovl').remove()">とじる</button>
+    </div></div>`;
+  document.body.appendChild(ovl);
+  document.getElementById("rc-share").onclick=async()=>{
+    try{
+      const blob=await (await fetch(url)).blob();
+      const file=new File([blob],"bokiinu_result.png",{type:"image/png"});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:"ボキイヌのCBT模試 #簿記"});return;}
+    }catch(e){}
+    miniToast("この端末ではシェアできないので、画像を長おしで保存してね");
+  };
+  try{track("report_card",{total:R.total});}catch(e){}
+};
+function updateGhost(){
+  const g=exState&&exState.ghost;const gb=document.getElementById("ghostbar");
+  if(!g||!gb)return;
+  const elapsed=exState.ex.minutes*60-exState.remain;
+  let gsec=null;
+  for(let i=0;i<g.cum.length;i++){if(elapsed<g.cum[i].end){gsec=g.cum[i].no;break;}}
+  const my=exState.cur;
+  let cmp;
+  if(gsec==null)cmp=`もう解き終わって見直し中(このとき${g.total}点)`;
+  else if(gsec>my)cmp=`第${gsec}問を解いている ─ 先を行かれてる!`;
+  else if(gsec<my)cmp=`まだ第${gsec}問 ─ きみがリード🔥`;
+  else cmp=`おなじ第${gsec}問を解いている`;
+  gb.innerHTML=`👻 <b>前回のキミ</b>: ${cmp}`;
 }
 window.startExam=startExam;
 
@@ -4007,6 +4133,7 @@ window.roadClaim=function(v){
   const r=n.rw||{};
   if(r.fd)addFood(r.fd,null);if(r.tk)addTicket(r.tk,null);
   if(r.mockt)addItem("mockt",r.mockt);if(r.stampot)addItem("stampot",r.stampot);
+  try{SND.fanfare();}catch(e){}
   try{confettiBurst();}catch(e){}
   try{track("road_claim",{v});}catch(e){}
   if(n.mock){LS.set("b2_capsg",LS.get("b2_capsg",0)+1);setTimeout(()=>miniToast("✨ 関所クリア! 金カプセルを手に入れた"),1100);}
@@ -5684,6 +5811,36 @@ function checkAchStamps(){
     return added;
   }catch(e){return 0;}
 }
+/* シークレットスタンプ: かくし条件で貼られる */
+const SECRETS=[
+ {id:"owl",  e:"🦉",nm:"よなかのふくろう"},
+ {id:"bird", e:"🐓",nm:"はやおきどり"},
+ {id:"lucky",e:"🎰",nm:"ラッキーセブン"},
+ {id:"cent", e:"💯",nm:"百問のあかし"},
+ {id:"perf", e:"🌟",nm:"パーフェクト模試"}
+];
+function grantSecret(id){
+  try{
+    const g=stampList();
+    if(g.some(s=>s.k==="sec"&&s.id===id))return;
+    const d=SECRETS.find(s=>s.id===id);if(!d)return;
+    stampAdd({k:"sec",id:d.id,e:d.e,nm:d.nm});
+    try{SND.fanfare();}catch(e){}
+    setTimeout(()=>miniToast(`✨ シークレットスタンプ発見! ${d.e}「${d.nm}」`),900);
+    try{track("secret",{id});}catch(e){}
+  }catch(e){}
+}
+function checkSecrets(o){
+  try{
+    const h=new Date().getHours();
+    if(o>0&&(h>=0&&h<3))grantSecret("owl");
+    if(o>0&&(h>=5&&h<7))grantSecret("bird");
+    if(typeof combo!=="undefined"&&combo===7)grantSecret("lucky");
+    const d=LS.get(KEY_A,{});
+    const tot=Object.values(d).reduce((a,e)=>a+(e.q||0),0);
+    if(tot>=100)grantSecret("cent");
+  }catch(e){}
+}
 /* きょうのノルマ達成でカプセル1個(1日1回) */
 function maybeGrantCapsule(){
   try{
@@ -5711,6 +5868,124 @@ function isSlacking(){
   }catch(e){return false;}
 }
 window.isSlacking=isSlacking;
+/* ---------- 効果音(合成音・ファイル不要) ---------- */
+const SND=(()=>{
+  let ctx=null;
+  function c(){
+    if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return null;}}
+    if(ctx&&ctx.state==="suspended"){try{ctx.resume();}catch(e){}}
+    return ctx;
+  }
+  function tone(f,t0,dur,type,vol,slide){
+    const a=c();if(!a)return;
+    const o=a.createOscillator(),g=a.createGain();
+    o.type=type||"sine";
+    o.frequency.setValueAtTime(f,a.currentTime+t0);
+    if(slide)o.frequency.exponentialRampToValueAtTime(slide,a.currentTime+t0+dur);
+    g.gain.setValueAtTime(0,a.currentTime+t0);
+    g.gain.linearRampToValueAtTime(vol||.1,a.currentTime+t0+.012);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+t0+dur);
+    o.connect(g);g.connect(a.destination);
+    o.start(a.currentTime+t0);o.stop(a.currentTime+t0+dur+.05);
+  }
+  const on=()=>!LS.get("b2_mute",0);
+  return{
+    ok(){if(!on())return;tone(880,0,.09,"sine",.09);tone(1318,.07,.13,"sine",.09);},
+    ng(){if(!on())return;tone(196,0,.14,"square",.04);tone(165,.09,.18,"square",.04);},
+    coin(){if(!on())return;tone(988,0,.06,"square",.05);tone(1319,.06,.13,"square",.05);},
+    pop(){if(!on())return;tone(260,0,.06,"sine",.11,760);tone(920,.06,.1,"triangle",.07);},
+    fanfare(){if(!on())return;[523,659,784,1047].forEach((f,i)=>tone(f,i*.09,.17,"triangle",.08));tone(1047,.42,.3,"triangle",.09);},
+    drum(){if(!on())return;for(let i=0;i<12;i++)tone(110+Math.random()*50,i*.075,.05,"square",.045);},
+    unmuteDemo(){tone(880,0,.09,"sine",.09);tone(1318,.07,.13,"sine",.09);}
+  };
+})();
+window.SND=SND;
+/* ---------- きょうの1問: 全員同じ問題・翌日に全国正解率 ---------- */
+function dailyQ(){
+  const k=daysKey(new Date());
+  let h=0;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;
+  return{k,q:QZ[h%QZ.length]};
+}
+function homeDailyHTML(){
+  try{
+    const {k}=dailyQ();
+    const done=LS.get("b2_dailyq",null);
+    const st=done&&done.d===k?(done.ok?"○ 正解!":"× ざんねん"):null;
+    return `<button class="qrow-btn" style="margin-top:8px;" onclick="openDailyQ()">
+      <span class="qrow-h"><b>🌏 きょうの1問</b><span class="prog" id="dqst">${st?st+" ･ 全国と比べる →":"みんなと同じ問題に挑戦(+🍖2)"}</span></span>
+    </button>`;
+  }catch(e){return "";}
+}
+window.openDailyQ=function(){
+  const {k,q}=dailyQ();
+  const done=LS.get("b2_dailyq",null);
+  const answered=done&&done.d===k;
+  const old=document.getElementById("cele-ovl");if(old)old.remove();
+  const ovl=document.createElement("div");ovl.id="cele-ovl";
+  ovl.onclick=e=>{if(e.target===ovl)ovl.remove();};
+  document.body.appendChild(ovl);
+  if(answered){dailyResultUI(ovl,q,done.ok);return;}
+  const order=q.c.map((c,i)=>({c,i})).sort(()=>Math.random()-.5);
+  window._dqOrder=order;
+  ovl.innerHTML=`<div id="cele-box" style="text-align:left;max-width:480px;">
+    <b style="color:var(--navy);">🌏 きょうの1問</b>
+    <p class="prog" style="margin:2px 0 10px;">全国のみんなと同じ問題。あしたに正解率が出ます</p>
+    <div class="qtext" style="font-size:15px;">${q.q}</div>
+    <div id="dqc">${order.map((o,i2)=>`<button class="qzc" onclick="answerDailyQ(${i2})">${o.c}</button>`).join("")}</div>
+  </div>`;
+};
+window.answerDailyQ=function(i2){
+  const {k,q}=dailyQ();
+  const ok=window._dqOrder[i2].i===0;
+  LS.set("b2_dailyq",{d:k,ok});
+  try{recordActivity(1,ok?1:0);}catch(e){}
+  if(ok)addFood(2,null);
+  try{track("daily_q",{d:k,ok,app:"b2"});}catch(e){}
+  document.querySelectorAll("#dqc .qzc").forEach((b,j)=>{b.disabled=true;
+    if(window._dqOrder[j].i===0)b.classList.add("ok");else if(j===i2)b.classList.add("ng");});
+  const box=document.querySelector("#cele-box");
+  const d2=document.createElement("div");
+  d2.innerHTML=`<div style="margin-top:10px;font-weight:900;font-size:18px;" class="${ok?"correct":"wrong"}">${ok?"○ 正解! 🍖+2":"× ざんねん!"}</div>
+    <div class="exp">${q.x||""}</div>
+    <p class="prog" id="dqrate" style="margin-top:8px;">きのうの全国正解率をしらべ中…</p>
+    <button class="btn gray" style="width:100%;margin-top:10px;" onclick="document.getElementById('cele-ovl').remove();try{renderHome()}catch(e){}">とじる</button>`;
+  box.appendChild(d2);
+  fetchDailyRate(document.getElementById("dqrate"));
+};
+function dailyResultUI(ovl,q,ok){
+  ovl.innerHTML=`<div id="cele-box" style="text-align:left;max-width:480px;">
+    <b style="color:var(--navy);">🌏 きょうの1問 — 回答ずみ</b>
+    <div class="qtext" style="font-size:14px;margin-top:8px;">${q.q}</div>
+    <div style="margin-top:8px;font-weight:900;" class="${ok?"correct":"wrong"}">きみ: ${ok?"○ 正解":"× 不正解"}</div>
+    <div class="exp">${q.x||""}</div>
+    <p class="prog" id="dqrate" style="margin-top:8px;">きのうの全国正解率をしらべ中…</p>
+    <button class="btn gray" style="width:100%;margin-top:10px;" onclick="document.getElementById('cele-ovl').remove()">とじる</button></div>`;
+  fetchDailyRate(document.getElementById("dqrate"));
+}
+async function fetchDailyRate(el){
+  try{
+    const y=new Date();y.setDate(y.getDate()-1);
+    const yk=daysKey(y);
+    const r=await fetch(AN_URL+"?ev=eq.daily_q&meta->>d=eq."+yk+"&meta->>app=eq.b2&select=meta&limit=1000",
+      {headers:{apikey:AN_KEY,Authorization:"Bearer "+AN_KEY}});
+    const rows=await r.json();
+    if(!el)return;
+    if(!Array.isArray(rows)||rows.length<1){el.textContent="きのうの全国データはまだありません。あしたまた見てね";return;}
+    const okn=rows.filter(x=>x.meta&&x.meta.ok).length;
+    el.innerHTML=`きのうの全国正解率: <b style="color:var(--navy);">${Math.round(okn/rows.length*100)}%</b> (${rows.length}人が挑戦)`;
+  }catch(e){if(el)el.textContent="全国データを取得できませんでした";}
+}
+window.toggleSnd=function(){
+  const m=LS.get("b2_mute",0)?0:1;
+  LS.set("b2_mute",m);
+  sndBtn();
+  if(!m)SND.unmuteDemo();
+};
+function sndBtn(){
+  const b=document.getElementById("btn-snd");
+  if(b)b.innerHTML=`<span class="nicon" data-icon="zap"></span>効果音: ${LS.get("b2_mute",0)?"オフ":"オン"}`;
+}
+setTimeout(()=>{try{sndBtn();mountIcons(document.getElementById("btn-snd"));}catch(e){}},400);
 /* 勉強の仕方から二つ名を決める(卒業時) */
 function styleTitle(){
   try{
@@ -5746,6 +6021,7 @@ window.openCapsule=function(gold){
    <p style="color:#6b6488;">タップして あけよう</p></div>`;
   document.body.appendChild(ovl);
   ovl.querySelector("#capball").onclick=function(){
+    try{SND.pop();}catch(e){}
     if(tier.k==="r"||tier.k==="e"){try{confettiBurst();}catch(e){}}
     ovl.querySelector("#cele-box").innerHTML=`<div style="font-size:64px;line-height:1.3;">${p.e}</div>
       <div style="margin:6px 0;"><span style="display:inline-block;background:${tier.c};color:#fff;border-radius:8px;padding:2px 12px;font-size:14px;font-weight:800;">${tier.n}</span></div>
@@ -5800,6 +6076,7 @@ window.renderGarden=function(){
     if(s.k==="zomb")return `<div class="stampc zomb" style="${rot}" onclick="stampInfo(${oi})"><span class="stampi" id="stmpd${oi}"></span><b>ゾンビ犬</b><span class="prog">🎟1で退去</span></div>`;
     if(s.k==="dog")return `<div class="stampc dog" style="${rot}" onclick="stampInfo(${oi})"><span class="stampi" id="stmpd${oi}"></span><b>${escapeHtml(s.nm)}</b><span class="prog">そだてた記録</span></div>`;
     if(s.k==="ach")return `<div class="stampc ach" style="${rot}" onclick="stampInfo(${oi})"><span class="stampi">${s.e}</span><b>${escapeHtml(s.nm)}</b><span class="prog">じっせき</span></div>`;
+    if(s.k==="sec")return `<div class="stampc sec" style="${rot}" onclick="stampInfo(${oi})"><span class="stampi">${s.e}</span><b>${escapeHtml(s.nm)}</b><span class="prog">シークレット</span></div>`;
     const t=tierOf(s.r);
     return `<div class="stampc" style="${rot}border-color:${t.c}55;" onclick="stampInfo(${oi})"><span class="stampi">${s.e}</span><b>${escapeHtml(s.nm)}</b><span class="prog" style="color:${t.c};font-weight:800;">${t.n}</span></div>`;
   });
@@ -5814,6 +6091,7 @@ window.renderGarden=function(){
     </div>
     ${(()=>{const pages=[];for(let p=0;p<stampPages();p++){pages.push(`<div class="prog" style="margin:${p?14:0}px 0 4px;font-weight:700;">${p+1}まいめ</div><div class="stampgrid book-${bt.k}">${cellArr.slice(p*20,p*20+20).join("")}</div>`);}return pages.join("");})()}
     ${stamps.length?"":`<p class="prog" style="margin-top:8px;">まだ1まいもない。ノルマ達成のカプセルとガチャで貼っていこう</p>`}
+    ${(()=>{try{const got=new Set(stamps.filter(s=>s.k==="sec").map(s=>s.id));const rest=SECRETS.length-got.size;return rest>0?`<p class="prog" style="margin-top:8px;font-size:11.5px;">✨ シークレット のこり${rest}まい: ${SECRETS.map(s=>got.has(s.id)?s.e:"❓").join(" ")}(かくし条件で貼られる)</p>`:"";}catch(e){return "";}})()}
   </div>`;
   /* 庭: 犬たちを置くだけ(動かない)。ゆくゆくはスタンプと合体した庭に */
   const zombY=(()=>{try{return isSlacking();}catch(e){return false;}})();
@@ -5972,6 +6250,7 @@ function runFeedAnim(key,dogSel){
 }
 /* ポケモン風 進化シネマ */
 function evoCinema(name,breed,newSt,btnLabel,btnFn){
+  try{SND.fanfare();}catch(e){}
   let o=document.getElementById("cele-ovl");if(o)o.remove();
   o=document.createElement("div");o.id="cele-ovl";
   o.innerHTML=`<div id="cele-box" class="pixf" style="background:transparent;box-shadow:none;text-align:center;">
@@ -6154,6 +6433,7 @@ window.rollGacha=function(){
 /* タマゴからスタンプが生まれる */
 function hatchStamp(sp,tier){
   const ovl=document.getElementById("cele-ovl");if(!ovl)return;
+  try{SND.pop();}catch(e){}
   if(tier.k==="r"||tier.k==="e"){try{confettiBurst();}catch(e){}}
   try{track("gacha",{kind:"stamp",r:tier.k});}catch(e){}
   if(stampFull()){stampExchangeUI({k:"emo",e:sp.e,nm:sp.nm,r:tier.k},tier);return;}
@@ -6704,7 +6984,7 @@ async function pushProfile(){
     /* クライアントの値をそのまま信用しないための上限。根本解決にはサーバ集計が必要 */
   const clamp=(v,mx)=>{const x=Number(v);return isFinite(x)&&x>0?Math.min(Math.floor(x),mx):0;};
   /* 週が変わっていたら、先週の成績を last_week_* に退避してからでないと順位を出せない */
-  const row={user_id:sbUser.id,nickname:nick,week_start:ws,week_solved:clamp(wk,3000),streak:clamp(a.streak,4000),pat_done:clamp(po,pt),pat_total:clamp(pt,200),mock_best:clamp(best,100),ach:_es.length,ach_top:_es.length?_es[_es.length-1].nm:"",dogs:getDogs().map(x=>({f:x.f||0,b:x.b||0,n:(x.n||"").slice(0,10)})),partner:getPartner(),updated_at:new Date().toISOString()};
+  const row={user_id:sbUser.id,nickname:nick,week_start:ws,week_solved:clamp(wk,3000),streak:clamp(a.streak,4000),pat_done:clamp(po,pt),pat_total:clamp(pt,200),mock_best:clamp(best,100),ach:_es.length,ach_top:_es.length?_es[_es.length-1].nm:"",dogs:getDogs().map(x=>({f:x.f||0,b:x.b||0,n:(x.n||"").slice(0,10),egg:x.egg?1:0,title:(x.title||"").slice(0,8)})),partner:getPartner(),stamps:(()=>{try{return{n:stampList().length,list:stampList().slice(0,20).map(s=>({k:s.k,e:s.e||"",nm:(s.nm||"").slice(0,24),r:s.r||"",b:s.b}))};}catch(e){return null;}})(),updated_at:new Date().toISOString()};
     try{
       const {data:prev}=await sb.from("profiles").select("week_start,week_solved,last_week_start,last_week_solved").eq("user_id",sbUser.id).maybeSingle();
       if(prev&&prev.week_start&&prev.week_start!==ws){
@@ -6808,7 +7088,7 @@ window.renderRank=async function(){
 };
 async function loadRank(){
   try{
-    const {data,error}=await sb.from("profiles").select("nickname,week_start,week_solved,streak,pat_done,pat_total,mock_best,ach,ach_top,dogs,partner").limit(200);
+    const {data,error}=await sb.from("profiles").select("nickname,week_start,week_solved,streak,pat_done,pat_total,mock_best,ach,ach_top,dogs,partner,stamps").limit(200);
     const el=document.getElementById("rlist");if(!el)return;
     if(error||!data){el.textContent="読み込みエラー("+(error?error.message:"")+")";return;}
     const ws=weekStart();
@@ -6847,9 +7127,15 @@ window.showUserDogs=function(i){
   const old=document.getElementById("cele-ovl");if(old)old.remove();
   const ovl=document.createElement("div");ovl.id="cele-ovl";ovl.onclick=e=>{if(e.target===ovl)ovl.remove();};
   const dogs=r.dogs||[];
-  ovl.innerHTML=`<div id="cele-box"><h2 style="color:var(--navy);font-size:19px;">${escapeHtml(r.nickname)} さんの犬 (${dogs.length}匹)</h2>
+  const sb2=r.stamps&&r.stamps.list?`<div style="text-align:left;margin-top:12px;"><b style="color:var(--navy);font-size:14px;">📖 スタンプ帳(${r.stamps.n}まい)</b>
+    <div class="stampgrid book-w" style="margin-top:6px;max-height:230px;overflow-y:auto;">${r.stamps.list.map(s=>{
+      const ic=s.k==="dog"||s.k==="zomb"?"🐶":s.e;
+      const sub=s.k==="ach"?"じっせき":s.k==="sec"?"シークレット":s.k==="dog"?"そだてた記録":"";
+      return `<div class="stampc ${s.k==="ach"?"ach":s.k==="sec"?"sec":s.k==="dog"?"dog":""}"><span class="stampi">${ic}</span><b>${escapeHtml(s.nm)}</b><span class="prog">${sub}</span></div>`;}).join("")}</div></div>`:"";
+  ovl.innerHTML=`<div id="cele-box" style="max-width:560px;"><h2 style="color:var(--navy);font-size:19px;">${escapeHtml(r.nickname)} さんの犬 (${dogs.length}匹)</h2>
   <div id="udogs" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:16px 0;max-height:300px;overflow-y:auto;"></div>
   ${dogs.length?"":"<p class='prog'>まだ犬がいません</p>"}
+  ${sb2}
   <button class="btn gray" onclick="document.getElementById('cele-ovl').remove()">閉じる</button></div>`;
   document.body.appendChild(ovl);
   const box=ovl.querySelector("#udogs");
