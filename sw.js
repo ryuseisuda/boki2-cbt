@@ -6,7 +6,7 @@ self.addEventListener("push",e=>{
   try{d=e.data?e.data.json():{};}catch(err){d={body:e.data?e.data.text():""};}
   const title=d.title||"ボキイヌ";
   const opts={
-    body:d.body||"きょうの1問、といていこう🐶",
+    body:d.body||"ぼくのこと わすれてない…？ きょうの1問、いっしょにとこ🐶",
     icon:"/boki2-cbt/icon-192.png",
     badge:"/boki2-cbt/icon-192.png",
     data:{url:d.url||"/boki2-cbt/"},
