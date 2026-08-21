@@ -3492,7 +3492,7 @@ function renderDrillQ(){
   </div></div>`;
   main.querySelectorAll("input[data-j]").forEach(inp=>inp.addEventListener("blur",()=>{const n=parseNum(inp.value);inp.value=n==null?"":fmt(n);}));
   $("#d-grade").onclick=()=>gradeDrill(q);
-  btMount(60,()=>{const m=btMiss();const r=$("#dres");
+  btMount(90,()=>{const m=btMiss();const r=$("#dres");
     if(!m||!m.dead)btPop("⏰ 時間切れ",1);});
 }
 function gradeDrill(q){
@@ -3606,7 +3606,7 @@ function masteryFromLogs(id,fallback){
   const settled=succ.filter(x=>x.t>=succ[0].t+MST_GAP);
   if(settled.length){
     v=MST.settled;
-    if(settled.some(x=>x.sec<=Math.max(90,(x.n||1)*45)))v=MST.timed;
+    if(settled.some(x=>x.sec<=timeLimitOf(x.n)))v=MST.timed;
   }
   const last=logs.reduce((a,b)=>a.t>b.t?a:b);
   if(last.ok/last.n<0.8)v=Math.min(v,MST.solved);
@@ -3994,7 +3994,7 @@ function masteryTimes(id){
       if(s==null)s=x.t;
       else if(x.t>=s+MST_GAP){
         if(d==null)d=x.t;
-        if(ti==null&&x.sec<=Math.max(90,(x.n||1)*45))ti=x.t;
+        if(ti==null&&x.sec<=timeLimitOf(x.n))ti=x.t;
       }
     }
   }
@@ -4513,7 +4513,10 @@ function patRender(q,lock){
   window.scrollTo(0,0);
 }
 /* パターンの目安時間(秒): 欄1つあたり45秒、最低90秒 */
-function patLimit(q){return Math.max(90,(q.boxes?q.boxes.length:1)*45);}
+/* 目安時間: 本番は90分/100点=54秒/点。1欄≒2点なので1欄90秒・最低3分が本番相当ペース */
+function timeLimitOf(n){return Math.max(180,(n||1)*90);}
+window.timeLimitOf=timeLimitOf;
+function patLimit(q){return timeLimitOf(q.boxes?q.boxes.length:1);}
 function gradePat(q){
   let got=0;const okFlags=[];let newTry=0,newOk=0;
   q.boxes.forEach((b,i)=>{
@@ -5877,7 +5880,7 @@ function styleTitle(){
     const logs=LS.get(KEY_LOG,[]);
     if(!logs.length)return "がんばりや";
     const n=logs.length;
-    const inTime=logs.filter(x=>x.n>0&&x.ok/x.n>=0.8&&x.sec<=Math.max(90,(x.n||1)*45)).length/n;
+    const inTime=logs.filter(x=>x.n>0&&x.ok/x.n>=0.8&&x.sec<=timeLimitOf(x.n)).length/n;
     const okr=logs.filter(x=>x.n>0&&x.ok/x.n>=0.8).length/n;
     const hrs=logs.map(x=>new Date(x.t).getHours());
     const morning=hrs.filter(h=>h>=5&&h<9).length/n, night=hrs.filter(h=>h>=22||h<2).length/n;
