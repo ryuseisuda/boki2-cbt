@@ -1735,6 +1735,9 @@ const fmt=n=>n==null||n===""?"":Number(n).toLocaleString("ja-JP");
 const parseNum=v=>{const s=String(v).replace(/[,，\s円¥]/g,"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));if(s==="")return null;const n=Number(s);return isNaN(n)?null:n;};
 const LS={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){try{console.warn("保存できませんでした",k,e);}catch(x){}}try{schedulePush()}catch(e){}}};
 const KEY_H="b2_history",KEY_D="b2_drill",KEY_W="b2_wrong";
+/* 完走した模試だけ(中断 ab=1 は除外)。合格力・関所・ゴースト等の判定はこちらを使う */
+function mockHist(){return LS.get(KEY_H,[]).filter(a=>a&&!a.ab);}
+window.mockHist=mockHist;
 
 /* 全仕訳問題マップ(ドリル+模試の仕訳) 復習モード用 */
 const QMAP={};
@@ -1813,7 +1816,7 @@ function migrateExp(){
     Object.keys(p).forEach(k=>{const v=p[k];if(v&&v.best>=80)xp+=120;else if(v&&v.g)xp+=40;});
     const st=LS.get(KEY_AC,{});
     for(let l=1;l<=ACC_NLV;l++)if(st["p"+l]&&st["p"+l].best>=13)xp+=150;
-    xp+=(LS.get(KEY_H,[]).length)*400;
+    xp+=(mockHist().length)*400;
     const d=LS.get(KEY_D,{});
     xp+=Object.keys(d).filter(k=>d[k]&&d[k].o>0).length*25;
   }catch(e){}
@@ -1865,6 +1868,7 @@ window.stamMax=stamMax;
 /* 経過時間から自然回復を反映して現在値を返す */
 function stam(){
   const max=stamMax();
+  try{if(localStorage.getItem("b2_dev")==="1")return max;}catch(e){}   /* 開発者は無限 */
   let s=LS.get(KEY_ST,null);
   const now=Date.now();
   /* v も t も壊れていたら作り直す。t が未来(時計を戻した/同期のズレ)なら今に丸める */
@@ -1886,6 +1890,7 @@ function stamNextSec(){
 /* 満タンまでの残り分 */
 function stamFullMin(){const d=stamMax()-stam();return d<=0?0:Math.ceil((d*stamMin()*60000-(stamMin()*60000-stamNextSec()*1000))/60000)+stamMin();}
 function stamUse(n){
+  try{if(localStorage.getItem("b2_dev")==="1")return true;}catch(e){}   /* 開発者は消費なし */
   const cur=stam();
   if(cur<n)return false;
   const s=LS.get(KEY_ST,{v:cur,t:Date.now()});
@@ -2511,7 +2516,7 @@ window.withLoading=withLoading;
 window.openMyPage=function(){
   const old=document.getElementById("mypv");if(old)old.remove();
   const L=userLv(),nx=nextUnlock(L.lv);
-  const act=actInfo(),h=LS.get(KEY_H,[]),wrong=LS.get(KEY_W,[]);
+  const act=actInfo(),h=mockHist(),wrong=LS.get(KEY_W,[]);
   const best=h.length?Math.max(...h.map(x=>x.total)):null;
   const {po,pt}=patCount();
   const ed=examDate();
@@ -2560,7 +2565,7 @@ window.openMyPage=function(){
 window.mypExam=function(){const e=document.getElementById("mypexam");if(e)e.classList.toggle("hidden");};
 window.openStudy=function(){
   const old=document.getElementById("studyv");if(old)old.remove();
-  const h=LS.get(KEY_H,[]),wrong=LS.get(KEY_W,[]);
+  const h=mockHist(),wrong=LS.get(KEY_W,[]);
   const best=h.length?Math.max(...h.map(x=>x.total)):null;
   const {po,pt}=patCount();
   const revDone=LS.get("b2_expdd","")===daysKey(new Date());
@@ -2805,7 +2810,7 @@ function homeTodoHTML(){
       chips.push(`<button class="ptask" onclick="startPat(${t.gi},${t.ii})"><b>${escapeHtml(t.label)}</b><span>${act}</span></button>`);
     });}catch(e){}})();
   }
-  const mockNeed=(()=>{try{const mocks=LS.get(KEY_H,[]).length;const gr=ROAD.filter(x=>x.mock&&estScore()>=x.v).reduce((a,x)=>Math.max(a,x.mock),0);return Math.max(0,gr-mocks);}catch(e){return 0;}})();
+  const mockNeed=(()=>{try{const mocks=mockHist().length;const gr=ROAD.filter(x=>x.mock&&estScore()>=x.v).reduce((a,x)=>Math.max(a,x.mock),0);return Math.max(0,gr-mocks);}catch(e){return 0;}})();
   if(mockNeed>0)chips.push(`<button class="ptask mock" onclick="renderExams()">🎓 模試を受ける(今週中)</button>`);
   return `<div class="tdcard wide" id="plancard">
     <div class="pch">
@@ -2958,7 +2963,7 @@ const ACH=[
  {id:"dog3",nm:"犬派のきわみ",ic:"bone",ds:"犬を3匹あつめる",f:s=>s.dogN>=3}
 ];
 function achStats(){
-  const a=actInfo();const {po,pt}=patCount();const h=LS.get(KEY_H,[]);const dogs=getDogs();
+  const a=actInfo();const {po,pt}=patCount();const h=mockHist();const dogs=getDogs();
   return{a,po,pt,mocks:h.length,best:h.length?Math.max(...h.map(x=>x.total)):0,
     maxStage:dogs.length?Math.max(...dogs.map(x=>dogStage(x.f||0))):0,dogN:dogs.length};
 }
@@ -3019,10 +3024,10 @@ function railHTML(kind){
   if(kind==="none")return "";
   if(kind==="exams"){
     const h=LS.get(KEY_H,[]);
-    const rows=h.slice(-10).reverse().map(a=>`<tr><td>${a.date}</td><td>${a.title.replace("模試 ","")}</td><td class="${a.total>=70?"correct":"wrong"}">${a.total}点</td></tr>`).join("");
+    const rows=h.slice(-10).reverse().map(a=>`<tr><td>${a.date}</td><td>${a.title.replace("模試 ","")}</td><td class="${a.total>=70?"correct":"wrong"}">${a.total}点${a.ab?"<span style='font-size:10px;color:var(--tx2);'>(中断)</span>":""}</td></tr>`).join("");
     return `<div class="rcard"><h3>受験履歴</h3>${h.length?`<table class="rtable" style="margin:6px 0 0;font-size:12.5px;"><tr><th>日時</th><th>模試</th><th>得点</th></tr>${rows}</table>`:`<p class="prog">まだ受験していません</p>`}</div>`;
   }
-  const a=actInfo(),h=LS.get(KEY_H,[]),wrong=LS.get(KEY_W,[]);
+  const a=actInfo(),h=mockHist(),wrong=LS.get(KEY_W,[]);
   const best=h.length?Math.max(...h.map(x=>x.total)):null;
   const {po,pt}=patCount();
   const rankCard=kind==="home"?`<div class="rcard" style="cursor:pointer;" onclick="renderRank()"><h3><span class="sicon" data-icon="trophy"></span>今週のランキング</h3><div id="rail-rank-list" class="prog">読み込み中…</div></div>`:"";
@@ -3108,8 +3113,11 @@ function mountRail(){
   if(el){const dogs=getDogs();if(dogs.length){const d=dogs[getPartner()];el.appendChild(dogOrEgg(d,5,(()=>{try{return isSlacking();}catch(e){return false;}})()));const nm=document.getElementById("raildogname");if(nm)nm.textContent=d.n;}}
 }
 $("#hdr-title").onclick=()=>{
-  if(exState&&!confirm("試験を中断してホームに戻りますか？(解答は破棄されます)"))return;
-  stopExam();renderHome();
+  if(exState){
+    if(!confirm("試験を中断してホームに戻りますか？(ここまでの解答は採点して記録に残ります)"))return;
+    finishExam(false,true);
+  }
+  renderHome();
 };
 $("#btn-finish").onclick=()=>{if(exState&&confirm("試験を終了して採点しますか？"))finishExam();};
 
@@ -3135,7 +3143,7 @@ window.openExamCfg=function(){
 };
 window.toggleDcfg=function(){openExamCfg();};   /* 旧呼び出し互換 */
 function roadmapHTML(){
-  const h=LS.get(KEY_H,[]),wrong=LS.get(KEY_W,[]);
+  const h=mockHist(),wrong=LS.get(KEY_W,[]);
   const best=h.length?Math.max(...h.map(a=>a.total)):0;
   const {po,pt}=patCount();
   const ed=examDate();
@@ -3159,7 +3167,7 @@ function roadmapHTML(){
 function renderHome(){
   try{btEnd();acc=null;drill=null;}catch(e){}
   setMode("home");exState=null;setNav("home");
-  const a=actInfo(),h=LS.get(KEY_H,[]),wrong=LS.get(KEY_W,[]);
+  const a=actInfo(),h=mockHist(),wrong=LS.get(KEY_W,[]);
   const best=h.length?Math.max(...h.map(x=>x.total)):null;
   const {po,pt}=patCount();
   const ed=examDate();const t0=new Date();t0.setHours(0,0,0,0);
@@ -3323,7 +3331,7 @@ function renderHome(){
 function renderStudy(){renderHome();}
 function renderExams(){
   setMode("home");exState=null;setNav("exams");
-  const h=LS.get(KEY_H,[]);
+  const h=mockHist();
   const card=ex=>{
     const att=h.filter(a=>a.examId===ex.id);
     const best=att.length?Math.max(...att.map(a=>a.total)):null;
@@ -3359,7 +3367,7 @@ function startExam(id){
   exState={ex,answers,cur:1,remain:ex.minutes*60,times:{},secStart:Date.now()};
   /* ゴースト: 前回(同じ模試優先)の大問別タイムを持ち込む */
   try{
-    const h=LS.get(KEY_H,[]);
+    const h=mockHist();
     const prev=h.slice().reverse().find(a=>a.examId===ex.id&&a.secs&&a.secs.length)||h.slice().reverse().find(a=>a.secs&&a.secs.length);
     const gb=document.getElementById("ghostbar");
     if(prev){
@@ -3470,7 +3478,7 @@ function journalUserText(a){
   const s=rows=>{const f=rows.filter(r=>r[0]&&r[1]!=="");return f.length?f.map(r=>`${r[0]} ${fmt(r[1])}`).join("、"):"(未解答)";};
   return `(借) ${s(a.dr)} / (貸) ${s(a.cr)}`;
 }
-function finishExam(auto){
+function finishExam(auto,ab){
   try{bumpDay('m');}catch(e){}
   saveInputs();markTime();clearInterval(exState.timer);
   const ex=exState.ex,answers=exState.answers,times=exState.times;
@@ -3504,13 +3512,19 @@ function finishExam(auto){
     secRes.push({no:sec.no,name:sec.name,tag:sec.tag,got:Math.round(got),max:sec.pts,time:times[sec.no]});
     detail.push({sec,items});
   });
-  LS.set(KEY_W,wrong);
+  if(!ab)LS.set(KEY_W,wrong);   /* 中断時は未回答を間違い扱いにしない */
   let ti=0,ci=0;detail.forEach(d=>d.items.forEach(it=>{if(it.kind!=="exp"){ti++;if(it.ok)ci++;}}));
-  recordActivity(ti,ci);
+  if(!ab)recordActivity(ti,ci);else if(ci>0)recordActivity(ci,ci);
   const total=secRes.reduce((s,r)=>s+r.got,0);
-  try{track("exam_finish",{exam:ex.id,score:total});}catch(e){}
-  const rec={examId:ex.id,title:ex.title,date:new Date().toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}),total,secs:secRes.map(r=>({no:r.no,got:r.got,max:r.max,tag:r.tag,time:r.time}))};
+  try{track("exam_finish",{exam:ex.id,score:total,ab:ab?1:0});}catch(e){}
+  const rec={examId:ex.id,title:ex.title,date:new Date().toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}),total,ab:ab?1:0,secs:secRes.map(r=>({no:r.no,got:r.got,max:r.max,tag:r.tag,time:r.time}))};
   const h=LS.get(KEY_H,[]);h.push(rec);LS.set(KEY_H,h);
+  if(ab){ /* 中断: 記録だけ残して静かに終わる(報酬・結果画面なし) */
+    window._exRes=null;
+    exState=null;setMode("home");resetHdr();
+    setTimeout(()=>miniToast(`📝 中断したけど、ここまでの ${total}点ぶんは記録に残したよ`),400);
+    return;
+  }
   /* 模試の報酬: 全体の残り時間で速度ランクを決め、正解数ぶんもらえる */
   const lim=(ex.min||90)*60, used=secRes.reduce((s,r)=>s+r.time,0);
   window._exRes=ci>0?grantBattle("mock",Math.max(0,1-used/lim),null,{mult:ci}):null;
@@ -3525,7 +3539,7 @@ function renderResult(ex,secRes,total,detail,auto){
   /* 前回の模試とくらべた伸び */
   let grow="";
   try{
-    const h=LS.get(KEY_H,[]);
+    const h=mockHist();
     const prev=h.length>=2?h[h.length-2]:null;
     if(prev){
       const d=total-prev.total;
@@ -4020,7 +4034,7 @@ function estScore(){
   });
   if(wsum>0)total=total*100/wsum;    /* 満点=100点にそろえる */
   /* 模試を受けていれば、直近2回の実測を重めに混ぜる */
-  const h=LS.get(KEY_H,[]);
+  const h=mockHist();
   if(h.length){
     const rec=h.slice(-2).reduce((a,b)=>a+b.total,0)/Math.min(2,h.length);
     total=total*0.45+rec*0.55;
@@ -4093,13 +4107,13 @@ function ppItemDelta(gi,it){
   const pts=SEC_PTS[gi+1]||20,n=Math.max(1,PATMAP[gi].items.length);
   const cur=patMastery(it);
   let d=pts*(1-cur)/n*100/ppWeights();
-  if(LS.get(KEY_H,[]).length)d*=0.45;
+  if(mockHist().length)d*=0.45;
   return Math.round(d*10)/10;
 }
 /* ポイントの集め方。効率(期待pt)の高い順 */
 function ppActions(){
   initPatMap();
-  const acts=[],wrong=LS.get(KEY_W,[]),h=LS.get(KEY_H,[]);
+  const acts=[],wrong=LS.get(KEY_W,[]),h=mockHist();
   const revDone=LS.get("b2_expdd","")===daysKey(new Date());
   const rec=(()=>{try{return recommendDungeon();}catch(e){return null;}})();
   const bon=(()=>{try{return bonusPat();}catch(e){return null;}})();
@@ -4176,7 +4190,7 @@ function roadTaskRow(t,compact){
 }
 function roadState(n){
   if(LS.get("b2_road",[]).includes(n.v))return "done";
-  const ok=estScore()>=n.v&&(!n.mock||LS.get(KEY_H,[]).length>=n.mock);
+  const ok=estScore()>=n.v&&(!n.mock||mockHist().length>=n.mock);
   return ok?"ready":"lock";
 }
 function roadRwText(n){const r=n.rw||{},p=[];
@@ -4231,7 +4245,7 @@ function secExp(gi){
 /* 直近模試のこの大問の実測(got/max) */
 const EXAM_SEC=5400;   /* 本試験90分 */
 function secMock(gi){
-  const h=LS.get(KEY_H,[]);if(!h.length)return null;
+  const h=mockHist();if(!h.length)return null;
   const last=h[h.length-1];if(!last.secs)return null;
   const nos=GSEC[gi]||[gi+1];
   let got=0,max=0,time=0,found=false;
@@ -4442,7 +4456,7 @@ function mockRange(){
     varT+=pts*pts/k*v;
     if(mean>0)any=true;
   });
-  const h=LS.get(KEY_H,[]);
+  const h=mockHist();
   let sd;
   if(h.length){
     const t=h.slice(-3).map(a=>a.total);
@@ -4492,7 +4506,7 @@ window.showPlanLog=function(){
 };
 /* 実績(直近2模試の大問別正答率60% + 現在の習熟率40%)から、合計74点のおすすめ配分を作る */
 function gplanSuggest(){
-  const h=LS.get(KEY_H,[]).slice(-2);
+  const h=mockHist().slice(-2);
   const ptsArr=PATMAP.map((g,gi)=>SEC_PTS[gi+1]||20);
   const rates=PATMAP.map((g,gi)=>{
     const nos=GSEC[gi]||[gi+1];
@@ -4556,7 +4570,7 @@ window.roadSelect=function(v){
 window.renderRoadmap=function(){
   setMode("home");exState=null;setNav("road");try{btEnd();}catch(e){}
   const cur=estScore(),f=passForecast();
-  const mocks=LS.get(KEY_H,[]).length;
+  const mocks=mockHist().length;
   const fx=f.done?`<b style="color:var(--green,#0e7a5f);">合格ライン到達! この調子で仕上げよう</b>`
     :f.date?`このペースなら <b>${f.date}</b> ごろに合格ライン`
     :f.stalled?`のびが止まっています。<b>復習</b>から立てなおそう`
@@ -4651,7 +4665,7 @@ function renderDash(){
   setMode("home");setNav("dash");
   const h=LS.get(KEY_H,[]);
   /* 得点推移 */
-  const trend=h.map((a,i)=>`<div class="bar"><span class="bl">${a.date}</span><div class="bt" style="height:20px;"><div class="bf ${a.total>=70?"high":"low"}" style="width:${a.total}%"></div></div><span class="bv">${a.total}点</span></div>`).join("")||"<p class='prog'>まだ受験していません</p>";
+  const trend=h.map((a,i)=>`<div class="bar"><span class="bl">${a.date}</span><div class="bt" style="height:20px;"><div class="bf ${a.total>=70?"high":"low"}" style="width:${a.total}%"></div></div><span class="bv">${a.total}点${a.ab?"(中断)":""}</span></div>`).join("")||"<p class='prog'>まだ受験していません</p>";
   /* 直近の時間配分 */
   const lastA=h[h.length-1];
   const timeRows=lastA?lastA.secs.map(s=>{const r=s.time/(90*60);
@@ -5847,7 +5861,7 @@ function stampTier(gold){
 function stampPick(t){const p=t.pool[Math.floor(Math.random()*t.pool.length)];return{e:p[0],nm:p[1]};}
 /* 実績スタンプ: 条件を満たしたら1回だけ自動で貼られる */
 function stampAchDefs(){
-  const h=LS.get(KEY_H,[]),a=actInfo(),{po,pt}=patCount();
+  const h=mockHist(),a=actInfo(),{po,pt}=patCount();
   const best=h.length?Math.max(...h.map(x=>x.total)):0;
   let est=0;try{est=estScore();}catch(e){}
   return [
@@ -7164,7 +7178,7 @@ async function pushProfile(){
   try{
     const {po,pt}=patCount();
     const a=actInfo();
-    const h=LS.get(KEY_H,[]);const best=h.length?Math.max(...h.map(x=>x.total)):null;
+    const h=mockHist();const best=h.length?Math.max(...h.map(x=>x.total)):null;
     const ws=weekStart();
     const dd=LS.get(KEY_A,{});let wk=0;Object.entries(dd).forEach(([k,v])=>{if(k>=ws)wk+=v.q||0;});
     const _es=(()=>{try{return earnedAch();}catch(e){return [];}})();
@@ -7333,7 +7347,7 @@ window.showEOD=function(){
   const a=actInfo();
   const d=LS.get(KEY_A,{})[daysKey(new Date())]||{q:0,o:0,r:0};
   const {po,pt}=patCount();
-  const h=LS.get(KEY_H,[]);const best=h.length?Math.max(...h.map(x=>x.total)):null;
+  const h=mockHist();const best=h.length?Math.max(...h.map(x=>x.total)):null;
   const ed=examDate();const t0=new Date();t0.setHours(0,0,0,0);
   const left=ed?Math.max(0,Math.round((ed-t0)/86400000)):null;
   const acc=d.q?Math.round(d.o/d.q*100):0;
@@ -7416,8 +7430,8 @@ window.shareEOD=function(){
 })();
 
 document.querySelectorAll("#nav button[data-v]").forEach(b=>b.onclick=()=>{
-  if(exState&&!confirm("試験を中断しますか？(解答は破棄されます)"))return;
-  if(exState)stopExam();
+  if(exState&&!confirm("試験を中断しますか？(ここまでの解答は採点して記録に残ります)"))return;
+  if(exState)finishExam(false,true);
   ({home:renderHome,road:renderRoadmap,exams:renderExams,dash:renderDash,garden:renderGarden,gacha:renderGacha,rank:renderRank})[b.dataset.v]();
 });
 window.shareX=function(total){
