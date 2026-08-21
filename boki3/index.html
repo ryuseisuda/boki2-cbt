@@ -1071,6 +1071,7 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
   <button id="btn-invite" onclick="openInvite()"><span class="nicon" data-icon="gift"></span>友達に紹介<span class="hchip2 navchip"><span class="sicon" data-icon="ticket" data-s="1"></span>+5</span></button>
   <button id="btn-theme" onclick="toggleTheme()"><span class="nicon" data-icon="moon"></span>ダークモード</button>
   <button id="btn-snd" onclick="toggleSnd()"><span class="nicon" data-icon="zap"></span>効果音: オン</button>
+  <button id="btn-bgm" onclick="toggleBgm()">🎵 BGM: オフ</button>
 </div>
 <div id="tabs" class="hidden"></div>
 <div id="ghostbar" class="hidden"></div>
@@ -5593,6 +5594,108 @@ const SND=(()=>{
   };
 })();
 window.SND=SND;
+/* ---------- BGM: 生成系ローファイ(音源ファイルなし) ---------- */
+const BGM=(()=>{
+  let ctx=null,master=null,lp=null,timer=null,noise=null,nextBar=0,barIdx=0;
+  const BPM=74,BAR=60/BPM*4;
+  /* FM7 → G7 → Em7 → Am7 のループ(やさしい王道進行) */
+  const PROG=[
+    {b:87.31,c:[174.61,220.00,261.63,329.63]},
+    {b:98.00,c:[196.00,246.94,293.66,349.23]},
+    {b:82.41,c:[164.81,196.00,246.94,293.66]},
+    {b:110.00,c:[220.00,261.63,329.63,392.00]}
+  ];
+  const ARP=[0,2,1,3,0,2,3,1];
+  function init(){
+    if(ctx)return true;
+    try{
+      ctx=new (window.AudioContext||window.webkitAudioContext)();
+      master=ctx.createGain();master.gain.value=0;
+      lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=1500;lp.Q.value=.4;
+      master.connect(lp);lp.connect(ctx.destination);
+      /* レコードノイズ(ごく小さく) */
+      const len=ctx.sampleRate*2;
+      const buf=ctx.createBuffer(1,len,ctx.sampleRate);
+      const d=buf.getChannelData(0);
+      let last=0;
+      for(let i=0;i<len;i++){last=(last+(Math.random()*2-1)*0.02)*0.98;d[i]=last;}
+      noise=ctx.createBufferSource();noise.buffer=buf;noise.loop=true;
+      const ng=ctx.createGain();ng.gain.value=.5;
+      noise.connect(ng);ng.connect(master);
+      noise.start();
+      return true;
+    }catch(e){return false;}
+  }
+  function v(f,t0,dur,type,vol,dest){
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type=type;o.frequency.setValueAtTime(f,t0);
+    g.gain.setValueAtTime(0,t0);
+    g.gain.linearRampToValueAtTime(vol,t0+Math.min(.35,dur*.3));
+    g.gain.exponentialRampToValueAtTime(.001,t0+dur);
+    o.connect(g);g.connect(dest||master);
+    o.start(t0);o.stop(t0+dur+.05);
+  }
+  function scheduleBar(t0){
+    const P=PROG[barIdx%PROG.length];
+    /* ベース: 2分音符×2 */
+    v(P.b,t0,BAR/2*.95,"sine",.05);
+    v(P.b,t0+BAR/2,BAR/2*.95,"sine",.045);
+    /* パッド: コードをふわっと */
+    P.c.forEach((f,i)=>v(f,t0+.02*i,BAR*.96,"triangle",.016));
+    /* アルペジオ: 8分でぽろぽろ(小節ごとに少し変える) */
+    for(let i=0;i<8;i++){
+      const step=ARP[(i+barIdx)%8];
+      const f=P.c[step%P.c.length]*2;
+      v(f,t0+i*BAR/8+Math.random()*.012,BAR/8*1.6,"sine",.028);
+    }
+    /* ときどき高音のきらめき */
+    if(barIdx%4===3)v(P.c[3]*4,t0+BAR*.55,.8,"sine",.02);
+    barIdx++;
+  }
+  function tick(){
+    if(!ctx)return;
+    while(nextBar<ctx.currentTime+1.6){scheduleBar(nextBar);nextBar+=BAR;}
+  }
+  return{
+    playing:()=>!!timer,
+    start(){
+      if(timer)return;
+      if(!init())return;
+      if(ctx.state==="suspended"){try{ctx.resume();}catch(e){}}
+      nextBar=Math.max(nextBar,ctx.currentTime+.1);
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setValueAtTime(master.gain.value,ctx.currentTime);
+      master.gain.linearRampToValueAtTime(.9,ctx.currentTime+1.2);
+      timer=setInterval(tick,400);tick();
+    },
+    stop(){
+      if(!timer)return;
+      clearInterval(timer);timer=null;
+      if(ctx&&master){
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(master.gain.value,ctx.currentTime);
+        master.gain.linearRampToValueAtTime(0,ctx.currentTime+.6);
+      }
+    }
+  };
+})();
+window.BGM=BGM;
+window.toggleBgm=function(){
+  const on=LS.get("b2_bgm",0)?0:1;
+  LS.set("b2_bgm",on);
+  if(on)BGM.start();else BGM.stop();
+  bgmBtn();
+};
+function bgmBtn(){
+  const b=document.getElementById("btn-bgm");
+  if(b)b.textContent="🎵 BGM: "+(LS.get("b2_bgm",0)?"オン":"オフ");
+}
+setTimeout(bgmBtn,400);
+/* 前回オンだった人は、最初のタップで再開(自動再生制限のため) */
+if(LS.get("b2_bgm",0)){
+  const armBgm=()=>{try{BGM.start();}catch(e){}document.removeEventListener("pointerdown",armBgm);};
+  document.addEventListener("pointerdown",armBgm,{once:true});
+}
 /* ---------- きょうの1問: 全員同じ問題・翌日に全国正解率 ---------- */
 function dailyQ(){
   const k=daysKey(new Date());
