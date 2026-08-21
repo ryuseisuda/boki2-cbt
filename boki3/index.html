@@ -5014,6 +5014,16 @@ window.tutNext=function(){
   const st=tut.sc[tut.i];
   main.querySelectorAll(".tutrow-hl").forEach(e=>e.classList.remove("tutrow-hl"));
   try{tutClearNums();if(st.nums)st.nums.forEach(tutMarkNum);}catch(e){}
+  /* ここまでのステップの答えは常に埋めておく(どんな経路でも空欄を残さない) */
+  try{
+    for(let k=0;k<tut.i;k++){
+      const ps=tut.sc[k];
+      if(ps.box!==undefined&&ps.ans!==undefined){
+        const pi=main.querySelector(`input[data-pq="${ps.box}"]`);
+        if(pi&&parseNum(pi.value)!==ps.ans){pi.value=fmt(ps.ans);pi.disabled=true;if(!pi.style.background)pi.style.background="#eef2f7";}
+      }
+    }
+  }catch(e){}
   if(st.row!==undefined){const tr=main.querySelectorAll(".qtext table tr")[st.row];if(tr)tr.classList.add("tutrow-hl");}
   if(st.box!==undefined){const inp=main.querySelector(`input[data-pq="${st.box}"]`);if(inp){inp.disabled=false;inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();tutCheck();}};setTimeout(()=>inp.focus(),450);}}
   tutGuide(st);

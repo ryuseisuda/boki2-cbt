@@ -5283,11 +5283,11 @@ const PATTUT={
 "ref_m4_5_0":{ph:["ルール","標準と予算","3つの差異","卒業"],steps:[
 {p:0,hlText:"シュラッター図",look:"「<b>シュラッター図(3分法)</b>」",think:"製造間接費の差異分析。登場する時間は3つ:<br><b>標準時間940h</b>(470個×2h)/<b>実際時間950h</b>/<b>基準1,000h</b>。<br>シュラッター図=この3点を横軸に置いて差異を面積で見る図。",act:"まず配賦率: 変動費率400円+固定費率(600,000÷1,000h=600円)=<b>@1,000円</b>。"},
 {p:1,box:0,look:"<b>① 標準配賦額</b>の欄",think:"標準配賦額=標準時間×配賦率。<br>940h×1,000円。",act:"<b>①</b>に <b>940×1,000</b> を入れる",hint:"940,000。",ans:940000},
-{p:1,box:5,look:"<b>⑥ 予算許容額</b>の欄",think:"実際時間における予算許容額=変動費率×実際時間+固定費予算。<br>400×950+600,000。",act:"<b>⑥</b>に <b>380,000+600,000</b> を入れる",hint:"980,000。",ans:980000,why:"「実際に950h動いたなら、予算上はいくら掛かっていいはずか」という許容ライン。予算差異の基準になる。"},
 {p:2,box:1,look:"<b>② 総差異</b>の欄",think:"標準配賦額940,000−実際発生額985,000=△45,000 → 不利。",act:"<b>②</b>に <b>45,000</b> を入れて「不利」を選ぶ",hint:"①−985,000。",ans:45000},
 {p:2,box:2,look:"<b>③ 予算差異</b>の欄",think:"予算許容額980,000−実際985,000=△5,000 → 不利。<br>(予算より使いすぎた分)",act:"<b>③</b>に <b>5,000</b> を入れて「不利」を選ぶ",hint:"⑥−985,000。",ans:5000},
 {p:2,box:3,look:"<b>④ 能率差異</b>の欄",think:"(標準940h−実際950h)×配賦率1,000円=△10,000 → 不利。<br>(3分法: 変動費と固定費の両方から)",act:"<b>④</b>に <b>10,000</b> を入れて「不利」を選ぶ",hint:"差10h×1,000円。",ans:10000},
 {p:2,box:4,look:"<b>⑤ 操業度差異</b>の欄",think:"(実際950h−基準1,000h)×<b>固定費率600円</b>=△30,000 → 不利。<br>検算: 5,000+10,000+30,000=45,000 ✓",act:"<b>⑤</b>に <b>30,000</b> を入れて「不利」を選ぶ",hint:"差50h×600円。",ans:30000,why:"操業度差異=設備をフル稼働できなかったムダ。固定費は稼働してもしなくても掛かるから、固定費率だけで計算する。"},
+{p:1,box:5,look:"<b>⑥ 予算許容額</b>の欄",think:"実際時間における予算許容額=変動費率×実際時間+固定費予算。<br>400×950+600,000。",act:"<b>⑥</b>に <b>380,000+600,000</b> を入れる",hint:"980,000。",ans:980000,why:"「実際に950h動いたなら、予算上はいくら掛かっていいはずか」という許容ライン。予算差異の基準になる。"},
 {p:3,say:"全問クリア!🎉 シュラッター図の3差異:<br><b>予算差異=許容額−実際/能率差異=時間の差×配賦率/操業度差異=基準との差×固定費率</b>。<br>3つ足して総差異になれば正解。<b>自力で解いて制覇○</b>を!",last:true}
 ]},
 "pq_chokugen":{ph:["ルール","直接原価計算","固定費調整","卒業"],steps:[
@@ -5386,6 +5386,16 @@ window.tutNext=function(){
   const st=tut.sc[tut.i];
   main.querySelectorAll(".tutrow-hl").forEach(e=>e.classList.remove("tutrow-hl"));
   try{tutClearNums();if(st.nums)st.nums.forEach(tutMarkNum);}catch(e){}
+  /* ここまでのステップの答えは常に埋めておく(どんな経路でも空欄を残さない) */
+  try{
+    for(let k=0;k<tut.i;k++){
+      const ps=tut.sc[k];
+      if(ps.box!==undefined&&ps.ans!==undefined){
+        const pi=main.querySelector(`input[data-pq="${ps.box}"]`);
+        if(pi&&parseNum(pi.value)!==ps.ans){pi.value=fmt(ps.ans);pi.disabled=true;if(!pi.style.background)pi.style.background="#eef2f7";}
+      }
+    }
+  }catch(e){}
   if(st.row!==undefined){const tr=main.querySelectorAll(".qtext table tr")[st.row];if(tr)tr.classList.add("tutrow-hl");}
   if(st.box!==undefined){const inp=main.querySelector(`input[data-pq="${st.box}"]`);if(inp){inp.disabled=false;inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();tutCheck();}};setTimeout(()=>inp.focus(),450);}}
   tutGuide(st);
