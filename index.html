@@ -2927,7 +2927,7 @@ function checkLoginBonus(){
       ${ticket?`<span style="text-align:center;"><span data-icon="ticket" data-s="5"></span><b style="display:block;color:var(--navy);font-size:17px;">×1</b></span>`:""}
     </div>
     <p style="color:#8a84a3;font-size:12px;">あすは ごはん×${Math.min(lb.run+3,7)}${(lb.run+1)%7===0?" + ガチャ券":""}</p>
-    <button class="btn" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove();if(window._awayNotice){window._awayNotice=false;showAwayNotice();}else if(LS.get('b2_tut',0)===1){tutGacha();}">うけとる</button>
+    <button class="btn" data-snd="reward" style="margin-top:12px;" onclick="document.getElementById('cele-ovl').remove();if(window._awayNotice){window._awayNotice=false;showAwayNotice();}else if(LS.get('b2_tut',0)===1){tutGacha();}">うけとる</button>
   </div>`;
   document.body.appendChild(ovl);try{mountIcons(ovl);}catch(e){}
   try{track("login_bonus",{run:lb.run});}catch(e){}
@@ -5964,6 +5964,7 @@ const SND=(()=>{
     ok(){if(!on())return;tone(880,0,.09,"sine",.09);tone(1318,.07,.13,"sine",.09);},
     ng(){if(!on())return;tone(196,0,.14,"square",.04);tone(165,.09,.18,"square",.04);},
     coin(){if(!on())return;tone(988,0,.06,"square",.05);tone(1319,.06,.13,"square",.05);},
+    reward(){if(!on())return;[1047,1319,1568,2093].forEach((f,i)=>tone(f,i*.055,.14,"sine",.07));tone(2093,.28,.25,"triangle",.05);},
     pop(){if(!on())return;tone(260,0,.06,"sine",.11,760);tone(920,.06,.1,"triangle",.07);},
     fanfare(){if(!on())return;[523,659,784,1047].forEach((f,i)=>tone(f,i*.09,.17,"triangle",.08));tone(1047,.42,.3,"triangle",.09);},
     drum(){if(!on())return;for(let i=0;i<12;i++)tone(110+Math.random()*50,i*.075,.05,"square",.045);},
@@ -5979,6 +5980,7 @@ document.addEventListener("pointerdown",function(e){
     const el=e.target&&e.target.closest?e.target.closest("button,[onclick],a"):null;
     if(!el||el.disabled)return;
     const oc=el.getAttribute("onclick")||"";
+    if(/\b(claimQuest|roadClaim|fteGift|fteFromDiag|openCapsule)\(/.test(oc)||el.dataset.snd==="reward"){SND.reward();return;}
     if(/\b(startPat|startReview|startExam|renderDrillSetup|renderQuizSetup|openDailyQ|openStudy|renderPatMap)\(/.test(oc)){SND.go();return;}
     SND.tap();
   }catch(x){}
