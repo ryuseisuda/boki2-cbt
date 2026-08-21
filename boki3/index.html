@@ -4513,8 +4513,8 @@ function patRender(q,lock){
   window.scrollTo(0,0);
 }
 /* パターンの目安時間(秒): 欄1つあたり45秒、最低90秒 */
-/* 目安時間: 本番は90分/100点=54秒/点。1欄≒2点なので1欄90秒・最低3分が本番相当ペース */
-function timeLimitOf(n){return Math.max(180,(n||1)*90);}
+/* 目安時間: 3級の本番は60分/100点=36秒/点。1欄≒2点なので1欄60秒・最低2分が本番相当ペース */
+function timeLimitOf(n){return Math.max(120,(n||1)*60);}
 window.timeLimitOf=timeLimitOf;
 function patLimit(q){return timeLimitOf(q.boxes?q.boxes.length:1);}
 function gradePat(q){
