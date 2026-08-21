@@ -2809,7 +2809,7 @@ function homeTodoHTML(){
   return `<div class="tdcard wide" id="plancard">
     <div class="pch">
       <b>合格プラン</b>
-      <span class="prog">${pace.hasExam?`試験まで <b style="color:var(--navy);">あと${pace.days}日</b>`:`<a style="text-decoration:underline;cursor:pointer;" onclick="toggleDcfg()">試験日を設定</a>(いまは${pace.days}日で仮定)`}${pace.remain>0?` ･ 1日 <b style="color:var(--navy);">${pace.perDay}問</b> で間に合うペース`:` ･ のこりは模試だけ`}</span>
+      <span class="prog">${pace.hasExam?`試験まで <b style="color:var(--navy);">あと${pace.days}日</b> <a style="font-size:11px;text-decoration:underline;cursor:pointer;color:var(--tx2);" onclick="openExamCfg()">変更</a>`:`<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日を設定</a>(いまは${pace.days}日で仮定)`}${pace.remain>0?` ･ 1日 <b style="color:var(--navy);">${pace.perDay}問</b> で間に合うペース`:` ･ のこりは模試だけ`}</span>
       <span class="pdtabs">${["today","week","month"].map(k=>`<button class="${pd===k?"act":""}" onclick="planPd('${k}')">${PD[k].l}</button>`).join("")}</span>
     </div>
     <div class="pbar-row big"><span class="pbl">${P.l}</span><span class="pbar"><i class="${pc>=100?"full":""}" style="width:${pc}%;"></i></span><span class="pbn">${P.d} / ${P.q}問</span></div>
@@ -3116,7 +3116,23 @@ $("#btn-finish").onclick=()=>{if(exState&&confirm("試験を終了して採点�
 function patCount(){initPatMap();let po=0,pt=0;PATMAP.forEach(g=>g.items.forEach(it=>{pt++;if(patStat(it).s==="○")po++;}));return{po,pt};}
 function examDate(){const s=LS.get("b2_exam",null);return s?new Date(s+"T00:00:00"):null;}
 window.saveExamDate=function(v){if(v)LS.set("b2_exam",v);else localStorage.removeItem("b2_exam");renderHome();};
-window.toggleDcfg=function(){document.getElementById("dcfg").classList.toggle("hidden");};
+window.openExamCfg=function(){
+  const ed=examDate();
+  const old=document.getElementById("cele-ovl");if(old)old.remove();
+  const ovl=document.createElement("div");ovl.id="cele-ovl";
+  ovl.onclick=e=>{if(e.target===ovl)ovl.remove();};
+  ovl.innerHTML=`<div id="cele-box">
+    <h2 style="color:var(--navy);font-size:19px;">試験日の設定</h2>
+    <p class="prog" style="margin:4px 0 12px;">残り日数と1日のノルマがこの日から逆算されます</p>
+    <input type="date" id="excfg-d" value="${ed?ed.toISOString().slice(0,10):""}" style="border:1.5px solid var(--bd);border-radius:12px;padding:11px 16px;font-family:inherit;font-size:15px;">
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;">
+      <button class="btn" onclick="saveExamDate(document.getElementById('excfg-d').value);document.getElementById('cele-ovl').remove();">保存</button>
+      ${ed?`<button class="btn gray" onclick="saveExamDate(null);document.getElementById('cele-ovl').remove();">未設定にする</button>`:""}
+      <button class="btn gray" onclick="document.getElementById('cele-ovl').remove()">とじる</button>
+    </div></div>`;
+  document.body.appendChild(ovl);
+};
+window.toggleDcfg=function(){openExamCfg();};   /* 旧呼び出し互換 */
 function roadmapHTML(){
   const h=LS.get(KEY_H,[]),wrong=LS.get(KEY_W,[]);
   const best=h.length?Math.max(...h.map(a=>a.total)):0;
