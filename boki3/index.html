@@ -7193,7 +7193,10 @@ try{updHUD();}catch(e){}
 if(!LS.get("b2_seen",0))LS.set("b2_seen",1);
 else{
   /* きょうもう学習済みの人にだけ起動時に出す。未学習なら1問目のあとに出る(行動の直後に報酬) */
-  const _tq=(LS.get(KEY_A,{}
+  const _tq=(LS.get(KEY_A,{})[daysKey(new Date())]||{}).q||0;
+  if(_tq>0)setTimeout(checkLoginBonus,700);
+  else{const lb=LS.get("b2_login",{last:null,run:0});if(lb.last){const gap=Math.round((new Date(daysKey(new Date())+"T00:00:00")-new Date(lb.last+"T00:00:00"))/86400000);if(gap>0)try{triggerAway(gap);}catch(e){}}}
+}
 </script>
 </body>
 </html>
