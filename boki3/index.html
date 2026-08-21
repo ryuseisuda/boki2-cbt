@@ -599,6 +599,16 @@ body{font-family:'Zen Kaku Gothic New',"Hiragino Kaku Gothic ProN","Yu Gothic",M
 .strkbig b{font-size:30px;font-weight:900;color:#f59e0b;font-family:'Zen Kaku Gothic New',sans-serif;}
 .strkbig .strku{font-size:14px;font-weight:800;color:#f59e0b;}
 .strkbig .strkw{font-size:11.5px;color:var(--ng,#dc2626);font-weight:800;margin-left:6px;animation:blink 1.2s infinite;}
+/* 1問目クリアの🔥スプラッシュ */
+.strksplash{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(28,23,51,.32);animation:fadein .25s;}
+.strksplash.out{opacity:0;transition:opacity .5s;}
+.ss-in{background:var(--card,#fff);border-radius:24px;padding:26px 44px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:sspop .45s cubic-bezier(.2,1.4,.4,1);}
+.ss-in .ss-f{display:block;font-size:56px;line-height:1.1;animation:ssfire .6s ease-in-out 2;}
+.ss-in b{font-size:44px;font-weight:900;color:#f59e0b;font-family:'Zen Kaku Gothic New',sans-serif;}
+.ss-in .ss-t{font-size:20px;font-weight:900;color:#f59e0b;margin-left:2px;}
+.ss-in .ss-s{display:block;font-size:12.5px;color:var(--tx2);margin-top:6px;font-weight:700;}
+@keyframes sspop{0%{transform:scale(.4);opacity:0;}100%{transform:scale(1);opacity:1;}}
+@keyframes ssfire{0%,100%{transform:scale(1);}50%{transform:scale(1.25) rotate(-6deg);}}
 /* ランキング行の報酬チップ */
 .rwsm{font-size:10.5px;color:var(--goldd);font-weight:800;white-space:nowrap;margin-left:6px;}
 @keyframes ctaPulse{0%,100%{transform:translateY(0);box-shadow:0 4px 0 rgba(28,23,51,.35),0 0 0 0 rgba(43,108,234,.45);}50%{transform:translateY(-3px);box-shadow:0 7px 0 rgba(28,23,51,.35),0 0 0 14px rgba(43,108,234,0);}}
@@ -1038,6 +1048,7 @@ body.dark .hchip.on,body.dark .hchip.gold{background:#453d1e;}
   <h1 id="hdr-title" style="cursor:pointer;display:flex;align-items:center;"><span class="nicon" data-icon="dog"></span>ボキイヌ 3級</h1>
   <div style="display:flex;gap:12px;align-items:center;">
     <div id="hud">
+      <span class="hud-i" id="hud-strk" title="連続日数">🔥<b>0</b></span>
       <span class="hud-i" id="hud-tk" onclick="renderGacha()" title="ガチャ券"><span class="sicon" data-icon="ticket" data-s="1"></span><b>0</b></span>
     </div>
     <div id="timer" class="hidden">90:00</div>
@@ -1651,6 +1662,10 @@ function updHUD(){
   const h=document.getElementById("hud");
   const t=h&&h.querySelector("#hud-tk b");
   if(t)t.textContent=LS.get(KEY_T,0);
+  try{
+    const s=h&&h.querySelector("#hud-strk");
+    if(s){const a=actInfo();s.querySelector("b").textContent=a.streak;s.style.opacity=a.streak>0?"1":"0.5";}
+  }catch(e){}
   /* レベルはアカウントボタン側 */
   const L=userLv();
   const lv=document.querySelector("#btn-acct .acct-lvn");
@@ -2267,7 +2282,25 @@ function recordActivity(n,o){
     if(o>0){combo++;}else{combo=0;}
   }
   if(o>0){
-    if(first)addFood(5,null);
+    if(first){
+      addFood(5,null);
+      try{
+        const a2=actInfo();
+        setTimeout(()=>{try{streakSplash(a2.streak);}catch(e){}},650);
+        /* おかえりボーナス: 2日以上あいて戻ってきた日は責めずに祝う */
+        const dd2=LS.get(KEY_A,{});const tk2=daysKey(new Date());
+        let lastPrev=null;Object.keys(dd2).forEach(k2=>{if(k2<tk2&&(dd2[k2].q||0)>0&&(!lastPrev||k2>lastPrev))lastPrev=k2;});
+        const gap=lastPrev?Math.round((new Date(tk2+"T00:00:00")-new Date(lastPrev+"T00:00:00"))/86400000):0;
+        if(gap>=2&&LS.get("b3_wbday","")!==tk2){
+          LS.set("b3_wbday",tk2);
+          LS.set("b2_caps",LS.get("b2_caps",0)+1);
+          setTimeout(()=>miniToast("🐶 おかえり! また会えてうれしい ─ 復帰ボーナスでカプセル🎁+1"),2300);
+          try{track("welcome_back",{gap});}catch(e){}
+        }
+        /* デイリーボーナスは「開いたとき」でなく「1問目を解いたあと」に開く */
+        setTimeout(()=>{try{checkLoginBonus();}catch(e){}},3000);
+      }catch(e){}
+    }
     if(n===1&&combo>0&&combo%5===0){addFood(3,null);setTimeout(()=>miniToast(`<span data-icon="fire" data-s="2"></span>${combo}連続正解! ごはん +3`),350);}
     if(first)setTimeout(()=>miniToast(`<span data-icon="food" data-s="2"></span>きょう最初の正解! ごはん +5`),600);
     const aw=awaySt();
@@ -2800,10 +2833,17 @@ function renderHome(){
     <div class="heroflex">
     <div style="position:relative;z-index:1;flex:1 1 52%;min-width:320px;">
       ${(()=>{try{const a=actInfo();const tq=a.today.q||0;
-        if(!a.streak)return "";
+        if(!a.streak)return `<div class="strkbig zero"><span class="strkfire" style="filter:grayscale(1);opacity:.6;">🔥</span><span class="strku" style="color:var(--tx2);">きょう1問とくと 連続スタート</span></div>`;
         return `<div class="strkbig ${tq===0?"risk":""}"><span class="strkfire">🔥</span><b>${a.streak}</b><span class="strku">日連続</span>${tq===0?'<span class="strkw">今日1問で継続!</span>':""}</div>`;}catch(e){return ""}})()}
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
-      <button class="btn go cta gobig" onclick="openStudy()">学習を始める　<span class="arrowa">→</span></button>
+      ${(()=>{try{
+        const p=planPace();
+        const left=p?Math.max(0,p.quotaToday-p.doneToday):0;
+        const t=(p&&p.remain>0&&left>0)?gquestTop(1)[0]:null;
+        if(t)return `<button class="btn go cta gobig" onclick="startPat(${t.gi},${t.ii})">▶ ${p.doneToday>0?`つづきを解く(あと${left}問)`:"きょうの1問目を解く"}</button>
+          <div style="margin-top:8px;"><a style="font-size:12.5px;color:var(--tx2);text-decoration:underline;cursor:pointer;" onclick="openStudy()">べつのモードをえらぶ</a></div>`;
+      }catch(e){}
+      return `<button class="btn go cta gobig" onclick="openStudy()">学習を始める　<span class="arrowa">→</span></button>`;})()}
       <div class="qrow" id="qrow">${qrowHTML()}</div>
       ${(()=>{try{return homeDailyHTML();}catch(e){return ""}})()}
     </div>
@@ -5496,6 +5536,15 @@ function isSlacking(){
   }catch(e){return false;}
 }
 window.isSlacking=isSlacking;
+/* きょうの1問目クリアで🔥がドン */
+window.streakSplash=function(n){
+  if(!(n>0))return;
+  const el=document.createElement("div");el.className="strksplash";
+  el.innerHTML=`<div class="ss-in"><span class="ss-f">🔥</span><b>${n}</b><span class="ss-t">日連続!</span><span class="ss-s">きょうの1問目 クリア</span></div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.classList.add("out"),1500);
+  setTimeout(()=>el.remove(),2100);
+};
 /* ---------- 効果音(合成音・ファイル不要) ---------- */
 const SND=(()=>{
   let ctx=null;
@@ -7142,7 +7191,9 @@ try{migrateExp();}catch(e){}
 renderHome();
 try{updHUD();}catch(e){}
 if(!LS.get("b2_seen",0))LS.set("b2_seen",1);
-else setTimeout(checkLoginBonus,700);
+else{
+  /* きょうもう学習済みの人にだけ起動時に出す。未学習なら1問目のあとに出る(行動の直後に報酬) */
+  const _tq=(LS.get(KEY_A,{}
 </script>
 </body>
 </html>
