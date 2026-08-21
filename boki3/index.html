@@ -715,6 +715,8 @@ body.dark #tutguide .tg-ex{background:#173a2e;}
 .tutrow-hl{background:#fff3bf!important;}
 body.dark .tutrow-hl{background:#4a4420!important;}
 .tuthl{background:#ffe08a;border-radius:4px;padding:0 3px;color:#1c2230;font-weight:800;}
+.tuthl2{background:#ffcf66;border-radius:4px;padding:0 3px;color:#1c2230;font-weight:800;box-shadow:0 0 0 2px #f5a92399;animation:hl2p 1.4s ease-in-out infinite;}
+@keyframes hl2p{0%,100%{box-shadow:0 0 0 2px #f5a92399;}50%{box-shadow:0 0 0 4px #f5a92355;}}
 .tutshake{animation:tutshake .3s;}
 @keyframes tutshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .minichips{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
@@ -3132,7 +3134,7 @@ function finishExam(auto,ab){
           let ok=u.v===b.ans;
           if(b.fav!==undefined)ok=ok&&u.f===b.fav;
           if(ok)got+=ppts;
-          items.push({kind:"b",label:b.label,ok,pts:ok?ppts:0,max:ppts,user:(u.v===""?"(未解答)":fmt(u.v))+(b.fav!==undefined?" "+(u.f||""):""),ansText:fmt(b.ans)+(b.fav!==undefined?" "+b.fav:""),exp:null});
+          items.push({kind:"b",label:b.label,ok,pts:ok?ppts:0,max:ppts,user:(u.v===""?"(未解答)":fmt(u.v))+(b.fav!==undefined?" "+(u.f||""):""),ansText:fmt(b.ans)+(b.fav!==undefined?" "+b.fav:""),exp:b.exp||null});
         });
         if(p.exp||sec.exp)items.push({kind:"exp",exp:p.exp||sec.exp});
       }
@@ -4606,6 +4608,13 @@ function gradePat(q){
   if(newTry>newOk)dmg=btMiss();
   if(wrong===0)awardTicket(q.id,q.title);
   $("#pqres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${pct>=80?"correct":"wrong"}">${got} / ${q.boxes.length} 正解 (${pct}%)${wrong===0?" — このパターン完全制覇!":(pct>=80?" — 制覇! あと少しで満点":"")}</div>${res?`<div class="xpsum">${rankBadge(res)}</div>`:""}<div class="exp">【解説】\n${q.exp}</div>`;
+  /* 欄ごとの解説がある問題は、全欄ぶん見られるように */
+  try{
+    if(q.boxes.some(b=>b.exp)){
+      const _rows=q.boxes.map((b,i)=>b.exp?`<div style="border-bottom:1px dashed var(--bd);padding:7px 0;"><span class="${okFlags[i]?"correct":"wrong"}">${okFlags[i]?"○":"×"}</span> <b>${b.label}</b> = ${fmt(b.ans)}${b.fav!==undefined?" "+b.fav:""}<div class="exp" style="margin-top:4px;">${b.exp}</div></div>`:"").join("");
+      $("#pqres").insertAdjacentHTML("beforeend",`<details class="kc" style="margin-top:12px;" open><summary style="cursor:pointer;font-weight:800;color:var(--blue);">📖 欄ごとの解説</summary><div style="margin-top:6px;">${_rows}</div></details>`);
+    }
+  }catch(e){}
   if(dmg&&dmg.dead)return;
   setTimeout(()=>flushEvo(),800);
   if(wrong>0){
@@ -4970,12 +4979,41 @@ window.tutPos=function(){
       if(r.bottom>limit&&!tut._scrolling){tut._scrolling=true;window.scrollBy({top:r.bottom-limit,behavior:"smooth"});setTimeout(()=>{if(tut)tut._scrolling=false;},400);}}
   }
 };
+/* 計算に使う数字のハイライト(境界チェックつき: "500,000"が"1,500,000"に誤ヒットしない) */
+function tutClearNums(){
+  const qt=main.querySelector(".qtext");if(!qt)return;
+  qt.querySelectorAll(".tuthl2").forEach(sp=>sp.replaceWith(document.createTextNode(sp.textContent)));
+  qt.normalize();
+}
+function tutMarkNum(s){
+  const qt=main.querySelector(".qtext");if(!qt)return;
+  const digitish=ch=>/[0-9,]/.test(ch||"");
+  const w=document.createTreeWalker(qt,NodeFilter.SHOW_TEXT);
+  let n;
+  while(n=w.nextNode()){
+    if(n.parentElement&&n.parentElement.closest(".tuthl2,.tuthl"))continue;
+    const t=n.nodeValue;let from=0;
+    while(true){
+      const i=t.indexOf(s,from);
+      if(i<0)break;
+      /* 数字系は前後が数字/カンマだと別の金額の一部なのでスキップ */
+      if(/[0-9]/.test(s[0])&&(digitish(t[i-1])||digitish(t[i+s.length]))){from=i+1;continue;}
+      const span=document.createElement("span");span.className="tuthl2";
+      const after=n.splitText(i);after.splitText(s.length);
+      span.textContent=after.nodeValue;
+      after.parentNode.replaceChild(span,after);
+      return true;
+    }
+  }
+  return false;
+}
 window.tutNext=function(){
   if(!tut)return;
   tut.i++;tut.att=0;
   if(tut.i>=tut.sc.length){tutExit(1);return;}
   const st=tut.sc[tut.i];
   main.querySelectorAll(".tutrow-hl").forEach(e=>e.classList.remove("tutrow-hl"));
+  try{tutClearNums();if(st.nums)st.nums.forEach(tutMarkNum);}catch(e){}
   if(st.row!==undefined){const tr=main.querySelectorAll(".qtext table tr")[st.row];if(tr)tr.classList.add("tutrow-hl");}
   if(st.box!==undefined){const inp=main.querySelector(`input[data-pq="${st.box}"]`);if(inp){inp.disabled=false;inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();tutCheck();}};setTimeout(()=>inp.focus(),450);}}
   tutGuide(st);

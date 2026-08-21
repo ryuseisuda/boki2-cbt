@@ -715,6 +715,8 @@ body.dark #tutguide .tg-ex{background:#173a2e;}
 .tutrow-hl{background:#fff3bf!important;}
 body.dark .tutrow-hl{background:#4a4420!important;}
 .tuthl{background:#ffe08a;border-radius:4px;padding:0 3px;color:#1c2230;font-weight:800;}
+.tuthl2{background:#ffcf66;border-radius:4px;padding:0 3px;color:#1c2230;font-weight:800;box-shadow:0 0 0 2px #f5a92399;animation:hl2p 1.4s ease-in-out infinite;}
+@keyframes hl2p{0%,100%{box-shadow:0 0 0 2px #f5a92399;}50%{box-shadow:0 0 0 4px #f5a92355;}}
 .tutshake{animation:tutshake .3s;}
 @keyframes tutshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .minichips{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
@@ -1263,16 +1265,16 @@ exp:"建物:6,000,000÷30年=200,000/年。\n備品:第1期 800,000×20%×6/12=8
 {no:3,name:"第3問",type:"boxes",tag:"財務諸表(P/L)",pts:20,
 intro:"次の決算整理前残高試算表(一部)と決算整理事項にもとづき、損益計算書の各金額を答えなさい。(各2点)\n\n<table class='tb'><tr><th colspan='2'>決算整理前残高試算表(一部)</th></tr><tr><td class='l'>売掛金</td><td>1,500,000</td></tr><tr><td class='l'>繰越商品</td><td>400,000</td></tr><tr><td class='l'>売買目的有価証券</td><td>500,000</td></tr><tr><td class='l'>備品</td><td>1,200,000</td></tr><tr><td class='l'>備品減価償却累計額</td><td>300,000</td></tr><tr><td class='l'>貸倒引当金</td><td>10,000</td></tr><tr><td class='l'>売上</td><td>8,000,000</td></tr><tr><td class='l'>仕入</td><td>5,200,000</td></tr><tr><td class='l'>給料</td><td>900,000</td></tr><tr><td class='l'>保険料</td><td>120,000</td></tr><tr><td class='l'>支払家賃</td><td>240,000</td></tr></table>\n【決算整理事項】\n1. 期末商品帳簿棚卸高¥450,000。棚卸減耗損¥10,000、商品評価損¥8,000が生じている。いずれも売上原価の内訳科目として処理する。\n2. 売掛金残高に対し2%の貸倒引当金を設定する(差額補充法)。\n3. 備品について定率法(償却率25%)で減価償却を行う。\n4. 売買目的有価証券の期末時価は¥530,000である。\n5. 保険料のうち¥30,000は次期分の前払いである。\n6. 家賃の未払分が¥20,000ある。\n7. 法人税等は税引前当期純利益の30%を計上する。",
 boxes:[
-{label:"① 売上原価(減耗損・評価損を含む)",ans:5168000},
-{label:"② 売上総利益",ans:2832000},
-{label:"③ 貸倒引当金繰入",ans:20000},
-{label:"④ 減価償却費",ans:225000},
-{label:"⑤ 保険料(当期費用計上額)",ans:90000},
-{label:"⑥ 営業利益",ans:1337000},
-{label:"⑦ 有価証券評価益",ans:30000},
-{label:"⑧ 税引前当期純利益",ans:1367000},
-{label:"⑨ 法人税、住民税及び事業税",ans:410100},
-{label:"⑩ 当期純利益",ans:956900}],
+{label:"① 売上原価(減耗損・評価損を含む)",exp:"売上原価の公式は「期首+仕入−期末」。期首(繰越商品)400,000+仕入5,200,000−期末450,000=5,150,000。この問題は棚卸減耗損10,000と商品評価損8,000を売上原価に含める指示なので、5,150,000+18,000=5,168,000。",ans:5168000},
+{label:"② 売上総利益",exp:"売上総利益=売上高−売上原価。8,000,000−5,168,000=2,832,000。",ans:2832000},
+{label:"③ 貸倒引当金繰入",exp:"必要な引当金=売掛金1,500,000×2%=30,000。すでに残高が10,000あるので、差額補充法により30,000−10,000=20,000だけ繰り入れる。",ans:20000},
+{label:"④ 減価償却費",exp:"定率法は「(取得原価−期首の減価償却累計額)×償却率」。(1,200,000−300,000)×25%=225,000。",ans:225000},
+{label:"⑤ 保険料(当期費用計上額)",exp:"支払額120,000のうち30,000は次期分の前払い(来期の費用)。当期の費用は120,000−30,000=90,000。",ans:90000},
+{label:"⑥ 営業利益",exp:"販管費の合計=給料900,000+貸倒引当金繰入20,000+減価償却費225,000+保険料90,000+支払家賃(240,000+未払20,000=260,000)=1,495,000。営業利益=売上総利益2,832,000−1,495,000=1,337,000。",ans:1337000},
+{label:"⑦ 有価証券評価益",exp:"売買目的有価証券は期末に時価評価する。時価530,000−帳簿価額500,000=評価益30,000(営業外収益)。",ans:30000},
+{label:"⑧ 税引前当期純利益",exp:"営業利益1,337,000+営業外収益(有価証券評価益)30,000=1,367,000。",ans:1367000},
+{label:"⑨ 法人税、住民税及び事業税",exp:"法人税等=税引前当期純利益×30%。1,367,000×30%=410,100。",ans:410100},
+{label:"⑩ 当期純利益",exp:"税引前当期純利益1,367,000−法人税等410,100=956,900。これがP/Lの最終利益。",ans:956900}],
 exp:"売上原価=400,000+5,200,000−450,000+10,000+8,000=5,168,000。売上総利益=8,000,000−5,168,000=2,832,000。\n貸倒引当金繰入=1,500,000×2%−10,000=20,000。減価償却費=(1,200,000−300,000)×25%=225,000。\n保険料=120,000−30,000=90,000。支払家賃=240,000+20,000=260,000。\n販管費計=900,000+20,000+225,000+90,000+260,000=1,495,000 → 営業利益1,337,000。\n評価益=530,000−500,000=30,000 → 税引前1,367,000。法人税等=×30%=410,100。純利益956,900。"},
 {no:4,name:"第4問",type:"mixed",tag:"工業簿記",pts:28,parts:[
 {type:"journal",inst:"(1) 次の取引について仕訳しなさい。(各4点)",items:[
@@ -3504,7 +3506,7 @@ function finishExam(auto,ab){
           let ok=u.v===b.ans;
           if(b.fav!==undefined)ok=ok&&u.f===b.fav;
           if(ok)got+=ppts;
-          items.push({kind:"b",label:b.label,ok,pts:ok?ppts:0,max:ppts,user:(u.v===""?"(未解答)":fmt(u.v))+(b.fav!==undefined?" "+(u.f||""):""),ansText:fmt(b.ans)+(b.fav!==undefined?" "+b.fav:""),exp:null});
+          items.push({kind:"b",label:b.label,ok,pts:ok?ppts:0,max:ppts,user:(u.v===""?"(未解答)":fmt(u.v))+(b.fav!==undefined?" "+(u.f||""):""),ansText:fmt(b.ans)+(b.fav!==undefined?" "+b.fav:""),exp:b.exp||null});
         });
         if(p.exp||sec.exp)items.push({kind:"exp",exp:p.exp||sec.exp});
       }
@@ -4978,6 +4980,13 @@ function gradePat(q){
   if(newTry>newOk)dmg=btMiss();
   if(wrong===0)awardTicket(q.id,q.title);
   $("#pqres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${pct>=80?"correct":"wrong"}">${got} / ${q.boxes.length} 正解 (${pct}%)${wrong===0?" — このパターン完全制覇!":(pct>=80?" — 制覇! あと少しで満点":"")}</div>${res?`<div class="xpsum">${rankBadge(res)}</div>`:""}<div class="exp">【解説】\n${q.exp}</div>`;
+  /* 欄ごとの解説がある問題は、全欄ぶん見られるように */
+  try{
+    if(q.boxes.some(b=>b.exp)){
+      const _rows=q.boxes.map((b,i)=>b.exp?`<div style="border-bottom:1px dashed var(--bd);padding:7px 0;"><span class="${okFlags[i]?"correct":"wrong"}">${okFlags[i]?"○":"×"}</span> <b>${b.label}</b> = ${fmt(b.ans)}${b.fav!==undefined?" "+b.fav:""}<div class="exp" style="margin-top:4px;">${b.exp}</div></div>`:"").join("");
+      $("#pqres").insertAdjacentHTML("beforeend",`<details class="kc" style="margin-top:12px;" open><summary style="cursor:pointer;font-weight:800;color:var(--blue);">📖 欄ごとの解説</summary><div style="margin-top:6px;">${_rows}</div></details>`);
+    }
+  }catch(e){}
   if(dmg&&dmg.dead)return;
   setTimeout(()=>flushEvo(),800);
   if(wrong>0){
@@ -5102,13 +5111,13 @@ const PATTUT={
 ]},
 "ref_m1_3_0":{ph:["ルール","売上原価","販管費など","利益の計算","卒業"],steps:[
 {p:0,hlText:"損益計算書",look:"問題のタイトル「<b>損益計算書</b>」",think:"損益計算書(P/L)=1年間の<b>もうけの計算書</b>。<br>上から「売上−売上原価=売上総利益」→「−販管費=営業利益」→「±営業外=税引前」→「−法人税等=当期純利益」と<b>段々に利益を出す</b>。",act:"決算整理を1つずつ数字にして、上から順に埋めていくよ!"},
-{p:1,box:0,hlText:"期末商品帳簿棚卸高¥450,000",look:"整理事項1(商品)",think:"売上原価の公式:<b>期首+仕入−期末</b>。<br>400,000+5,200,000−450,000=5,150,000。<br>さらにこの問題は減耗損10,000と評価損8,000を<b>売上原価に含める</b>指示。",act:"<b>①</b>に <b>5,150,000+10,000+8,000</b> を入れる",hint:"5,150,000+18,000。",ans:5168000,why:"棚卸減耗損=数が減っていた分。商品評価損=値下がりした分。指示があれば売上原価の内訳になる。"},
-{p:1,box:1,look:"<b>② 売上総利益</b>の欄",think:"売上総利益=売上−売上原価。",act:"<b>②</b>に <b>8,000,000−5,168,000</b> を入れる",hint:"売上−①。",ans:2832000},
-{p:2,box:2,hlText:"2%の貸倒引当金",look:"整理事項2",think:"必要な引当金=売掛金1,500,000×2%=30,000。<br>すでに10,000ある→<b>差額だけ</b>繰り入れる(差額補充法)。",act:"<b>③</b>に <b>30,000−10,000</b> を入れる",hint:"30,000−10,000。",ans:20000},
-{p:2,box:3,hlText:"定率法(償却率25%)",look:"整理事項3",think:"定率法=<b>(取得原価−累計額)×率</b>。<br>(1,200,000−300,000)×25%。",act:"<b>④</b>に <b>900,000×25%</b> を入れる",hint:"900,000×0.25。",ans:225000},
-{p:2,box:4,hlText:"¥30,000は次期分の前払い",look:"整理事項5",think:"前払分は<b>来期の費用</b>。今期の費用から除く。",act:"<b>⑤</b>に <b>120,000−30,000</b> を入れる",hint:"120,000−30,000。",ans:90000},
-{p:2,box:5,look:"<b>⑥ 営業利益</b>の欄",think:"販管費を合計: 給料900,000+貸引繰入20,000+減価償却225,000+保険料90,000+家賃(240,000+未払20,000=260,000)=1,495,000。",act:"<b>⑥</b>に <b>2,832,000−1,495,000</b> を入れる",hint:"②−1,495,000。",ans:1337000},
-{p:3,box:6,hlText:"期末時価は¥530,000",look:"整理事項4(有価証券)",think:"売買目的→時価評価。530,000−500,000=評価益(営業外収益)。",act:"<b>⑦</b>に <b>530,000−500,000</b> を入れる",hint:"時価−帳簿。",ans:30000},
+{p:1,box:0,hlText:"期末商品帳簿棚卸高¥450,000",nums:["繰越商品","400,000","仕入","5,200,000","¥10,000","¥8,000"],look:"整理事項1(商品)",think:"売上原価の公式:<b>期首+仕入−期末</b>。<br>400,000+5,200,000−450,000=5,150,000。<br>さらにこの問題は減耗損10,000と評価損8,000を<b>売上原価に含める</b>指示。",act:"<b>①</b>に <b>5,150,000+10,000+8,000</b> を入れる",hint:"5,150,000+18,000。",ans:5168000,why:"棚卸減耗損=数が減っていた分。商品評価損=値下がりした分。指示があれば売上原価の内訳になる。"},
+{p:1,box:1,nums:["売上","8,000,000"],look:"<b>② 売上総利益</b>の欄",think:"売上総利益=売上−売上原価。",act:"<b>②</b>に <b>8,000,000−5,168,000</b> を入れる",hint:"売上−①。",ans:2832000},
+{p:2,box:2,hlText:"2%の貸倒引当金",nums:["売掛金","1,500,000","10,000"],look:"整理事項2",think:"必要な引当金=売掛金1,500,000×2%=30,000。<br>すでに10,000ある→<b>差額だけ</b>繰り入れる(差額補充法)。",act:"<b>③</b>に <b>30,000−10,000</b> を入れる",hint:"30,000−10,000。",ans:20000},
+{p:2,box:3,hlText:"定率法(償却率25%)",nums:["備品","1,200,000","300,000"],look:"整理事項3",think:"定率法=<b>(取得原価−累計額)×率</b>。<br>(1,200,000−300,000)×25%。",act:"<b>④</b>に <b>900,000×25%</b> を入れる",hint:"900,000×0.25。",ans:225000},
+{p:2,box:4,hlText:"¥30,000は次期分の前払い",nums:["保険料","120,000"],look:"整理事項5",think:"前払分は<b>来期の費用</b>。今期の費用から除く。",act:"<b>⑤</b>に <b>120,000−30,000</b> を入れる",hint:"120,000−30,000。",ans:90000},
+{p:2,box:5,nums:["給料","900,000","支払家賃","240,000","¥20,000"],look:"<b>⑥ 営業利益</b>の欄",think:"販管費を合計: 給料900,000+貸引繰入20,000+減価償却225,000+保険料90,000+家賃(240,000+未払20,000=260,000)=1,495,000。",act:"<b>⑥</b>に <b>2,832,000−1,495,000</b> を入れる",hint:"②−1,495,000。",ans:1337000},
+{p:3,box:6,hlText:"期末時価は¥530,000",nums:["売買目的有価証券","500,000"],look:"整理事項4(有価証券)",think:"売買目的→時価評価。530,000−500,000=評価益(営業外収益)。",act:"<b>⑦</b>に <b>530,000−500,000</b> を入れる",hint:"時価−帳簿。",ans:30000},
 {p:3,box:7,look:"<b>⑧ 税引前当期純利益</b>の欄",think:"営業利益+営業外収益。",act:"<b>⑧</b>に <b>1,337,000+30,000</b> を入れる",hint:"⑥+⑦。",ans:1367000},
 {p:3,box:8,hlText:"30%を計上",look:"整理事項7",think:"法人税等=税引前×30%。",act:"<b>⑨</b>に <b>1,367,000×30%</b> を入れる",hint:"⑧×0.3。",ans:410100},
 {p:3,box:9,look:"<b>⑩ 当期純利益</b>の欄",think:"最後は 税引前−法人税等。",act:"<b>⑩</b>に <b>1,367,000−410,100</b> を入れる",hint:"⑧−⑨。",ans:956900},
@@ -5342,12 +5351,41 @@ window.tutPos=function(){
       if(r.bottom>limit&&!tut._scrolling){tut._scrolling=true;window.scrollBy({top:r.bottom-limit,behavior:"smooth"});setTimeout(()=>{if(tut)tut._scrolling=false;},400);}}
   }
 };
+/* 計算に使う数字のハイライト(境界チェックつき: "500,000"が"1,500,000"に誤ヒットしない) */
+function tutClearNums(){
+  const qt=main.querySelector(".qtext");if(!qt)return;
+  qt.querySelectorAll(".tuthl2").forEach(sp=>sp.replaceWith(document.createTextNode(sp.textContent)));
+  qt.normalize();
+}
+function tutMarkNum(s){
+  const qt=main.querySelector(".qtext");if(!qt)return;
+  const digitish=ch=>/[0-9,]/.test(ch||"");
+  const w=document.createTreeWalker(qt,NodeFilter.SHOW_TEXT);
+  let n;
+  while(n=w.nextNode()){
+    if(n.parentElement&&n.parentElement.closest(".tuthl2,.tuthl"))continue;
+    const t=n.nodeValue;let from=0;
+    while(true){
+      const i=t.indexOf(s,from);
+      if(i<0)break;
+      /* 数字系は前後が数字/カンマだと別の金額の一部なのでスキップ */
+      if(/[0-9]/.test(s[0])&&(digitish(t[i-1])||digitish(t[i+s.length]))){from=i+1;continue;}
+      const span=document.createElement("span");span.className="tuthl2";
+      const after=n.splitText(i);after.splitText(s.length);
+      span.textContent=after.nodeValue;
+      after.parentNode.replaceChild(span,after);
+      return true;
+    }
+  }
+  return false;
+}
 window.tutNext=function(){
   if(!tut)return;
   tut.i++;tut.att=0;
   if(tut.i>=tut.sc.length){tutExit(1);return;}
   const st=tut.sc[tut.i];
   main.querySelectorAll(".tutrow-hl").forEach(e=>e.classList.remove("tutrow-hl"));
+  try{tutClearNums();if(st.nums)st.nums.forEach(tutMarkNum);}catch(e){}
   if(st.row!==undefined){const tr=main.querySelectorAll(".qtext table tr")[st.row];if(tr)tr.classList.add("tutrow-hl");}
   if(st.box!==undefined){const inp=main.querySelector(`input[data-pq="${st.box}"]`);if(inp){inp.disabled=false;inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();tutCheck();}};setTimeout(()=>inp.focus(),450);}}
   tutGuide(st);
