@@ -912,6 +912,7 @@ body.dark .gcard.ok{background:linear-gradient(180deg,#12291c,var(--card));borde
 .msn-bg.mock{background:#dbeafe;color:#1d4ed8;}
 .msn-bg.mid{background:#fee2e2;color:#b91c1c;}
 .msn-sub2{margin-left:7px;font-size:10.5px;color:var(--tx2);font-weight:600;}
+.msn-sec{display:inline-block;font-size:10px;font-weight:800;color:var(--tx2);border:1px solid var(--bd);border-radius:6px;padding:1.5px 6px;margin-right:4px;vertical-align:1px;}
 .msn-bg.left{background:transparent;color:var(--tx2);font-weight:700;border:1px dashed var(--bd);}
 .msn-ev.keep{color:#6d28d9;background:#ede9fe;}
 .msn-claims{margin-top:10px;font-size:12.5px;color:var(--navy);background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:7px 11px;}
@@ -5104,6 +5105,7 @@ function missionCardHTML(){
       const done=flags[i];
       const ev=done?0:missionEv(t);
       let label=t.tp==="rev"?`仕訳の復習 ${t.n}問`:t.tp==="mock"?"模試を受ける":t.tp==="acc"?escapeHtml(t.label||"仕訳特訓"):escapeHtml(t.label||"");
+      let sec=t.tp==="rev"?`<span class="msn-sec">第1問</span>`:(t.gi!=null?`<span class="msn-sec">第${t.gi+1}問</span>`:"");
       let sub="";
       try{
         const it=t.gi!=null?PATMAP[t.gi].items[t.ii]:null;
@@ -5115,7 +5117,7 @@ function missionCardHTML(){
       }catch(e){}
       const evTx=t.tp==="mock"?((t.mev||0)>=0.5?`<span class="msn-ev">実力どおりなら+${t.mev.toFixed(1)}点</span>`:`<span class="msn-ev mock">実力測定</span>`):t.tp==="acc"?(done?"":`<span class="msn-ev keep">反射速度UP</span>`):(ev>=0.05?`<span class="msn-ev">+${ev.toFixed(1)}点</span>`:(!done&&t.tp==="srs"?`<span class="msn-ev keep">記憶キープ</span>`:""));
       return `<div class="msn-row ${done?"done":""}" ${done?"":`onclick="${missionAct(t)}"`}>
-        <span class="msn-ck">${done?"✓":"▢"}</span><span class="msn-lb">${badge(t,done)} ${label}${sub}</span>${evTx}
+        <span class="msn-ck">${done?"✓":"▢"}</span><span class="msn-lb">${sec}${badge(t,done)} ${label}${sub}</span>${evTx}
       </div>`;
     };
     const fit=Math.max(0,Math.min(ms.fit!=null?ms.fit:4,view.length-1));
