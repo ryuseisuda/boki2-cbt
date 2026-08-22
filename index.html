@@ -4109,7 +4109,9 @@ function gradeDrill(q){
   }
   $("#dres").innerHTML=`<div style="margin-top:12px;font-size:20px;font-weight:800;" class="${ok?"correct":"wrong"}">${ok?"○ 正解！":"× 不正解"}</div>${dres?`<div class="xpsum">${rankBadge(dres)}</div>`:""}
   <div class="ans-cmp">あなた: <span class="u">${journalUserText(a)}</span><br>正解: <span class="a">${journalAnsText(q)}</span></div>
-  <div class="exp">${q.exp}</div>`;
+  <div class="exp">${q.exp}</div>${ok?"":`<button class="btn" style="margin-top:10px;font-size:13.5px;padding:10px 16px;background:var(--blue);" onclick="askSensei(window._dAsk)">🐶 この間違いをAIたまご先生にきく</button>`}`;
+  if(!ok){window._dAsk={id:q.id,title:"仕訳: "+(q.tag||""),intro:q.q,
+    items:[{label:"この仕訳",correct:journalAnsText(q),user:journalUserText(a),exp:q.exp||"",wrong:true}]};}
   const btn=$("#d-grade");
   if(drill.idx<drill.qs.length-1){btn.textContent="次の問題 →";btn.onclick=()=>{drill.idx++;renderDrillQ();};}
   else{btn.textContent="結果を見る";btn.onclick=()=>{
@@ -5059,6 +5061,63 @@ window.startPat=function(gi,ii){
   if(!gate("map",tier))return;
   withLoading(()=>enterPat(gi,ii),620,nm+"へ むかっています");
 };
+/* ================= AIたまご先生に質問(間違い画面から) ================= */
+const ASK_URL="https://ijddujtdsvmbrwtboodt.supabase.co/functions/v1/ask-sensei";
+function qaIdent(){let v=localStorage.getItem("b2_qaid");if(!v){v=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());localStorage.setItem("b2_qaid",v);}return v;}
+function htmlToText(s){const d=document.createElement("div");d.innerHTML=s||"";return (d.textContent||"").replace(/\s+/g," ").trim();}
+/* o={id,title,intro,items:[{label,correct,user,exp,wrong}]} 間違えた欄を選んで質問する */
+window.askSensei=function(o){
+  const old=document.getElementById("ask-ovl");if(old)old.remove();
+  const wrongs=o.items.map((it,i)=>({...it,i})).filter(it=>it.wrong);
+  if(!wrongs.length)return;
+  const ov=document.createElement("div");ov.id="ask-ovl";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(15,10,40,.55);z-index:2600;display:flex;align-items:center;justify-content:center;padding:14px;";
+  ov.innerHTML=`<div style="background:var(--card,#fff);border-radius:16px;max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:18px 18px 16px;box-shadow:0 18px 60px rgba(0,0,0,.35);">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:26px;">🐶</span><b style="font-size:16px;">たまご先生にAI質問</b>
+      <button onclick="document.getElementById('ask-ovl').remove()" style="margin-left:auto;border:none;background:none;font-size:20px;cursor:pointer;color:var(--mut,#888);">✕</button>
+    </div>
+    <div class="note" style="font-size:12px;margin-top:4px;">間違えた欄について、AIの先生が答えます(1日10回まで)</div>
+    ${wrongs.length>1?`<select id="ask-sel" class="fav" style="width:100%;margin-top:10px;max-width:100%;">${wrongs.map(w=>`<option value="${w.i}">${escapeHtml(htmlToText(w.label)).slice(0,60)}</option>`).join("")}</select>`:`<div style="margin-top:10px;font-size:13px;"><b>${escapeHtml(htmlToText(wrongs[0].label)).slice(0,80)}</b><input type="hidden" id="ask-sel" value="${wrongs[0].i}"></div>`}
+    <div id="ask-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+      ${["なんでこの処理をするの?","この数字はどこから来たの?","私の答えはどこが違った?","覚え方のコツを教えて"].map(c=>`<button class="btn" style="font-size:12px;padding:7px 10px;background:var(--bg,#f4f2fb);color:var(--tx,#333);border:1px solid var(--bd,#ddd);" onclick="askSend('${c}')">${c}</button>`).join("")}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <input id="ask-q" maxlength="300" placeholder="自由に質問してもOK" style="flex:1;padding:10px;border:1.5px solid var(--bd,#ddd);border-radius:10px;font-size:14px;" onkeydown="if(event.key==='Enter'){askSend()}">
+      <button class="btn" style="padding:10px 16px;" onclick="askSend()">きく</button>
+    </div>
+    <div id="ask-ans" style="margin-top:12px;"></div>
+  </div>`;
+  ov.addEventListener("click",e=>{if(e.target===ov)ov.remove();});
+  document.body.appendChild(ov);
+  window._askCtx=o;
+};
+let _askBusy=false;
+window.askSend=function(preset){
+  if(_askBusy)return;
+  const o=window._askCtx;if(!o)return;
+  const inp=document.getElementById("ask-q");
+  const q=(preset||inp.value||"").trim();
+  if(!q)return;
+  if(preset)inp.value=preset;
+  const sel=document.getElementById("ask-sel");
+  const it=o.items[+sel.value];
+  const ans=document.getElementById("ask-ans");
+  _askBusy=true;
+  ans.innerHTML=`<div class="note" style="font-size:13px;">🐶 たまご先生が考え中…</div>`;
+  try{track("ai_ask",{id:o.id});}catch(e){}
+  fetch(ASK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+    ident:qaIdent(),app:"b2",q:q,
+    ctx:{title:o.title,intro:htmlToText(o.intro).slice(0,1600),label:htmlToText(it.label),correct:String(it.correct),user:String(it.user||""),exp:htmlToText(it.exp||"")}
+  })}).then(r=>r.json().then(j=>({s:r.status,j}))).then(({s,j})=>{
+    _askBusy=false;
+    if(j.answer){
+      ans.innerHTML=`<div style="background:var(--bg,#f6f4fd);border-radius:12px;padding:12px;font-size:13.5px;line-height:1.75;white-space:pre-wrap;">${escapeHtml(j.answer)}</div>${j.remaining!=null?`<div class="note" style="font-size:11.5px;margin-top:5px;">きょうの残り質問回数: ${j.remaining}回</div>`:""}`;
+    }else{
+      ans.innerHTML=`<div class="note" style="font-size:13px;">${escapeHtml(j.msg||"うまく答えられなかったみたい。もう一度きいてみて")}</div>`;
+    }
+  }).catch(()=>{_askBusy=false;ans.innerHTML=`<div class="note" style="font-size:13px;">通信に失敗しました。もう一度ためしてね</div>`;});
+};
 let pqCur=null,patLock=null;
 /* 選択式の欄(ch)は文字列で答える。数値欄は従来どおり */
 function ansTxt(b){return b.ch?b.ans:fmt(b.ans);}
@@ -5173,6 +5232,15 @@ function gradePat(q){
     if(q.boxes.some(b=>b.exp)){
       const _rows=q.boxes.map((b,i)=>b.exp?`<div style="border-bottom:1px dashed var(--bd);padding:7px 0;"><span class="${okFlags[i]?"correct":"wrong"}">${okFlags[i]?"○":"×"}</span> <b>${b.label}</b> = ${ansTxt(b)}${b.fav!==undefined?" "+b.fav:""}<div class="exp" style="margin-top:4px;">${b.exp}</div></div>`:"").join("");
       $("#pqres").insertAdjacentHTML("beforeend",`<details class="kc" style="margin-top:12px;" open><summary style="cursor:pointer;font-weight:800;color:var(--blue);">📖 欄ごとの解説</summary><div style="margin-top:6px;">${_rows}</div></details>`);
+    }
+  }catch(e){}
+  /* 間違えた欄についてAIに質問できる */
+  try{
+    if(wrong>0){
+      window._pqAsk={id:q.id,title:q.title,intro:q.intro,
+        items:q.boxes.map((b,i)=>{const el=main.querySelector(`[data-pq="${i}"]`);
+          return {label:b.label,correct:ansTxt(b)+(b.fav!==undefined?" "+b.fav:""),user:el?el.value:"",exp:b.exp||q.exp||"",wrong:!okFlags[i]};})};
+      $("#pqres").insertAdjacentHTML("beforeend",`<button class="btn" style="margin-top:12px;font-size:13.5px;padding:10px 16px;background:var(--blue);" onclick="askSensei(window._pqAsk)">🐶 間違えた欄をAIたまご先生にきく</button>`);
     }
   }catch(e){}
   if(dmg&&dmg.dead)return;
