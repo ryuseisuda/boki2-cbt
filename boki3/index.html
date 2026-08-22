@@ -1486,18 +1486,18 @@ const WORLD={
 const PATMAP=[
 {g:"第1問　仕訳(45点)",note:"分野=パターン。全分野を○にすれば第1問(15問・45点)はどの分野が出ても対応できます。クリックでその分野のドリルを開始。",items:[
 ]},
-{g:"第2問　帳簿・勘定記入・語句(20点)",note:"過去問分析: 商品有高帳・勘定記入(経過勘定/固定資産/純資産)・伝票会計・補助簿の選択・語句補充が繰り返し出題される。この10パターンで第2問は網羅。",items:[
-{k:"pq",id:"pq3_ana",label:"語句補充(文章の穴埋め) ★取りどころ",tier:1},
+{g:"第2問　帳簿・勘定記入・語句(20点)",note:"過去問分析(13回分・旧形式は第2問と第4問の2枠): 商品有高帳×5・経過勘定の勘定記入×3・固定資産の勘定記入×3・伝票会計×3・語句補充×3・証ひょう×2・売掛金元帳×2。この10パターンで第2問は網羅。",items:[
+{k:"pq",id:"pq3_ana",label:"語句補充(文章の穴埋め) ★頻出・取りどころ",tier:1},
 {k:"pq",id:"pq3_hojo",label:"補助簿の選択",tier:1},
 {k:"pq",id:"pq3_ariidaka_ido",label:"商品有高帳(移動平均法) ★頻出",tier:1},
 {k:"pq",id:"pq3_shohin_kanjo",label:"勘定記入: 商品売買・売上原価の算定",tier:1},
 {k:"pq",id:"pq3_ariidaka_saki",label:"商品有高帳(先入先出法) ★頻出",tier:2},
 {k:"pq",id:"pq3_keika",label:"勘定記入: 経過勘定(前払家賃) ★頻出",tier:2},
-{k:"pq",id:"pq3_koteidai",label:"勘定記入: 固定資産台帳・減価償却累計額",tier:2},
+{k:"pq",id:"pq3_koteidai",label:"勘定記入: 固定資産台帳・減価償却累計額 ★頻出",tier:2},
 {k:"ref",label:"勘定記入: 利益準備金・繰越利益剰余金",exam:"k3m1",no:2,tier:2},
 {k:"pq",id:"pq3_denpyo",label:"伝票会計・仕訳日計表 ★頻出",tier:2},
-{k:"pq",id:"pq3_kashitsuke",label:"勘定記入: 貸付金と受取利息の見越し",tier:3}]},
-{g:"第3問　決算の総合問題(35点)",note:"出題は「財務諸表の作成」「精算表の作成」「決算整理後残高試算表の作成」の3パターンだけ。決算整理仕訳は共通なので、3つの答案の書き方に慣れれば網羅できる。",items:[
+{k:"pq",id:"pq3_kashitsuke",label:"勘定記入: 貸付金と受取利息の見越し",tier:2}]},
+{g:"第3問　決算の総合問題(35点)",note:"出題は「財務諸表の作成」「精算表の作成」「決算整理後残高試算表の作成」の3パターンだけ(13回分では精算表×7・財務諸表×6)。決算整理仕訳は共通なので、3つの答案の書き方に慣れれば網羅できる。",items:[
 {k:"ref",label:"財務諸表(貸借対照表・損益計算書)の作成 ★頻出",exam:"k3m1",no:3,tier:2},
 {k:"pq",id:"pq3_seisan",label:"精算表の作成 ★頻出",tier:2},
 {k:"pq",id:"pq3_kouTB",label:"決算整理後残高試算表の作成",tier:3}]}
@@ -4614,7 +4614,7 @@ function renderPatMap(){
     </div>`
    :`<div class="cprog"><div class="cprog-bar"><div style="width:${pct}%;"></div></div><span class="prog"><b>${pr.ok} / ${pr.total}</b> 制覇</span></div>
   ${pr.done?`<div class="note" style="background:#dcfce7;border-color:var(--ok);">🎉 <b>${T.n}編 制覇!</b> ${lv<3?`<a style="text-decoration:underline;cursor:pointer;font-weight:700;" onclick="setPatLv(${lv+1})">${TIERS[lv+1].n}編にすすむ →</a>`:"全パターン制覇! 仕上げに模試を通しで解いて時間配分を確認しましょう。"}</div>`:""}
-  <div class="note" style="font-size:12.5px;">ステータス: <b>未</b>=未挑戦 / <span class="pst mid" style="padding:1px 8px;">⚔</span>=挑戦中 / <span class="pst gd" style="padding:1px 8px;">△</span>=練習モードでクリア / <span class="pst ok" style="padding:1px 8px;">○</span>=自力でクリア。△も制覇にカウント。自力で解き直すと○に昇格!</div>
+  <div class="note" style="font-size:12.5px;"><b>初級・中級・上級は「解く順番(難易度)」</b>で、出題頻度ではありません。よく出るものには <b>★頻出</b> を付けています。<br>ステータス: <b>未</b>=未挑戦 / <span class="pst mid" style="padding:1px 8px;">⚔</span>=挑戦中 / <span class="pst gd" style="padding:1px 8px;">△</span>=練習モードでクリア / <span class="pst ok" style="padding:1px 8px;">○</span>=自力でクリア。△も制覇にカウント。自力で解き直すと○に昇格!</div>
   ${groups}`}
   <div style="margin-top:14px;"><button class="btn gray" onclick="renderHome()">ホームへ</button></div></div>`;
   try{mountIcons(main);}catch(e){}
