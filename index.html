@@ -5565,6 +5565,21 @@ function initPatMap(){
   DRILLS.forEach(d=>{if(!d.tag.startsWith("工簿")&&!seen.includes(d.tag)){seen.push(d.tag);PATMAP[0].items.push({k:"tag",label:d.tag,tag:d.tag});}});
 }
 function refId(item){return "ref_"+item.exam+"_"+item.no+"_"+(item.pi||0);}
+/* dev端末限定: 消えた仕訳ドリル記録の復元(?fixdrills=1 を一度踏む) */
+try{
+  if(location.search.indexOf("fixdrills=1")>=0&&localStorage.getItem("b2_dev")==="1"){
+    const t2=Date.now()-2*86400000;
+    const st=LS.get(KEY_D,{});const plog=LS.get(KEY_LOG,[]);
+    let added=0;
+    DRILLS.forEach(q=>{
+      const e=st[q.id]||{t:0,o:0};
+      if(!(e.o>0)){e.t=Math.max(1,e.t||0);e.o=1;st[q.id]=e;added++;}
+      if(!plog.some(x=>x.id===q.id&&x.ok>0))plog.push({t:t2,id:q.id,ttl:q.tag||"仕訳",sec:30,n:1,ok:1,src:"map",m:{}});
+    });
+    LS.set(KEY_D,st);LS.set(KEY_LOG,plog);
+    setTimeout(()=>miniToast(`🔧 仕訳ドリルの記録を復元しました(${added}問を正解済みに)`),1200);
+  }
+}catch(e){}
 function itemTier(it){return it.tier||TIER_TAG[it.tag]||3;}
 function patLv(){const v=+(LS.get("b2_patlv",0));return v>=1&&v<=3?v:0;}
 function patStat(item){
