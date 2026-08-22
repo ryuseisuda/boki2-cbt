@@ -4288,6 +4288,30 @@ function missionBuild(){
       evSum+=missionEv(task);
       if(fitIdx<0&&needPerDay>0&&evSum>=needPerDay)fitIdx=tasks.length-1;
     }
+    /* 3.5) クエストが尽きても合格まで足りなければ、プラン外もふくむ全パターンから積む */
+    if(tasks.length<HARD_CAP){
+      const pool=[];
+      PATMAP.forEach((g,gi)=>{
+        const pts=SEC_PTS[gi+1]||20,n=g.items.length||1;
+        g.items.forEach((it,ii)=>{
+          if(used[gi+"_"+ii])return;
+          const tier=itemTier(it);if(tier>1&&!unlocked("tier"+tier))return;
+          const m=patMastery(it);
+          if(m>=MST.timed-1e-9)return;
+          const goal=m<MST.solved-1e-9?MST.solved:(m<MST.settled-1e-9?MST.settled:MST.timed);
+          pool.push({gi,ii,m,goal,label:it.label,w:pts/n*(goal-m)});
+        });
+      });
+      pool.sort((a,b)=>b.w-a.w);
+      for(const p of pool){
+        if(tasks.length>=HARD_CAP)break;
+        used[p.gi+"_"+p.ii]=1;
+        const task={tp:"pat",gi:p.gi,ii:p.ii,goal:p.goal,m:p.m,label:p.label};
+        tasks.push(task);
+        evSum+=missionEv(task);
+        if(fitIdx<0&&needPerDay>0&&evSum>=needPerDay)fitIdx=tasks.length-1;
+      }
+    }
     if(fitIdx<0)fitIdx=Math.min(tasks.length-1,needPerDay>0?tasks.length-1:Math.min(4,tasks.length-1));
     tasks._fit=fitIdx;
     window._msnFitIdx=fitIdx;
@@ -4308,9 +4332,10 @@ function missionBuild(){
 function missionGet(){
   const today=daysKey(new Date());
   let ms=LS.get("b3_mission",null);
-  if(!ms||ms.d!==today||!Array.isArray(ms.tasks)){
+  const _dv=localStorage.getItem("b2_dev")==="1";
+  if(!ms||ms.d!==today||!Array.isArray(ms.tasks)||ms.dv!==_dv){
     const _t=missionBuild();
-    ms={d:today,tasks:_t,fit:(typeof _t._fit==="number"?_t._fit:Math.min(4,_t.length-1)),wrongSnap:LS.get(KEY_W,[]).slice(0,99),mockN:(mockHist()||[]).length,accN:(()=>{try{return accClearedParts();}catch(e){return 0;}})()};
+    ms={d:today,dv:_dv,tasks:_t,fit:(typeof _t._fit==="number"?_t._fit:Math.min(4,_t.length-1)),wrongSnap:LS.get(KEY_W,[]).slice(0,99),mockN:(mockHist()||[]).length,accN:(()=>{try{return accClearedParts();}catch(e){return 0;}})()};
     LS.set("b3_mission",ms);
   }
   return ms;
@@ -4393,6 +4418,7 @@ function missionAct(t){
   return `startPat(${t.gi},${t.ii})`;
 }
 window.missionSize=function(s){LS.set("b3_msize",s);const el=document.getElementById("missioncard");if(el)el.outerHTML=missionCardHTML();mountIcons(main);};
+window.missionRebuild=function(){localStorage.removeItem("b3_mission");renderHome();};
 function missionCardHTML(){
   try{
     const ms=missionGet();
@@ -4479,7 +4505,7 @@ function missionCardHTML(){
       return `<div class="msn-claims">🎁 受け取れる報酬が<b>${cl+rr}件</b> ${cl>0?`<a onclick="openQuests()">クエスト</a>`:""}${rr>0?`<a onclick="renderRoadmap()">ロード</a>`:""}</div>`;
     }catch(e){return "";}})();
     return `<div class="tdcard wide msn" id="missioncard">
-      <div class="pch"><b>きょうの作戦</b>${floorDone?`<span class="msn-ok">きょうのぶん成立🔥</span>`:""}
+      <div class="pch"><b>きょうの作戦</b><a onclick="missionRebuild()" title="作戦を組み直す" style="cursor:pointer;font-size:13px;color:var(--tx2);">🔄</a>${floorDone?`<span class="msn-ok">きょうのぶん成立🔥</span>`:""}
         <span class="pdtabs" style="margin-left:auto;">${[["s","軽め"],["m","きょうの分"]].map(([k,l])=>`<button class="${size===k?"act":""}" onclick="missionSize('${k}')">${l}</button>`).join("")}</span>
       </div>
       ${meter}
