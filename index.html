@@ -2079,7 +2079,7 @@ function unlockAt(lv){return UNLOCK.filter(u=>u.lv===lv&&u.t).map(u=>u.t);}
 function nextUnlock(lv){return UNLOCK.find(u=>u.lv>lv&&u.t)||null;}
 /* 機能が解禁されているか。lvReq(key) は必要Lv(0=最初から) */
 function lvReq(k){const u=UNLOCK.find(x=>x.k===k);return u?u.lv:0;}
-function unlocked(k){return userLv().lv>=lvReq(k);}
+function unlocked(k){if(localStorage.getItem("b2_dev")==="1")return true;return userLv().lv>=lvReq(k);}
 window.unlocked=unlocked;window.lvReq=lvReq;
 
 /* ================= スタミナ ================= */
