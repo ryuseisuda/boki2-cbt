@@ -5181,7 +5181,16 @@ window.missionHelp=function(){
   </div>`;
   document.body.appendChild(ovl);
 };
-/* 予想推移グラフ: このプラン通りに進めたら点数と日々の問題数がどう動くか */
+/* 予想推移グラフ: このプラン通りに進めたら点数と日々の問題数がどう動くか(Chart.js遅延ロード) */
+function loadChartJs(){
+  return new Promise((res,rej)=>{
+    if(window.Chart)return res();
+    const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
+    s.onload=()=>res();s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
 window.missionForecast=function(){
   const ms=missionGet();
   const wl=ms.wl;
@@ -5189,59 +5198,61 @@ window.missionForecast=function(){
   if(!wl||!wl.daily){miniToast("試験日を設定すると予想推移が見られるよ");return;}
   const old=document.getElementById("cele-ovl");if(old)old.remove();
   const cur=estScoreRaw();
+  const goal=nt.goal||goalScore();
   const evNew=wl.newGoal>0?nt.gap/wl.newGoal:0.4;
   const evRev=evNew*0.5;
-  /* 点数の推移(このプランを完遂した場合の近似) */
-  const scores=[cur];
-  wl.daily.forEach(dd=>{scores.push(Math.min(100,scores[scores.length-1]+dd.n*evNew+dd.r*evRev));});
   const D=wl.daily.length;
-  const maxQ=Math.max(3,...wl.daily.map(dd=>dd.n+dd.r));
-  const W=560,H=300,PL=34,PR=30,PT=26,PB=34;
-  const cw=W-PL-PR,ch=H-PT-PB;
-  const x=i=>PL+cw*(D<=1?0.5:i/(D-1));
-  const yS=v=>PT+ch*(1-v/100);
-  const yQ=v=>PT+ch*(1-v/maxQ);
-  let bars="",line="",mocks="";
-  const bw=Math.max(3,Math.min(16,cw/D*0.6));
+  const t0=new Date();t0.setHours(0,0,0,0);
+  const labels=[],scores=[],news=[],revs=[],mockPts=[];
+  let s=cur;
   wl.daily.forEach((dd,i)=>{
-    const bx=x(i)-bw/2;
-    const hR=ch*dd.r/maxQ,hN=ch*dd.n/maxQ;
-    if(dd.r>0)bars+=`<rect x="${bx.toFixed(1)}" y="${(PT+ch-hR).toFixed(1)}" width="${bw.toFixed(1)}" height="${hR.toFixed(1)}" fill="#fbbf24" opacity=".85"/>`;
-    if(dd.n>0)bars+=`<rect x="${bx.toFixed(1)}" y="${(PT+ch-hR-hN).toFixed(1)}" width="${bw.toFixed(1)}" height="${hN.toFixed(1)}" fill="#34d399" opacity=".9"/>`;
-    if(dd.m)mocks+=`<text x="${x(i).toFixed(1)}" y="${PT-8}" font-size="12" text-anchor="middle">🎓</text>`;
+    const dt=new Date(t0.getTime()+i*86400000);
+    labels.push(i===0?"きょう":(dt.getMonth()+1)+"/"+dt.getDate());
+    s=Math.min(100,s+dd.n*evNew+dd.r*evRev);
+    scores.push(Math.round(s*10)/10);
+    news.push(dd.n);revs.push(dd.r);
+    mockPts.push(dd.m?96:null);
   });
-  scores.forEach((s,i)=>{line+=(i===0?"M":"L")+x(Math.min(i,D-1)).toFixed(1)+","+yS(s).toFixed(1);});
-  const goal=nt.goal||goalScore();
-  const svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;background:var(--card,#fff);border-radius:12px;">
-    <line x1="${PL}" y1="${yS(goal)}" x2="${W-PR}" y2="${yS(goal)}" stroke="#f43f5e" stroke-dasharray="5 4" stroke-width="1.5"/>
-    <text x="${W-PR}" y="${yS(goal)-5}" font-size="10.5" fill="#f43f5e" text-anchor="end">目標 ${goal}点</text>
-    <line x1="${PL}" y1="${yS(70)}" x2="${W-PR}" y2="${yS(70)}" stroke="#94a3b8" stroke-dasharray="2 4" stroke-width="1"/>
-    <text x="${PL+2}" y="${yS(70)-4}" font-size="9.5" fill="#94a3b8">合格70</text>
-    ${bars}${mocks}
-    <path d="${line}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round"/>
-    <text x="${PL-4}" y="${yS(100)+4}" font-size="10" fill="var(--tx2,#888)" text-anchor="end">100</text>
-    <text x="${PL-4}" y="${yS(0)+4}" font-size="10" fill="var(--tx2,#888)" text-anchor="end">0</text>
-    <text x="${W-PR+4}" y="${yQ(maxQ)+4}" font-size="10" fill="#b45309">${maxQ}問</text>
-    <text x="${W-PR+4}" y="${yQ(0)+4}" font-size="10" fill="#b45309">0</text>
-    <text x="${PL}" y="${H-8}" font-size="10.5" fill="var(--tx2,#888)">きょう</text>
-    <text x="${W-PR}" y="${H-8}" font-size="10.5" fill="var(--tx2,#888)" text-anchor="end">試験日(あと${D}日)</text>
-  </svg>`;
   const ovl=document.createElement("div");ovl.id="cele-ovl";
   ovl.onclick=e=>{if(e.target===ovl)ovl.remove();};
-  ovl.innerHTML=`<div id="cele-box" style="max-width:640px;text-align:left;">
+  ovl.innerHTML=`<div id="cele-box" style="max-width:680px;width:min(94vw,680px);text-align:left;">
     <h2 style="color:var(--navy);font-size:17px;text-align:center;">📈 このプランで進めた場合の予想推移</h2>
-    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--tx2);margin:6px 0 8px;justify-content:center;">
-      <span><i style="display:inline-block;width:14px;height:3px;background:#2563eb;vertical-align:3px;"></i> 予想点</span>
-      <span><i style="display:inline-block;width:10px;height:10px;background:#34d399;"></i> 新規/日</span>
-      <span><i style="display:inline-block;width:10px;height:10px;background:#fbbf24;"></i> 復習/日</span>
-      <span>🎓 模試(計${(wl.mockDays||[]).length}回)</span>
-    </div>
-    ${svg}
-    <p class="prog" style="font-size:11.5px;margin:8px 0 0;">序盤は新規多め→終盤は復習中心に切り替わる計画。模試は約9日に1回、最後は試験直前。${wl.fits?"この計画で目標に届く見込み":"⚠ このままでは新規"+wl.newLeftover+"問が積み残し"}</p>
+    <div style="position:relative;height:300px;margin-top:8px;"><canvas id="fc-chart"></canvas></div>
+    <p class="prog" style="font-size:11.5px;margin:8px 0 0;">序盤は新規多め→終盤は復習中心。模試は約9日に1回(計${(wl.mockDays||[]).length}回)、最後は試験直前。${wl.fits?"この計画で目標に届く見込み":"⚠ このままでは新規"+wl.newLeftover+"問が積み残し"}</p>
     <div style="text-align:center;margin-top:12px;"><button class="btn" onclick="document.getElementById('cele-ovl').remove()">とじる</button></div>
   </div>`;
   document.body.appendChild(ovl);
   try{track("forecast_view",{});}catch(e){}
+  loadChartJs().then(()=>{
+    const ctx=document.getElementById("fc-chart");if(!ctx)return;
+    const css=getComputedStyle(document.body);
+    const tx2=(css.getPropertyValue("--tx2")||"#8a84a3").trim();
+    new Chart(ctx,{
+      data:{labels,datasets:[
+        {type:"line",label:"予想点",data:scores,yAxisID:"y2",borderColor:"#2563eb",backgroundColor:"#2563eb",borderWidth:2.5,pointRadius:0,pointHoverRadius:4,tension:.3},
+        {type:"line",label:"目標"+goal+"点",data:labels.map(()=>goal),yAxisID:"y2",borderColor:"#f43f5e",borderDash:[6,4],borderWidth:1.5,pointRadius:0,pointHoverRadius:0},
+        {type:"scatter",label:"模試",data:mockPts,yAxisID:"y2",pointStyle:"rectRot",radius:7,backgroundColor:"#7c3aed",borderColor:"#7c3aed"},
+        {type:"bar",label:"新規/日",data:news,yAxisID:"y",backgroundColor:"#34d399",stack:"q",borderRadius:3},
+        {type:"bar",label:"復習/日",data:revs,yAxisID:"y",backgroundColor:"#fbbf24",stack:"q",borderRadius:3}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+        plugins:{
+          legend:{position:"bottom",labels:{boxWidth:14,font:{size:11},color:tx2,filter:i=>i.text!=="模試"||mockPts.some(v=>v!=null)}},
+          tooltip:{callbacks:{label:c=>{
+            if(c.dataset.label==="模試")return c.raw!=null?"🎓 模試の日":null;
+            if(c.dataset.label.startsWith("目標"))return null;
+            if(c.dataset.label==="予想点")return "予想 "+c.raw+"点";
+            return c.dataset.label.replace("/日","")+" "+c.raw+"問";
+          }}}
+        },
+        scales:{
+          x:{stacked:true,grid:{display:false},ticks:{color:tx2,font:{size:10},maxTicksLimit:10,maxRotation:0}},
+          y:{stacked:true,position:"right",beginAtZero:true,suggestedMax:Math.max(6,...news.map((n,i)=>n+revs[i]))*1.6,
+             title:{display:true,text:"問/日",color:"#b45309",font:{size:10}},ticks:{color:"#b45309",font:{size:10},precision:0},grid:{display:false}},
+          y2:{position:"left",min:0,max:100,title:{display:true,text:"点",color:"#2563eb",font:{size:10}},ticks:{color:tx2,font:{size:10}},grid:{color:"rgba(148,163,184,.18)"}}
+        }}
+    });
+  }).catch(()=>{miniToast("グラフの読み込みに失敗しました(通信環境を確認してね)");});
 };
 /* 採点画面から作戦の次タスクへ直行 */
 function missionNextTask(){
