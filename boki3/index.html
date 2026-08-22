@@ -2960,12 +2960,13 @@ window.openExamCfg=function(){
     <p class="prog" style="margin:4px 0 12px;">残り日数と1日のノルマがこの日から逆算されます</p>
     <input type="date" id="excfg-d" value="${ed?ed.toISOString().slice(0,10):""}" style="border:1.5px solid var(--bd);border-radius:12px;padding:11px 16px;font-family:inherit;font-size:15px;">
     <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--navy);">
+      <label>目標 <input type="number" id="excfg-goal" min="70" max="100" step="1" value="${goalScore()}" style="width:58px;border:1.5px solid var(--bd);border-radius:10px;padding:7px 8px;font-family:inherit;font-size:14px;">点</label>
       <label>平日 <input type="number" id="excfg-wd" min="5" max="720" step="5" value="${studyTime().wd}" style="width:64px;border:1.5px solid var(--bd);border-radius:10px;padding:7px 8px;font-family:inherit;font-size:14px;">分</label>
       <label>休日 <input type="number" id="excfg-we" min="5" max="720" step="5" value="${studyTime().we}" style="width:64px;border:1.5px solid var(--bd);border-radius:10px;padding:7px 8px;font-family:inherit;font-size:14px;">分</label>
     </div>
-    <p class="prog" style="margin:6px 0 0;font-size:11.5px;">きょうのノルマは この持ち時間の比で配分されます(休日に多め など)</p>
+    <p class="prog" style="margin:6px 0 0;font-size:11.5px;">目標70点ちょうどは下振れで落ちるリスクあり(推奨75+)。ノルマは持ち時間の比で配分されます</p>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;">
-      <button class="btn" onclick="LS.set('b2_stime',{wd:+document.getElementById('excfg-wd').value||60,we:+document.getElementById('excfg-we').value||120});saveExamDate(document.getElementById('excfg-d').value);document.getElementById('cele-ovl').remove();try{missionRebuild()}catch(e){}">保存</button>
+      <button class="btn" onclick="LS.set('b3_goal',Math.min(100,Math.max(70,+document.getElementById('excfg-goal').value||75)));LS.set('b2_stime',{wd:+document.getElementById('excfg-wd').value||60,we:+document.getElementById('excfg-we').value||120});saveExamDate(document.getElementById('excfg-d').value);document.getElementById('cele-ovl').remove();try{missionRebuild()}catch(e){}">保存</button>
       ${ed?`<button class="btn gray" onclick="saveExamDate(null);document.getElementById('cele-ovl').remove();">未設定にする</button>`:""}
       <button class="btn gray" onclick="document.getElementById('cele-ovl').remove()">とじる</button>
     </div></div>`;
@@ -4223,11 +4224,16 @@ window.gquestTop=gquestTop;
 function itemKeyOf(it){return it.k==="tag"?("tag:"+it.tag):(it.k==="pq"?it.id:refId(it));}
 /* 平日/休日の勉強時間(分)。きょうの必要点はこの持ち時間の比で配分する */
 function studyTime(){const s=LS.get("b2_stime",null)||{};return{wd:Math.max(5,+s.wd||60),we:Math.max(5,+s.we||120)};}
+/* 目標点(70〜100)。70ぴったりは下振れで落ちるので既定75 */
+function goalScore(){const v=+(LS.get("b3_goal",75))||75;return Math.min(100,Math.max(70,v));}
+/* 今日おぼえた問題が試験日までに受ける復習の回数(+1=最初に解く分) */
+function touchesFor(daysLeft){let c=1,s=0;for(const iv of SRS_IV){s+=iv;if(s<daysLeft)c++;else break;}return c;}
 function missionNeedToday(){
   const ed=examDate();
   const cur=estScoreRaw();
-  if(!ed)return{need:0,days:0,gap:Math.max(0,70-cur)};
-  if(cur>=70)return{need:0,days:0,gap:0,ok:true};
+  const goal=goalScore();
+  if(!ed)return{need:0,days:0,gap:Math.max(0,goal-cur)};
+  if(cur>=goal)return{need:0,days:0,gap:0,ok:true};
   const st=studyTime();
   const t0=new Date();t0.setHours(0,0,0,0);
   const ws=[];
@@ -4240,9 +4246,9 @@ function missionNeedToday(){
   let W=ws.reduce((a,b)=>a+b,0);
   for(let i=0;i<reserve;i++)W-=ws[ws.length-1-i];
   W=Math.max(ws[0],W);
-  const gap=70-cur;
+  const gap=goal-cur;
   const dow0=t0.getDay();
-  return{need:gap*ws[0]/W,days:ws.length,reserve,todayMin:ws[0],isWe:(dow0===0||dow0===6),gap};
+  return{need:gap*ws[0]/W,days:ws.length,reserve,todayMin:ws[0],isWe:(dow0===0||dow0===6),gap,goal,W,todayW:ws[0]};
 }
 /* 忘却曲線(エビングハウス)の復習間隔: k回目の成功後、次の復習までの日数 */
 const SRS_IV=[1,3,7,14,30];
@@ -4368,6 +4374,30 @@ function missionBuild(){
         if(fitIdx<0&&needPerDay>0&&evSum>=needPerDay)fitIdx=tasks.length-1;
       }
     }
+    /* 仕事量モデル: 新規はタッチ数(解く+試験日までの復習回数)で数え、既存の復習負債を足す。
+       きょうの分 = 総仕事 × きょうの持ち時間の割合 */
+    try{
+      const nt=missionNeedToday();
+      if(nt.days>0){
+        const touches=touchesFor(nt.days);
+        /* 目標到達に必要な新規タスク数: ev累積がgapに届く位置 */
+        let acc=0,nGoal=0;
+        for(const t of tasks){acc+=missionEv(t);nGoal++;if(acc>=nt.gap)break;}
+        if(acc<nt.gap)nGoal=tasks.length;
+        /* 既存パターンの復習負債(卒業前の残り復習回数の合計) */
+        let revDebt=0;
+        PATMAP.forEach(g=>{g.items.forEach(it=>{
+          if(it.k==="tag")return;
+          const m=patMastery(it);if(m<MST.solved-1e-9)return;
+          const id=it.k==="pq"?it.id:refId(it);
+          const s=srsInfo(id);if(s&&!s.grad)revDebt+=s.remain;
+        })});
+        const total=nGoal*touches+revDebt;
+        const todayTouch=Math.max(1,Math.ceil(total*nt.todayW/Math.max(nt.todayW,nt.W)));
+        tasks._wl={nGoal,touches,revDebt,total,todayTouch};
+        fitIdx=Math.min(tasks.length-1,todayTouch-1);
+      }
+    }catch(e){}
     if(fitIdx<0)fitIdx=Math.min(tasks.length-1,needPerDay>0?tasks.length-1:Math.min(4,tasks.length-1));
     tasks._fit=fitIdx;
     window._msnFitIdx=fitIdx;
@@ -4383,6 +4413,7 @@ function missionBuild(){
   }catch(e){}
   const out=tasks.slice(0,HARD_CAP+1);
   out._fit=(typeof tasks._fit==="number")?Math.min(tasks._fit,out.length-1):Math.min(4,Math.max(0,out.length-1));
+  out._wl=tasks._wl||null;
   return out;
 }
 function missionGet(){
@@ -4391,7 +4422,7 @@ function missionGet(){
   const _dv=localStorage.getItem("b2_dev")==="1";
   if(!ms||ms.d!==today||!Array.isArray(ms.tasks)||ms.dv!==_dv){
     const _t=missionBuild();
-    ms={d:today,dv:_dv,tasks:_t,fit:(typeof _t._fit==="number"?_t._fit:Math.min(4,_t.length-1)),wrongSnap:LS.get(KEY_W,[]).slice(0,99),mockN:(mockHist()||[]).length,accN:(()=>{try{return accClearedParts();}catch(e){return 0;}})()};
+    ms={d:today,dv:_dv,tasks:_t,fit:(typeof _t._fit==="number"?_t._fit:Math.min(4,_t.length-1)),wl:_t._wl||null,wrongSnap:LS.get(KEY_W,[]).slice(0,99),mockN:(mockHist()||[]).length,accN:(()=>{try{return accClearedParts();}catch(e){return 0;}})()};
     LS.set("b3_mission",ms);
   }
   return ms;
@@ -4669,24 +4700,20 @@ function missionCardHTML(){
       const ed=examDate();
       if(!ed)return `<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日を設定</a>すると「間に合うか」を逆算するよ`;
       const nt=missionNeedToday();
-      if(nt.ok){window._msnFit=true;return `予想は合格ライン超え。あとは模試で仕上げと本番力!`;}
-      const need=nt.need;
+      if(nt.ok){window._msnFit=true;return `予想は目標${goalScore()}点をこえてる。あとは模試で仕上げと本番力! <a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">⚙目標を上げる</a>`;}
       const stm=studyTime();
       const fitN=Math.max(0,Math.min(ms.fit!=null?ms.fit:4,ms.tasks.length-1));
       const dayTasks=ms.tasks.slice(0,fitN+1);
-      const evAll=dayTasks.reduce((a,t)=>a+missionEv(t),0);
-      const mev=dayTasks.reduce((a,t)=>a+(t.tp==="mock"?(t.mev||0):0),0);
       const dayN=dayTasks.filter(t=>t.tp!=="mock").length;
-      /* 点数→問題数の換算: リスト全体の1問あたり平均期待値 */
-      const allEvs=ms.tasks.filter(t=>t.tp!=="mock"&&t.tp!=="acc").map(t=>missionEv(t)).filter(v=>v>0.01);
-      const avgEv=allEvs.length?allEvs.reduce((a,b)=>a+b,0)/allEvs.length:0.25;
-      const needN=Math.ceil(need/Math.max(0.05,avgEv));
-      /* Lv不足でロックされている問題数 */
+      const doneDay=dayTasks.filter(t=>missionDone(ms,t)).length;
+      const wl=ms.wl;
+      /* 1日の容量(タッチ): きょうの持ち時間÷1問あたり平均10分 */
+      const cap=Math.floor(nt.todayMin/10);
       const lockedN=(()=>{let n=0;try{PATMAP.forEach(g=>{g.items.forEach(it=>{const t2=itemTier(it);if(t2>1&&!unlocked("tier"+t2)&&patMastery(it)<MST.timed-1e-9)n++;});});}catch(e){}return n;})();
-      const calc=`<span class="msn-calc">計算: のこり${Math.round(nt.gap)}点を 平日${stm.wd}分・休日${stm.we}分 の持ち時間で配分 → きょう(${nt.isWe?"休日":"平日"})は+${need.toFixed(1)}点 ≈ ${needN}問　<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">⚙時間設定</a></span>`;
-      if(evAll>=need-0.05){window._msnFit=true;return `間に合わせるには1日<b>約${needN}問(+${need.toFixed(1)}点分)</b> → きょうの分は<b>${dayN}問(+${evAll.toFixed(1)}点分)</b>。毎日やれば間に合う計画<br>${calc}`;}
-      if(evAll+mev>=need-0.05){window._msnFit=true;return `間に合わせるには1日<b>約${needN}問</b>。パターン${dayN}問(+${evAll.toFixed(1)}点)+<b>模試で実力どおり取れれば+${mev.toFixed(1)}点</b>で、きょうの作戦で間に合う計画<br>${calc}`;}
-      return `⚠ 間に合わせるには1日<b>約${needN}問(+${need.toFixed(1)}点分)</b>必要だけど、いま出せるのは${dayN}問(+${(evAll+mev).toFixed(1)}点分)${lockedN>0?`。<b>🔒レベル不足で${lockedN}問がロック中</b>(問題を解いてLvを上げると解禁)`:""}。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日の見直し</a>も考えよう<br>${calc}`;
+      if(!wl){return `目標${nt.goal}点まで あと${Math.round(nt.gap)}点。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">⚙設定</a>`;}
+      const calc=`<span class="msn-calc">計算: 新規${wl.nGoal}問×${wl.touches}回タッチ(復習コスト込み)+たまった復習${wl.revDebt}回 = 総仕事${wl.total}回 → きょうの持ち時間(${nt.isWe?"休日":"平日"}${nt.todayMin}分)の割合で<b>${wl.todayTouch}回</b>　<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">⚙目標・時間設定</a></span>`;
+      if(wl.todayTouch<=cap){window._msnFit=true;return `目標<b>${nt.goal}点</b>まで、復習コスト込みで<b>きょう${wl.todayTouch}問</b>(${doneDay}/${dayN}個 完了)。毎日この分で間に合う計画<br>${calc}`;}
+      return `⚠ きょう<b>${wl.todayTouch}問</b>必要だけど、持ち時間${nt.todayMin}分だと約${cap}問が限界${lockedN>0?`。<b>🔒Lv不足で${lockedN}問ロック中</b>`:""}。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">時間を増やすか目標・試験日の見直し</a>を<br>${calc}`;
     }catch(e){return "";}})();
     const mkRow=(t,i)=>{
       const done=flags[i];
