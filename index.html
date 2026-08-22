@@ -927,6 +927,11 @@ body.dark .gcard.ok{background:linear-gradient(180deg,#12291c,var(--card));borde
 .msn-lb{font-size:13.5px;font-weight:700;color:var(--navy);min-width:0;}
 .msn-ev{margin-left:auto;flex:none;font-size:12px;font-weight:800;color:#0e9f6e;background:#dcfce7;border-radius:999px;padding:2px 9px;}
 .msn-ev.mock{color:#1d4ed8;background:#dbeafe;}
+#pomochip{position:fixed;bottom:14px;right:14px;z-index:2500;display:flex;align-items:center;gap:8px;background:var(--navy,#1e1b4b);color:#fff;border-radius:999px;padding:9px 14px;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.3);}
+#pomochip b{font-size:16px;font-variant-numeric:tabular-nums;}
+#pomochip .pm-ic{font-size:16px;}
+#pomochip .pm-t{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;opacity:.85;}
+#pomochip .pm-x{cursor:pointer;opacity:.7;margin-left:2px;}
 .msn-ext{margin-top:8px;}
 .msn-ext summary{cursor:pointer;font-size:12.5px;font-weight:800;color:var(--blue);padding:6px 2px;list-style:none;}
 .msn-ext summary::-webkit-details-marker{display:none;}
@@ -4852,6 +4857,74 @@ function missionAct(t){
   if(t.tp==="acc")return `accStart(${t.lv})`;
   return `startPat(${t.gi},${t.ii})`;
 }
+/* ================= ポモドーロ(25分+5分休憩)。目標は作戦から自動で切り出す ================= */
+function taskMin(t){
+  if(t.tp==="rev")return 2+(t.n||3)*1.5;
+  if(t.tp==="acc")return 6;
+  if(t.tp==="srs")return 8;
+  if(t.tp==="mock")return 90;
+  return (t.m||0)>=MST.solved?8:12;
+}
+function pomoTaskKey(t){return t.tp+":"+(t.gi!=null?t.gi+"_"+t.ii:(t.lv||t.n||""));}
+window.pomoStart=function(){
+  const ms=missionGet();
+  const undone=ms.tasks.filter(t=>!missionDone(ms,t)&&t.tp!=="mock");
+  const tgt=[];let sum=0;
+  for(const t of undone){
+    const m=taskMin(t);
+    if(tgt.length&&sum+m>25)break;
+    tgt.push(t);sum+=m;
+    if(sum>=25)break;
+  }
+  const names=tgt.map(t=>t.tp==="rev"?`仕訳復習${t.n}問`:t.tp==="acc"?"仕訳特訓":(t.label||"").replace(/★.*$/,"").trim().slice(0,14)).join(" → ");
+  const prev=LS.get("b2_pomo",null)||{};
+  LS.set("b2_pomo",{end:Date.now()+25*60000,mode:"work",names,keys:tgt.map(pomoTaskKey),n:(prev.n||0)+1});
+  try{track("pomo_start",{});}catch(e){}
+  try{SND.go();}catch(e){}
+  miniToast(`🍅 25分スタート! 目標: <b>${escapeHtml(names)||"作戦を進める"}</b>`);
+  pomoTick();
+  const t0=tgt[0];
+  if(t0){try{eval(missionAct(t0));}catch(e){}}
+};
+window.pomoStop=function(){
+  localStorage.removeItem("b2_pomo");
+  const el=document.getElementById("pomochip");if(el)el.remove();
+  if(window._pomoIv){clearInterval(window._pomoIv);window._pomoIv=null;}
+};
+function pomoTick(){
+  if(window._pomoIv)clearInterval(window._pomoIv);
+  window._pomoIv=setInterval(pomoRender,1000);
+  pomoRender();
+}
+function pomoRender(){
+  const p=LS.get("b2_pomo",null);
+  let el=document.getElementById("pomochip");
+  if(!p){if(el)el.remove();if(window._pomoIv){clearInterval(window._pomoIv);window._pomoIv=null;}return;}
+  if(!el){el=document.createElement("div");el.id="pomochip";document.body.appendChild(el);}
+  const left=Math.max(0,Math.round((p.end-Date.now())/1000));
+  if(left<=0){
+    if(p.mode==="work"){
+      /* 目標の達成判定 */
+      let hit=0,tot=(p.keys||[]).length;
+      try{
+        const ms=missionGet();
+        (p.keys||[]).forEach(k=>{const t=ms.tasks.find(x=>pomoTaskKey(x)===k);if(t&&missionDone(ms,t))hit++;});
+      }catch(e){}
+      try{SND.fanfare();}catch(e){}
+      try{track("pomo_done",{hit,tot});}catch(e){}
+      LS.set("b2_pomo",{...p,mode:"break",end:Date.now()+5*60000});
+      miniToast(tot?`🍅 25分おつかれ! 目標 ${hit}/${tot} 達成${hit>=tot?"🔥":""}　☕5分休憩しよう`:"🍅 25分おつかれ! ☕5分休憩しよう");
+    }else{
+      try{SND.coin();}catch(e){}
+      localStorage.removeItem("b2_pomo");
+      miniToast(`☕ 休憩おわり! もう1本いくなら作戦カードの🍅から`);
+    }
+    pomoRender();return;
+  }
+  const mm=String(Math.floor(left/60)).padStart(2,"0"),ss=String(left%60).padStart(2,"0");
+  el.innerHTML=`<span class="pm-ic">${p.mode==="work"?"🍅":"☕"}</span><b>${mm}:${ss}</b><span class="pm-t">${p.mode==="work"?escapeHtml((p.names||"").slice(0,26)):"休憩中"}</span><a class="pm-x" onclick="pomoStop()">✕</a>`;
+}
+setTimeout(()=>{try{if(LS.get("b2_pomo",null))pomoTick();}catch(e){}},1200);
 window.missionSize=function(s){LS.set("b2_msize",s);const el=document.getElementById("missioncard");if(el)el.outerHTML=missionCardHTML();mountIcons(main);};
 window.missionRebuild=function(){localStorage.removeItem("b2_mission");renderHome();};
 function missionCardHTML(){
@@ -4944,6 +5017,7 @@ function missionCardHTML(){
       </div>
       ${meter}
       <div class="msn-say"><span class="msn-dog">🐶</span><span>${head}</span></div>
+      ${allDone?"":`<button class="btn" style="margin:2px 0 4px;font-size:13px;padding:9px 16px;background:#e11d48;" onclick="pomoStart()">🍅 25分ポモドーロで始める</button>`}
       ${rows}
       ${allDone?`<div class="msn-more"><a onclick="openStudy()">もっとやる(じぶんで選ぶ)　→</a></div>`:""}
       ${claims}
