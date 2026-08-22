@@ -929,7 +929,12 @@ body.dark .gcard.ok{background:linear-gradient(180deg,#12291c,var(--card));borde
 .msn-lb{font-size:13.5px;font-weight:700;color:var(--navy);min-width:0;}
 .msn-ev{margin-left:auto;flex:none;font-size:12px;font-weight:800;color:#0e9f6e;background:#dcfce7;border-radius:999px;padding:2px 9px;}
 .msn-ev.mock{color:#1d4ed8;background:#dbeafe;}
-#pomochip{position:fixed;bottom:14px;right:14px;z-index:2500;display:flex;align-items:center;gap:8px;background:var(--navy,#1e1b4b);color:#fff;border-radius:999px;padding:9px 14px;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.3);}
+#pomochip{position:fixed;top:58px;right:12px;z-index:2500;display:flex;align-items:center;gap:8px;background:var(--navy,#1e1b4b);color:#fff;border-radius:999px;padding:8px 13px;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.3);cursor:pointer;}
+#pomobreak{position:fixed;inset:0;z-index:2700;background:rgba(15,10,40,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:10px;}
+#pomobreak .pb-t{font-size:64px;font-weight:800;font-variant-numeric:tabular-nums;}
+#pomobreak .pb-e{font-size:52px;}
+#pomobreak a{color:#c7c3e6;font-size:13px;text-decoration:underline;cursor:pointer;margin-top:14px;}
+
 #pomochip b{font-size:16px;font-variant-numeric:tabular-nums;}
 #pomochip .pm-ic{font-size:16px;}
 #pomochip .pm-t{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;opacity:.85;}
@@ -2853,7 +2858,7 @@ function railHTML(kind){
   const ppCard=(()=>{try{
     const cur=estScore(),f=passForecast();
     const fx=f.done?"合格ライン到達!":f.date?`このペースなら ${f.date} ごろ合格ライン`:f.stalled?"のびが停滞中。復習しよう":"学習すると予測が出ます";
-    return `<div class="rcard" style="cursor:pointer;" onclick="renderRoadmap()"><h3><span class="sicon" data-icon="pin"></span>合格力</h3>${ppGaugeHTML(cur)}<p class="prog" style="margin:8px 0 0;font-size:11.5px;">${fx}　→</p></div>`;
+    return `<div class="rcard" style="cursor:pointer;" onclick="renderRoadmap()"><h3><span class="sicon" data-icon="pin"></span>合格力<a onclick="event.stopPropagation();(LS.get('b3_pomo',null)?pomoGoals():pomoStart())" title="ポモドーロ" style="margin-left:auto;font-size:15px;cursor:pointer;">⏱</a></h3>${ppGaugeHTML(cur)}<p class="prog" style="margin:8px 0 0;font-size:11.5px;">${fx}　→</p></div>`;
   }catch(e){return ""}})();
   return ppCard+rankCard;
 }
@@ -3065,7 +3070,10 @@ function renderHome(){
         if(undone.length){
           const t=undone[0];
           const doneN=view.length-undone.length;
+          let pomoN=0;
+          try{pomoN=Math.ceil(view.filter(x=>!missionDone(ms,x)&&x.tp!=="mock").reduce((a,x)=>a+taskMin(x),0)/25);}catch(e){}
           return `<button class="btn go cta gobig" onclick="${missionAct(t)}">▶ ${doneN>0?`作戦のつづき(あと${undone.length}個)`:"きょうの作戦をはじめる"}</button>
+          <div style="margin-top:8px;"><button class="btn" style="font-size:13px;padding:9px 18px;background:#e11d48;" onclick="pomoStart()">🍅 ポモドーロでやる${pomoN>1?`(あと${pomoN}本)`:""}</button></div>
           <div style="margin-top:8px;"><a style="font-size:12.5px;color:var(--tx2);text-decoration:underline;cursor:pointer;" onclick="openStudy()">じぶんで選ぶ</a></div>`;
         }
       }catch(e){}
@@ -3850,7 +3858,7 @@ function patMastery(it){
   if(stt.s==="⚔")return MST.try;
   if(stt.s==="△")return MST.half;
   const id=it.k==="pq"?it.id:refId(it);
-  return masteryFromLogs(id,MST.solved);   /* ○だがログに成功が残っていない(古いデータ)→解けた扱い */
+  return srsDecay(id,masteryFromLogs(id,MST.solved));   /* ○だがログに成功なし(古いデータ)→解けた扱い。放置で忘却減衰 */
 }
 window.patMastery=patMastery;
 function estTheory(){
@@ -4237,7 +4245,10 @@ function missionNeedToday(){
 }
 /* 忘却曲線(エビングハウス)の復習間隔: k回目の成功後、次の復習までの日数 */
 const SRS_IV=[1,3,7,14,30];
+const _srsMemo={};
 function srsInfo(id){
+  const _c=_srsMemo[id];
+  if(_c&&Date.now()-_c.t<5000)return _c.v;
   const logs=LS.get(KEY_LOG,[]).filter(x=>x.id===id&&x.n>0).sort((a,b)=>a.t-b.t);
   const succ=[];
   logs.forEach(x=>{
@@ -4254,7 +4265,21 @@ function srsInfo(id){
   let remain=0;
   if(ed){let t=due,kk=k;while(t<=ed.getTime()&&remain<9){remain++;kk++;t+=SRS_IV[Math.min(kk-1,SRS_IV.length-1)]*86400000;}}
   else remain=Math.max(1,SRS_IV.length-k);
-  return {k,due,grad,remain};
+  const _v={k,due,grad,remain};
+  _srsMemo[id]={t:Date.now(),v:_v};
+  return _v;
+}
+/* 忘却減衰: 復習期日を1日すぎたら1段階、次の間隔分まで放置したら「解けた」まで低下。
+   復習して成功すれば回復する。合格力(予想点)にそのまま反映される */
+function srsDecay(id,m){
+  if(m<MST.settled-1e-9)return m;
+  const s=srsInfo(id);
+  if(!s||s.grad)return m;
+  const over=Date.now()-s.due;
+  if(over<=86400000)return m;
+  const iv=SRS_IV[Math.min(s.k,SRS_IV.length-1)]*86400000;
+  if(over>86400000+iv)return MST.solved;
+  return m>=MST.timed?MST.settled:MST.solved;
 }
 function missionBuild(){
   initPatMap();
@@ -4296,6 +4321,7 @@ function missionBuild(){
     const it=PATMAP[d.gi].items[d.ii];
     const goal=d.m<MST.settled-1e-9?MST.settled:MST.timed;
     tasks.push({tp:"srs",gi:d.gi,ii:d.ii,goal,label:it.label,k:d.s.k+1,remain:d.s.remain,k0:d.s.k,
+      over:Math.floor((Date.now()-d.s.due)/86400000),
       days:Math.max(1,Math.round((Date.now()-(d.s.due-0))/86400000)+1)});
     used[d.gi+"_"+d.ii]=1;
   });
@@ -4511,8 +4537,56 @@ function pomoRender(){
     pomoRender();return;
   }
   const mm=String(Math.floor(left/60)).padStart(2,"0"),ss=String(left%60).padStart(2,"0");
-  el.innerHTML=`<span class="pm-ic">${p.mode==="work"?"🍅":"☕"}</span><b>${mm}:${ss}</b><span class="pm-t">${p.mode==="work"?escapeHtml((p.names||"").slice(0,26)):"休憩中"}</span><a class="pm-x" onclick="pomoStop()">✕</a>`;
+  /* 休憩中は全画面で物理的に休ませる */
+  let bo=document.getElementById("pomobreak");
+  if(p.mode==="break"){
+    if(!bo){bo=document.createElement("div");bo.id="pomobreak";document.body.appendChild(bo);}
+    bo.innerHTML=`<span class="pb-e">☕</span><div class="pb-t">${mm}:${ss}</div><div style="font-size:15px;">きゅうけい中。画面から目をはなそう</div><a onclick="pomoSkipBreak()">休憩をスキップして再開する</a>`;
+    el.style.display="none";
+    return;
+  }
+  if(bo)bo.remove();
+  el.style.display="";
+  el.onclick=e=>{if(e.target.classList.contains("pm-x"))return;pomoGoals();};
+  el.innerHTML=`<span class="pm-ic">🍅</span><b>${mm}:${ss}</b><span class="pm-t">${escapeHtml((p.names||"").slice(0,22))}</span><a class="pm-x" onclick="event.stopPropagation();pomoStop()">✕</a>`;
 }
+window.pomoSkipBreak=function(){
+  const p=LS.get("b3_pomo",null);if(!p)return;
+  localStorage.removeItem("b3_pomo");
+  const bo=document.getElementById("pomobreak");if(bo)bo.remove();
+  pomoRender();
+  miniToast("☕→🍅 もう1本いくなら「ポモドーロでやる」から");
+};
+/* チップをタップ: この25分の目標と進捗 */
+window.pomoGoals=function(){
+  const p=LS.get("b3_pomo",null);if(!p)return;
+  const old=document.getElementById("cele-ovl");if(old)old.remove();
+  let rows="";
+  try{
+    const ms=missionGet();
+    rows=(p.keys||[]).map(k=>{
+      const t=ms.tasks.find(x=>pomoTaskKey(x)===k);
+      if(!t)return "";
+      const done=missionDone(ms,t);
+      let label=t.tp==="rev"?"仕訳の復習":t.tp==="acc"?"仕訳特訓":(t.label||"");
+      try{const it=t.gi!=null?PATMAP[t.gi].items[t.ii]:null;if(it&&it.k==="tag")label="仕訳: "+it.tag;}catch(e){}
+      return `<div style="padding:7px 0;border-bottom:1px dashed var(--bd);${done?"opacity:.55;text-decoration:line-through;":""}">${done?"✓":"▢"} ${escapeHtml((label||"").replace(/★.*$/,"").trim())}</div>`;
+    }).join("");
+  }catch(e){}
+  const left=Math.max(0,Math.round((p.end-Date.now())/1000));
+  const ovl=document.createElement("div");ovl.id="cele-ovl";
+  ovl.onclick=e=>{if(e.target===ovl)ovl.remove();};
+  ovl.innerHTML=`<div id="cele-box" style="text-align:left;max-width:400px;">
+    <h2 style="color:var(--navy);font-size:17px;text-align:center;">🍅 この25分の目標</h2>
+    <p class="prog" style="text-align:center;margin:2px 0 10px;">のこり ${Math.floor(left/60)}分${left%60}秒</p>
+    <div style="font-size:14px;">${rows||"きょうの作戦を進めよう"}</div>
+    <div style="text-align:center;margin-top:14px;display:flex;gap:8px;justify-content:center;">
+      <button class="btn" onclick="document.getElementById('cele-ovl').remove()">とじる</button>
+      <button class="btn gray" onclick="pomoStop();document.getElementById('cele-ovl').remove()">ポモドーロを中断</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ovl);
+};
 setTimeout(()=>{try{if(LS.get("b3_pomo",null))pomoTick();}catch(e){}},1200);
 window.missionSize=function(s){LS.set("b3_msize",s);const el=document.getElementById("missioncard");if(el)el.outerHTML=missionCardHTML();mountIcons(main);};
 window.missionRebuild=function(){localStorage.removeItem("b3_mission");renderHome();};
@@ -4524,10 +4598,10 @@ window.missionHelp=function(){
     <h2 style="color:var(--navy);font-size:17px;text-align:center;">バッジと問題の進み方</h2>
     <div style="font-size:13px;line-height:1.9;margin-top:10px;">
       <div><span class="msn-bg new">新規</span> はじめて解く問題</div>
-      <div><span class="msn-bg mid">もう一度</span> 挑戦したけど まだ解けていない(正解80%未満)</div>
-      <div><span class="msn-bg rev">定着させる</span> 一度<b>自力で解けた</b>問題。<b>別の日にもう一度</b>解けると「定着」になる</div>
+      <div><span class="msn-bg mid">もう一度</span> 挑戦したけど まだ解けていない(1問の中の記入欄の8割に届かず)</div>
+      <div><span class="msn-bg rev">定着させる</span> 一度<b>自力で解けた</b>(欄の8割以上正解)問題。<b>別の日にもう一度</b>解けると「定着」になる</div>
       <div><span class="msn-bg fin">仕上げる</span> 定着ずみ。<b>制限時間内</b>に解ければ本番力=満点あつかい</div>
-      <div><span class="msn-bg rev">復習◯回目</span> 忘却曲線(1日→3日→1週→2週→1か月)のタイミングで出題。<br><b>次の復習日が試験日をこえたら「完璧」</b>として卒業、もう出ないよ</div>
+      <div><span class="msn-bg rev">復習◯回目</span> 忘却曲線(1日→3日→1週→2週→1か月)のタイミングで出題。<br><b>復習をサボると定着がさがり、合格力も下がる</b>。<b>次の復習日が試験日をこえたら「完璧」</b>として卒業、もう出ないよ</div>
       <div><span class="msn-bg new">基礎</span> 仕訳の反射練習。ぜんぶの問題が速くなる準備運動</div>
     </div>
     <div style="text-align:center;margin-top:12px;"><button class="btn" onclick="document.getElementById('cele-ovl').remove()">とじる</button></div>
@@ -4578,7 +4652,7 @@ function missionCardHTML(){
       if(t.tp==="acc")return `<span class="msn-bg new">基礎</span>`;
       if(t.tp==="rev")return `<span class="msn-bg rev">リベンジ</span>`;
       if(t.tp==="mock")return `<span class="msn-bg mock">模試</span>`;
-      if(t.tp==="srs")return `<span class="msn-bg rev">復習${t.k}回目</span>${!done&&t.remain>0?`<span class="msn-bg left">あと${t.remain}回で完璧</span>`:""}`;
+      if(t.tp==="srs")return `${(t.over||0)>1?`<span class="msn-bg mid">忘れかけ!</span>`:""}<span class="msn-bg rev">復習${t.k}回目</span>${!done&&t.remain>0?`<span class="msn-bg left">あと${t.remain}回で完璧</span>`:""}`;
       /* いまの習熟度で「このタスクですること」を表示(リアルタイム反映) */
       let mNow=t.m||0;
       try{const it=t.gi!=null?PATMAP[t.gi].items[t.ii]:null;if(it)mNow=patMastery(it);}catch(e){}
@@ -4657,14 +4731,7 @@ function missionCardHTML(){
       </div>
       ${meter}
       <div class="msn-say"><span class="msn-dog">🐶</span><span>${head}</span></div>
-      ${allDone?"":(()=>{
-        let pomoN=0;
-        try{
-          const remainMin=view.slice(0,fit+1).filter((t,i)=>!flags[i]&&t.tp!=="mock").reduce((a,t)=>a+taskMin(t),0);
-          pomoN=Math.ceil(remainMin/25);
-        }catch(e){}
-        return `<button class="btn" style="margin:2px 0 4px;font-size:13px;padding:9px 16px;background:#e11d48;" onclick="pomoStart()">🍅 25分ポモドーロで始める${pomoN>1?` ─ きょうの分はあと${pomoN}本`:(pomoN===1?" ─ あと1本で完了!":"")}</button>`;
-      })()}
+
       ${rows}
       ${allDone?`<div class="msn-more"><a onclick="openStudy()">もっとやる(じぶんで選ぶ)　→</a></div>`:""}
       ${claims}
