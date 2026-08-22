@@ -4173,6 +4173,7 @@ function gradeDrill(q){
     const wr=drill.wrong||[];
     const bt=btEnd();
     main.innerHTML=`<div class="qpane" style="text-align:center;"><h2>${drill.mode==="review"?"復習":"仕訳特訓"} 終了</h2>
+    ${(()=>{try{return missionNextBtnHTML();}catch(e){return ""}})()}
     <div class="res-big ${drill.ok/drill.qs.length>=0.8?"pass":"fail"}">${drill.ok} / ${drill.qs.length} 問正解</div>
     ${drill.xp?`<div class="xpsum">獲得経験値 <b>✨ ${drill.xp}</b>${bt&&bt.tk?`　🎟 ガチャチケット ${bt.tk}`:""}</div>`:""}
     <p style="color:#64748b;">${wr.length?"間違えた問題だけすぐ解き直すのが一番効きます。":"全問正解です!"}</p>
@@ -4929,6 +4930,44 @@ function pomoRender(){
 setTimeout(()=>{try{if(LS.get("b2_pomo",null))pomoTick();}catch(e){}},1200);
 window.missionSize=function(s){LS.set("b2_msize",s);const el=document.getElementById("missioncard");if(el)el.outerHTML=missionCardHTML();mountIcons(main);};
 window.missionRebuild=function(){localStorage.removeItem("b2_mission");renderHome();};
+window.missionHelp=function(){
+  const old=document.getElementById("cele-ovl");if(old)old.remove();
+  const ovl=document.createElement("div");ovl.id="cele-ovl";
+  ovl.onclick=e=>{if(e.target===ovl)ovl.remove();};
+  ovl.innerHTML=`<div id="cele-box" style="text-align:left;max-width:440px;">
+    <h2 style="color:var(--navy);font-size:17px;text-align:center;">バッジと問題の進み方</h2>
+    <div style="font-size:13px;line-height:1.9;margin-top:10px;">
+      <div><span class="msn-bg new">新規</span> はじめて解く問題</div>
+      <div><span class="msn-bg mid">もう一度</span> 挑戦したけど まだ解けていない(正解80%未満)</div>
+      <div><span class="msn-bg rev">定着させる</span> 一度<b>自力で解けた</b>問題。<b>別の日にもう一度</b>解けると「定着」になる</div>
+      <div><span class="msn-bg fin">仕上げる</span> 定着ずみ。<b>制限時間内</b>に解ければ本番力=満点あつかい</div>
+      <div><span class="msn-bg rev">復習◯回目</span> 忘却曲線(1日→3日→1週→2週→1か月)のタイミングで出題。<br><b>次の復習日が試験日をこえたら「完璧」</b>として卒業、もう出ないよ</div>
+      <div><span class="msn-bg new">基礎</span> 仕訳の反射練習。ぜんぶの問題が速くなる準備運動</div>
+    </div>
+    <div style="text-align:center;margin-top:12px;"><button class="btn" onclick="document.getElementById('cele-ovl').remove()">とじる</button></div>
+  </div>`;
+  document.body.appendChild(ovl);
+};
+/* 採点画面から作戦の次タスクへ直行 */
+function missionNextTask(){
+  try{
+    const ms=missionGet();
+    const cur=window._patPos?(window._patPos.gi+"_"+window._patPos.ii):null;
+    return ms.tasks.find(t=>{
+      if(t.tp==="mock")return false;
+      if(missionDone(ms,t))return false;
+      if(cur&&t.gi!=null&&(t.gi+"_"+t.ii)===cur)return false;
+      return true;
+    })||null;
+  }catch(e){return null;}
+}
+window.missionNextBtnHTML=function(){
+  const t=missionNextTask();if(!t)return "";
+  let label=t.tp==="rev"?"仕訳の復習":t.tp==="acc"?"仕訳特訓":(t.label||"");
+  try{const it=t.gi!=null?PATMAP[t.gi].items[t.ii]:null;if(it&&it.k==="tag")label="仕訳: "+it.tag;}catch(e){}
+  label=(label||"").replace(/★.*$/,"").trim().slice(0,18);
+  return `<button class="btn go" style="margin-top:12px;font-size:14px;padding:11px 20px;" onclick="${missionAct(t)}">▶ 作戦のつづき: ${escapeHtml(label)}</button>`;
+};
 function missionCardHTML(){
   try{
     const ms=missionGet();
@@ -4954,12 +4993,12 @@ function missionCardHTML(){
       if(t.tp==="rev")return `<span class="msn-bg rev">リベンジ</span>`;
       if(t.tp==="mock")return `<span class="msn-bg mock">模試</span>`;
       if(t.tp==="srs")return `<span class="msn-bg rev">復習${t.k}回目</span>${!done&&t.remain>0?`<span class="msn-bg left">あと${t.remain}回で完璧</span>`:""}`;
-      /* いまの習熟度で判定(発行後に解いた分をリアルタイム反映) */
+      /* いまの習熟度で「このタスクですること」を表示(リアルタイム反映) */
       let mNow=t.m||0;
       try{const it=t.gi!=null?PATMAP[t.gi].items[t.ii]:null;if(it)mNow=patMastery(it);}catch(e){}
-      if(mNow>=MST.settled)return `<span class="msn-bg fin">仕上げ</span>`;
-      if(mNow>=MST.solved)return `<span class="msn-bg rev">定着</span>`;
-      if(mNow>=MST.try)return `<span class="msn-bg mid">挑戦中</span>`;
+      if(mNow>=MST.settled)return `<span class="msn-bg fin">仕上げる</span>`;
+      if(mNow>=MST.solved)return `<span class="msn-bg rev">定着させる</span>`;
+      if(mNow>=MST.try)return `<span class="msn-bg mid">もう一度</span>`;
       return `<span class="msn-bg new">新規</span>`;
     };
 
@@ -5027,7 +5066,7 @@ function missionCardHTML(){
       return `<div class="msn-claims">🎁 受け取れる報酬が<b>${cl+rr}件</b> ${cl>0?`<a onclick="openQuests()">クエスト</a>`:""}${rr>0?`<a onclick="renderRoadmap()">ロード</a>`:""}</div>`;
     }catch(e){return "";}})();
     return `<div class="tdcard wide msn" id="missioncard">
-      <div class="pch"><b>きょうの作戦</b><a onclick="missionRebuild()" title="作戦を組み直す" style="cursor:pointer;font-size:13px;color:var(--tx2);">🔄</a>${floorDone?`<span class="msn-ok">きょうのぶん成立🔥</span>`:""}
+      <div class="pch"><b>きょうの作戦</b><a onclick="missionRebuild()" title="作戦を組み直す" style="cursor:pointer;font-size:13px;color:var(--tx2);">🔄</a><a onclick="missionHelp()" title="バッジの意味" style="cursor:pointer;font-size:12px;color:var(--tx2);border:1.5px solid var(--bd);border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;">?</a>${floorDone?`<span class="msn-ok">きょうのぶん成立🔥</span>`:""}
         <span class="pdtabs" style="margin-left:auto;">${[["s","軽め"],["m","きょうの分"]].map(([k,l])=>`<button class="${size===k?"act":""}" onclick="missionSize('${k}')">${l}</button>`).join("")}</span>
       </div>
       ${meter}
@@ -5731,6 +5770,8 @@ function gradePat(q){
       $("#pqres").insertAdjacentHTML("beforeend",`<button class="btn" style="margin-top:12px;font-size:13.5px;padding:10px 16px;background:var(--blue);" onclick="askSensei(window._pqAsk)">🐶 間違えた欄をAIたまご先生にきく</button>`);
     }
   }catch(e){}
+  /* 作戦の次タスクへ直行 */
+  try{$("#pqres").insertAdjacentHTML("beforeend",missionNextBtnHTML());}catch(e){}
   if(dmg&&dmg.dead)return;
   setTimeout(()=>flushEvo(),800);
   if(wrong>0){
