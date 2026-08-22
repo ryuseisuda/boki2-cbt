@@ -3359,8 +3359,13 @@ window.openExamCfg=function(){
     <h2 style="color:var(--navy);font-size:19px;">試験日の設定</h2>
     <p class="prog" style="margin:4px 0 12px;">残り日数と1日のノルマがこの日から逆算されます</p>
     <input type="date" id="excfg-d" value="${ed?ed.toISOString().slice(0,10):""}" style="border:1.5px solid var(--bd);border-radius:12px;padding:11px 16px;font-family:inherit;font-size:15px;">
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--navy);">
+      <label>平日 <input type="number" id="excfg-wd" min="5" max="720" step="5" value="${studyTime().wd}" style="width:64px;border:1.5px solid var(--bd);border-radius:10px;padding:7px 8px;font-family:inherit;font-size:14px;">分</label>
+      <label>休日 <input type="number" id="excfg-we" min="5" max="720" step="5" value="${studyTime().we}" style="width:64px;border:1.5px solid var(--bd);border-radius:10px;padding:7px 8px;font-family:inherit;font-size:14px;">分</label>
+    </div>
+    <p class="prog" style="margin:6px 0 0;font-size:11.5px;">きょうのノルマは この持ち時間の比で配分されます(休日に多め など)</p>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;">
-      <button class="btn" onclick="saveExamDate(document.getElementById('excfg-d').value);document.getElementById('cele-ovl').remove();">保存</button>
+      <button class="btn" onclick="LS.set('b2_stime',{wd:+document.getElementById('excfg-wd').value||60,we:+document.getElementById('excfg-we').value||120});saveExamDate(document.getElementById('excfg-d').value);document.getElementById('cele-ovl').remove();try{missionRebuild()}catch(e){}">保存</button>
       ${ed?`<button class="btn gray" onclick="saveExamDate(null);document.getElementById('cele-ovl').remove();">未設定にする</button>`:""}
       <button class="btn gray" onclick="document.getElementById('cele-ovl').remove()">とじる</button>
     </div></div>`;
@@ -4613,6 +4618,29 @@ window.gquestTop=gquestTop;
    復習(横串)→定着チャンス→本線(gquest)→模試 の優先順で1日のタスクを最大5つ発行。
    下限=先頭1つだけがコミット、残りはボーナス。期待値はマスタリー遷移×配点で誠実に計算 */
 function itemKeyOf(it){return it.k==="tag"?("tag:"+it.tag):(it.k==="pq"?it.id:refId(it));}
+/* 平日/休日の勉強時間(分)。きょうの必要点はこの持ち時間の比で配分する */
+function studyTime(){const s=LS.get("b2_stime",null)||{};return{wd:Math.max(5,+s.wd||60),we:Math.max(5,+s.we||120)};}
+function missionNeedToday(){
+  const ed=examDate();
+  const cur=estScoreRaw();
+  if(!ed)return{need:0,days:0,gap:Math.max(0,70-cur)};
+  if(cur>=70)return{need:0,days:0,gap:0,ok:true};
+  const st=studyTime();
+  const t0=new Date();t0.setHours(0,0,0,0);
+  const ws=[];
+  for(let d=new Date(t0);d<ed;d.setDate(d.getDate()+1)){
+    const dow=d.getDay();
+    ws.push((dow===0||dow===6)?st.we:st.wd);
+  }
+  if(!ws.length)ws.push(st.wd);
+  const reserve=Math.min(3,Math.floor(ws.length*0.2));
+  let W=ws.reduce((a,b)=>a+b,0);
+  for(let i=0;i<reserve;i++)W-=ws[ws.length-1-i];
+  W=Math.max(ws[0],W);
+  const gap=70-cur;
+  const dow0=t0.getDay();
+  return{need:gap*ws[0]/W,days:ws.length,reserve,todayMin:ws[0],isWe:(dow0===0||dow0===6),gap};
+}
 /* 忘却曲線(エビングハウス)の復習間隔: k回目の成功後、次の復習までの日数 */
 const SRS_IV=[1,3,7,14,30];
 function srsInfo(id){
@@ -4646,14 +4674,7 @@ function missionBuild(){
      足りるまで全部積む(絞らない。パターンが尽きるまで出し切る) */
   const HARD_CAP=50;
   let needPerDay=0;
-  try{
-    const ed=examDate();
-    if(ed){
-      const days=Math.max(1,Math.ceil((ed.getTime()-Date.now())/86400000));
-      const reserve=Math.min(3,Math.floor(days*0.2));   /* 直前の予備日 */
-      needPerDay=Math.max(0,70-estScoreRaw())/Math.max(1,days-reserve);
-    }
-  }catch(e){}
+  try{needPerDay=missionNeedToday().need||0;}catch(e){}
   /* 1.5) 仕訳特訓(必須の基礎枠): 未踏破レベルがあれば毎日1つ。短期間で完成する反射練習 */
   try{
     const cleared=accClearedParts();
@@ -4868,11 +4889,10 @@ function missionCardHTML(){
     const foot=(()=>{try{
       const ed=examDate();
       if(!ed)return `<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日を設定</a>すると「間に合うか」を逆算するよ`;
-      const days=Math.max(1,Math.ceil((ed.getTime()-Date.now())/86400000));
-      const cur2=estScoreRaw();
-      if(cur2>=70){window._msnFit=true;return `予想は合格ライン超え。あとは模試で仕上げと本番力!`;}
-      const reserve=Math.min(3,Math.floor(days*0.2));
-      const need=(70-cur2)/Math.max(1,days-reserve);
+      const nt=missionNeedToday();
+      if(nt.ok){window._msnFit=true;return `予想は合格ライン超え。あとは模試で仕上げと本番力!`;}
+      const need=nt.need;
+      const stm=studyTime();
       const fitN=Math.max(0,Math.min(ms.fit!=null?ms.fit:4,ms.tasks.length-1));
       const dayTasks=ms.tasks.slice(0,fitN+1);
       const evAll=dayTasks.reduce((a,t)=>a+missionEv(t),0);
@@ -4884,7 +4904,7 @@ function missionCardHTML(){
       const needN=Math.ceil(need/Math.max(0.05,avgEv));
       /* Lv不足でロックされている問題数 */
       const lockedN=(()=>{let n=0;try{PATMAP.forEach(g=>{g.items.forEach(it=>{const t2=itemTier(it);if(t2>1&&!unlocked("tier"+t2)&&patMastery(it)<MST.timed-1e-9)n++;});});}catch(e){}return n;})();
-      const calc=`<span class="msn-calc">計算: (70−予想${Math.round(cur2)}点)÷実働${Math.max(1,days-reserve)}日 = 1日+${need.toFixed(1)}点 ≈ 1日${needN}問ペース</span>`;
+      const calc=`<span class="msn-calc">計算: のこり${Math.round(nt.gap)}点を 平日${stm.wd}分・休日${stm.we}分 の持ち時間で配分 → きょう(${nt.isWe?"休日":"平日"})は+${need.toFixed(1)}点 ≈ ${needN}問　<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">⚙時間設定</a></span>`;
       if(evAll>=need-0.05){window._msnFit=true;return `間に合わせるには1日<b>約${needN}問(+${need.toFixed(1)}点分)</b> → きょうの分は<b>${dayN}問(+${evAll.toFixed(1)}点分)</b>。毎日やれば間に合う計画<br>${calc}`;}
       if(evAll+mev>=need-0.05){window._msnFit=true;return `間に合わせるには1日<b>約${needN}問</b>。パターン${dayN}問(+${evAll.toFixed(1)}点)+<b>模試で実力どおり取れれば+${mev.toFixed(1)}点</b>で、きょうの作戦で間に合う計画<br>${calc}`;}
       return `⚠ 間に合わせるには1日<b>約${needN}問(+${need.toFixed(1)}点分)</b>必要だけど、いま出せるのは${dayN}問(+${(evAll+mev).toFixed(1)}点分)${lockedN>0?`。<b>🔒レベル不足で${lockedN}問がロック中</b>(問題を解いてLvを上げると解禁)`:""}。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日の見直し</a>も考えよう<br>${calc}`;
