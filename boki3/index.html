@@ -7737,6 +7737,14 @@ function setAcctBtn(){
 }
 async function onLogin(user){
   sbUser=user;
+  /* 運営者アカウントはどの端末でもdevモード(全解禁・スタミナ無限・分析除外) */
+  try{
+    if(user&&user.email&&crypto.subtle){
+      const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(user.email.toLowerCase()));
+      const hex=[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+      if(hex==="170478dab2975479ad9d8aa23908d9edcc51876049080492e4fb0a2429b40932")localStorage.setItem("b2_dev","1");
+    }
+  }catch(e){}
   try{
     const {data:row}=await sb.from("user_progress").select("data").eq("user_id",user.id).maybeSingle();
     if(row&&row.data&&tqOf(row.data)>tqOf(collectLocal()))applyData(row.data);
