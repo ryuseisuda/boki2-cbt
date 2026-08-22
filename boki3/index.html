@@ -4603,7 +4603,14 @@ function missionCardHTML(){
       </div>
       ${meter}
       <div class="msn-say"><span class="msn-dog">🐶</span><span>${head}</span></div>
-      ${allDone?"":`<button class="btn" style="margin:2px 0 4px;font-size:13px;padding:9px 16px;background:#e11d48;" onclick="pomoStart()">🍅 25分ポモドーロで始める</button>`}
+      ${allDone?"":(()=>{
+        let pomoN=0;
+        try{
+          const remainMin=view.slice(0,fit+1).filter((t,i)=>!flags[i]&&t.tp!=="mock").reduce((a,t)=>a+taskMin(t),0);
+          pomoN=Math.ceil(remainMin/25);
+        }catch(e){}
+        return `<button class="btn" style="margin:2px 0 4px;font-size:13px;padding:9px 16px;background:#e11d48;" onclick="pomoStart()">🍅 25分ポモドーロで始める${pomoN>1?` ─ きょうの分はあと${pomoN}本`:(pomoN===1?" ─ あと1本で完了!":"")}</button>`;
+      })()}
       ${rows}
       ${allDone?`<div class="msn-more"><a onclick="openStudy()">もっとやる(じぶんで選ぶ)　→</a></div>`:""}
       ${claims}
