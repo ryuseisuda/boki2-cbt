@@ -930,7 +930,23 @@ body.dark .gcard.ok{background:linear-gradient(180deg,#12291c,var(--card));borde
 .msn-lb{font-size:13.5px;font-weight:700;color:var(--navy);min-width:0;}
 .msn-ev{margin-left:auto;flex:none;font-size:12px;font-weight:800;color:#0e9f6e;background:#dcfce7;border-radius:999px;padding:2px 9px;}
 .msn-ev.mock{color:#1d4ed8;background:#dbeafe;}
-#pomochip{position:fixed;top:58px;right:12px;z-index:2500;display:flex;align-items:center;gap:8px;background:var(--navy,#1e1b4b);color:#fff;border-radius:999px;padding:8px 13px;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.3);cursor:pointer;}
+#pomochip{position:fixed;top:58px;right:12px;z-index:2500;width:62px;height:62px;border-radius:50%;background:var(--navy,#1e1b4b);color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.3);cursor:pointer;overflow:hidden;transition:width .38s cubic-bezier(.34,1.56,.64,1),height .3s ease,border-radius .32s ease;}
+#pomochip::before{content:"";position:absolute;inset:0;border-radius:50%;padding:3.5px;background:conic-gradient(#f43f5e var(--pm-p,100%),rgba(255,255,255,.16) 0);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+#pomochip .pm-core{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;}
+#pomochip .pm-emo{font-size:14px;}
+#pomochip .pm-time{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums;}
+#pomochip .pm-panel{display:none;}
+#pomochip.open{width:272px;height:auto;border-radius:16px;cursor:default;}
+#pomochip.open::before{display:none;}
+#pomochip.open .pm-core{display:none;}
+#pomochip.open .pm-panel{display:block;padding:12px 14px 10px;}
+#pomochip .pm-ph{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;margin-bottom:6px;}
+#pomochip .pm-close{cursor:pointer;padding:0 6px;font-weight:800;opacity:.75;}
+#pomochip .pm-row{padding:6px 2px;font-size:13px;border-bottom:1px dashed rgba(255,255,255,.18);cursor:pointer;}
+#pomochip .pm-row.done{opacity:.5;text-decoration:line-through;cursor:default;}
+#pomochip .pm-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12.5px;}
+#pomochip .pm-time2{font-variant-numeric:tabular-nums;font-size:14px;}
+#pomochip .pm-stop{cursor:pointer;color:#fda4af;text-decoration:underline;font-size:12px;}
 #pomobreak{position:fixed;inset:0;z-index:2700;background:rgba(15,10,40,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:10px;}
 #pomobreak .pb-t{font-size:64px;font-weight:800;font-variant-numeric:tabular-nums;}
 #pomobreak .pb-e{font-size:52px;}
@@ -4603,12 +4619,11 @@ function pomoTick(){
 function pomoRender(){
   const p=LS.get("b3_pomo",null);
   let el=document.getElementById("pomochip");
-  if(!p){if(el)el.remove();if(window._pomoIv){clearInterval(window._pomoIv);window._pomoIv=null;}return;}
-  if(!el){el=document.createElement("div");el.id="pomochip";document.body.appendChild(el);}
+  if(!p){if(el)el.remove();const bo0=document.getElementById("pomobreak");if(bo0)bo0.remove();if(window._pomoIv){clearInterval(window._pomoIv);window._pomoIv=null;}return;}
   const left=Math.max(0,Math.round((p.end-Date.now())/1000));
+  const mm=String(Math.floor(left/60)).padStart(2,"0"),ss=String(left%60).padStart(2,"0");
   if(left<=0){
     if(p.mode==="work"){
-      /* 目標の達成判定 */
       let hit=0,tot=(p.keys||[]).length;
       try{
         const ms=missionGet();
@@ -4617,39 +4632,47 @@ function pomoRender(){
       try{SND.fanfare();}catch(e){}
       try{track("pomo_done",{hit,tot});}catch(e){}
       LS.set("b3_pomo",{...p,mode:"break",end:Date.now()+5*60000});
-      miniToast(tot?`🍅 25分おつかれ! 目標 ${hit}/${tot} 達成${hit>=tot?"🔥":""}　☕5分休憩しよう`:"🍅 25分おつかれ! ☕5分休憩しよう");
+      miniToast(tot?`🍅 25分おつかれ! 目標 ${hit}/${tot} 達成${hit>=tot?"🔥":""}`:"🍅 25分おつかれ!");
     }else{
       try{SND.coin();}catch(e){}
       localStorage.removeItem("b3_pomo");
-      miniToast(`☕ 休憩おわり! もう1本いくなら作戦カードの🍅から`);
+      const bo1=document.getElementById("pomobreak");if(bo1)bo1.remove();
+      miniToast(`☕ 休憩おわり! もう1本いくなら「ポモドーロでやる」から`);
     }
     pomoRender();return;
   }
-  const mm=String(Math.floor(left/60)).padStart(2,"0"),ss=String(left%60).padStart(2,"0");
   /* 休憩中は全画面で物理的に休ませる */
   let bo=document.getElementById("pomobreak");
   if(p.mode==="break"){
     if(!bo){bo=document.createElement("div");bo.id="pomobreak";document.body.appendChild(bo);}
     bo.innerHTML=`<span class="pb-e">☕</span><div class="pb-t">${mm}:${ss}</div><div style="font-size:15px;">きゅうけい中。画面から目をはなそう</div><a onclick="pomoSkipBreak()">休憩をスキップして再開する</a>`;
-    el.style.display="none";
+    if(el)el.style.display="none";
     return;
   }
   if(bo)bo.remove();
+  /* 丸いリングタイマー ⇄ クリックで四角に展開してリスト表示 */
+  if(!el){
+    el=document.createElement("div");el.id="pomochip";
+    el.innerHTML=`<div class="pm-core"><span class="pm-emo">🍅</span><b class="pm-time"></b></div>
+    <div class="pm-panel"><div class="pm-ph"><b>🍅 この25分の目標</b><span class="pm-close" title="ちいさくする">─</span></div>
+    <div class="pm-list"></div>
+    <div class="pm-foot"><b class="pm-time2"></b><a class="pm-stop">中断する</a></div></div>`;
+    document.body.appendChild(el);
+    el.addEventListener("click",e=>{
+      if(e.target.classList.contains("pm-stop")){pomoStop();return;}
+      if(e.target.classList.contains("pm-close")){el.classList.remove("open");return;}
+      if(!el.classList.contains("open")){el.classList.add("open");pomoFillList();}
+    });
+  }
   el.style.display="";
-  el.onclick=e=>{if(e.target.classList.contains("pm-x"))return;pomoGoals();};
-  el.innerHTML=`<span class="pm-ic">🍅</span><b>${mm}:${ss}</b><span class="pm-t">${escapeHtml((p.names||"").slice(0,22))}</span><a class="pm-x" onclick="event.stopPropagation();pomoStop()">✕</a>`;
+  el.style.setProperty("--pm-p",Math.round(left/(25*60)*100)+"%");
+  el.querySelector(".pm-time").textContent=mm+":"+ss;
+  el.querySelector(".pm-time2").textContent="のこり "+mm+":"+ss;
+  if(el.classList.contains("open"))pomoFillList();
 }
-window.pomoSkipBreak=function(){
+function pomoFillList(){
+  const el=document.getElementById("pomochip");if(!el)return;
   const p=LS.get("b3_pomo",null);if(!p)return;
-  localStorage.removeItem("b3_pomo");
-  const bo=document.getElementById("pomobreak");if(bo)bo.remove();
-  pomoRender();
-  miniToast("☕→🍅 もう1本いくなら「ポモドーロでやる」から");
-};
-/* チップをタップ: この25分の目標と進捗 */
-window.pomoGoals=function(){
-  const p=LS.get("b3_pomo",null);if(!p)return;
-  const old=document.getElementById("cele-ovl");if(old)old.remove();
   let rows="";
   try{
     const ms=missionGet();
@@ -4659,22 +4682,24 @@ window.pomoGoals=function(){
       const done=missionDone(ms,t);
       let label=t.tp==="rev"?"仕訳の復習":t.tp==="acc"?"仕訳特訓":(t.label||"");
       try{const it=t.gi!=null?PATMAP[t.gi].items[t.ii]:null;if(it&&it.k==="tag")label="仕訳: "+it.tag;}catch(e){}
-      return `<div style="padding:7px 0;border-bottom:1px dashed var(--bd);${done?"opacity:.55;text-decoration:line-through;":""}">${done?"✓":"▢"} ${escapeHtml((label||"").replace(/★.*$/,"").trim())}</div>`;
+      label=(label||"").replace(/★.*$/,"").trim();
+      return `<div class="pm-row ${done?"done":""}" ${done?"":`onclick="event.stopPropagation();${missionAct(t)}"`}>${done?"✓":"▢"} ${escapeHtml(label)}</div>`;
     }).join("");
   }catch(e){}
-  const left=Math.max(0,Math.round((p.end-Date.now())/1000));
-  const ovl=document.createElement("div");ovl.id="cele-ovl";
-  ovl.onclick=e=>{if(e.target===ovl)ovl.remove();};
-  ovl.innerHTML=`<div id="cele-box" style="text-align:left;max-width:400px;">
-    <h2 style="color:var(--navy);font-size:17px;text-align:center;">🍅 この25分の目標</h2>
-    <p class="prog" style="text-align:center;margin:2px 0 10px;">のこり ${Math.floor(left/60)}分${left%60}秒</p>
-    <div style="font-size:14px;">${rows||"きょうの作戦を進めよう"}</div>
-    <div style="text-align:center;margin-top:14px;display:flex;gap:8px;justify-content:center;">
-      <button class="btn" onclick="document.getElementById('cele-ovl').remove()">とじる</button>
-      <button class="btn gray" onclick="pomoStop();document.getElementById('cele-ovl').remove()">ポモドーロを中断</button>
-    </div>
-  </div>`;
-  document.body.appendChild(ovl);
+  el.querySelector(".pm-list").innerHTML=rows||`<div class="pm-row">きょうの作戦を進めよう</div>`;
+}
+window.pomoSkipBreak=function(){
+  const p=LS.get("b3_pomo",null);if(!p)return;
+  localStorage.removeItem("b3_pomo");
+  const bo=document.getElementById("pomobreak");if(bo)bo.remove();
+  pomoRender();
+  miniToast("☕→🍅 もう1本いくなら「ポモドーロでやる」から");
+};
+/* 外部から目標を見せたいとき(合格力カードの⏱など)はチップを展開する */
+window.pomoGoals=function(){
+  pomoRender();
+  const el=document.getElementById("pomochip");
+  if(el){el.classList.add("open");pomoFillList();}
 };
 setTimeout(()=>{try{if(LS.get("b3_pomo",null))pomoTick();}catch(e){}},1200);
 window.missionSize=function(s){LS.set("b3_msize",s);const el=document.getElementById("missioncard");if(el)el.outerHTML=missionCardHTML();mountIcons(main);};
