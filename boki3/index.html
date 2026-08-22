@@ -3836,7 +3836,7 @@ function patMastery(it){
   return masteryFromLogs(id,MST.solved);   /* ○だがログに成功が残っていない(古いデータ)→解けた扱い */
 }
 window.patMastery=patMastery;
-function estScoreRaw(){
+function estTheory(){
   initPatMap();
   let total=0,wsum=0;
   PATMAP.forEach((g,gi)=>{
@@ -3848,7 +3848,10 @@ function estScoreRaw(){
     items.forEach(it=>{s+=patMastery(it);});
     total+=pts*(s/items.length);
   });
-  if(wsum>0)total=total*100/wsum;    /* 満点=100点にそろえる */
+  return wsum>0?total*100/wsum:0;    /* 満点=100点にそろえる(模試ブレンド前の理論値) */
+}
+function estScoreRaw(){
+  let total=estTheory();
   /* 模試を受けていれば、直近2回の実測を重めに混ぜる */
   const h=mockHist();
   if(h.length){
@@ -4221,8 +4224,9 @@ function missionBuild(){
   if(wrong.length&&LS.get("b3_expdd","")!==daysKey(new Date())){
     tasks.push({tp:"rev",n:Math.min(wrong.length,5),total:wrong.length});
   }
-  /* 器の大きさ: 「きょう+何点必要か」の逆算。合格ライン70点に試験日までに届く1日分を積む */
-  const HARD_CAP=12;
+  /* 器の大きさ: 「きょう+何点必要か」の逆算。合格ライン70点に試験日までに届く1日分を、
+     足りるまで全部積む(絞らない。パターンが尽きるまで出し切る) */
+  const HARD_CAP=50;
   let needPerDay=0;
   try{
     const ed=examDate();
@@ -4247,18 +4251,21 @@ function missionBuild(){
     });
   });
   dues.sort((a,b)=>a.s.due-b.s.due);
-  dues.slice(0,3).forEach(d=>{
+  dues.slice(0,10).forEach(d=>{
     const it=PATMAP[d.gi].items[d.ii];
     const goal=d.m<MST.settled-1e-9?MST.settled:MST.timed;
     tasks.push({tp:"srs",gi:d.gi,ii:d.ii,goal,label:it.label,k:d.s.k+1,remain:d.s.remain,k0:d.s.k,
       days:Math.max(1,Math.round((Date.now()-(d.s.due-0))/86400000)+1)});
     used[d.gi+"_"+d.ii]=1;
   });
+  /* 2.5) 模試: 理論値と実測の乖離が大きい(=受け直せば予想が動く)なら本線より先に */
+  const mev=mockEvGain();
+  if(mev>=3)tasks.push({tp:"mock",mev:Math.round(mev*10)/10});
   /* 3) 本線: 「きょうの必要点」に届くまで配点効率順(gquest)で積む */
   try{
     let evSum=tasks.reduce((a,t)=>a+missionEv(t),0);
     const minN=Math.max(3,tasks.length);   /* 試験日未設定でも最低3タスク */
-    for(const t of gquestTop(HARD_CAP+4)){
+    for(const t of gquestTop(99)){
       if(tasks.length>=HARD_CAP)break;
       if(used[t.gi+"_"+t.ii])continue;
       if(tasks.length>=minN&&needPerDay>0&&evSum>=needPerDay)break;
@@ -4269,12 +4276,14 @@ function missionBuild(){
       evSum+=missionEv(task);
     }
   }catch(e){}
-  /* 4) 模試: 2週間受けていない(ある程度進んでから) */
+  /* 4) 模試(通常枠): 2週間受けていない(ある程度進んでから)。乖離枠で積んだ日は重複させない */
   try{
-    const h=mockHist();
-    const lastT=h.length?Math.max(...h.map(x=>x.t||0)):0;
-    const stale=h.length?(Date.now()-lastT>14*86400000):estScoreRaw()>=30;
-    if(tasks.length<HARD_CAP+1&&stale)tasks.push({tp:"mock"});
+    if(!tasks.some(t=>t.tp==="mock")){
+      const h=mockHist();
+      const lastT=h.length?Math.max(...h.map(x=>x.t||0)):0;
+      const stale=h.length?(Date.now()-lastT>14*86400000):estScoreRaw()>=30;
+      if(tasks.length<HARD_CAP+1&&stale)tasks.push({tp:"mock",mev:Math.round(mockEvGain()*10)/10});
+    }
   }catch(e){}
   return tasks.slice(0,HARD_CAP+1);
 }
@@ -4316,6 +4325,17 @@ function missionOvr(tasks){
   });
   return {ovr,wr};
 }
+/* 模試を受けて「いまの実力(理論値)どおり」取れた場合、予想点がどれだけ動くか */
+function mockEvGain(){
+  try{
+    const h=mockHist();
+    if(!h.length)return 0;
+    const T=estTheory();
+    const rec=h.slice(-2).reduce((a,b)=>a+b.total,0)/Math.min(2,h.length);
+    const newRec=(h[h.length-1].total+T)/2;
+    return Math.max(0,(newRec-rec)*0.55);
+  }catch(e){return 0;}
+}
 function missionEv(t){
   try{
     const base=estScoreRaw();
@@ -4336,7 +4356,7 @@ function missionAfterRange(tasks){
 function missionSay(t){
   if(!t)return "きょうのぶんは店じまい!また明日🐶";
   if(t.tp==="rev")return `まちがえた仕訳が${t.total}問たまってるよ。忘れるまえにリベンジしよう`;
-  if(t.tp==="mock")return "そろそろ実力をはかる日。模試にちょうせんしよう";
+  if(t.tp==="mock")return (t.mev||0)>=3?`練習の力が模試の点にまだ反映されてない。いま受ければ予想がグッと上がるよ`:"そろそろ実力をはかる日。模試にちょうせんしよう";
   const nm=(t.label||"").replace(/★.*$/,"").trim();
   if(t.tp==="srs")return t.k<=2?`「${nm}」の復習どき。いま解きなおすと記憶が定着するよ`:`「${nm}」${t.k}回目の復習。あと${t.remain}回で試験まで忘れない状態になるよ`;
   if(t.tp==="settle")return `${t.days}日まえに解けた「${nm}」、いま解きなおせば定着するよ`;
@@ -4378,29 +4398,33 @@ function missionCardHTML(){
       if((t.m||0)>=MST.solved)return `<span class="msn-bg rev">定着</span>`;
       return `<span class="msn-bg new">新規</span>`;
     };
-    const rows=view.map((t,i)=>{
-      const done=flags[i];
-      const ev=done?0:missionEv(t);
-      const label=t.tp==="rev"?`仕訳の復習 ${t.n}問`:t.tp==="mock"?"模試を受ける":escapeHtml(t.label||"");
-      const evTx=t.tp==="mock"?`<span class="msn-ev mock">実力測定</span>`:(ev>=0.05?`<span class="msn-ev">+${ev.toFixed(1)}点</span>`:(!done&&t.tp==="srs"?`<span class="msn-ev keep">記憶キープ</span>`:""));
-      const div=i===0?`<div class="msn-div">── ここまでは絶対 ──</div>`:(i===1?`<div class="msn-div bonus">── ここまでやると間に合う ──</div>`:"");
-      return div+`<div class="msn-row ${done?"done":""}" ${done?"":`onclick="${missionAct(t)}"`}>
-        <span class="msn-ck">${done?"✓":"▢"}</span><span class="msn-lb">${badge(t,done)} ${label}</span>${evTx}
-      </div>`;
-    }).join("");
-    /* 間に合うか: きょう必要な点数 vs 作戦の合計 */
+
+    /* 間に合うか: きょう必要な点数 vs 作戦の合計(模試で取り戻せる分も織り込む) */
+    window._msnFit=false;
     const foot=(()=>{try{
       const ed=examDate();
       if(!ed)return `<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日を設定</a>すると「間に合うか」を逆算するよ`;
       const days=Math.max(1,Math.ceil((ed.getTime()-Date.now())/86400000));
       const cur2=estScoreRaw();
-      if(cur2>=70)return `予想は合格ライン超え。あとは模試で仕上げと本番力!`;
+      if(cur2>=70){window._msnFit=true;return `予想は合格ライン超え。あとは模試で仕上げと本番力!`;}
       const reserve=Math.min(3,Math.floor(days*0.2));
       const need=(70-cur2)/Math.max(1,days-reserve);
       const evAll=ms.tasks.reduce((a,t)=>a+missionEv(t),0);
-      if(evAll>=need-0.05)return `合格ラインまで1日<b>+${need.toFixed(1)}点</b>が必要 → きょうの作戦は<b>+${evAll.toFixed(1)}点</b>分。毎日やれば間に合う計画`;
-      return `⚠ 1日<b>+${need.toFixed(1)}点</b>必要だけど、パターン学習で積めるのは+${evAll.toFixed(1)}点分。模試の実測を上げる(直近が予想の55%を占める)か、<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日の見直し</a>も考えよう`;
+      const mev=ms.tasks.reduce((a,t)=>a+(t.tp==="mock"?(t.mev||0):0),0);
+      if(evAll>=need-0.05){window._msnFit=true;return `合格ラインまで1日<b>+${need.toFixed(1)}点</b>が必要 → きょうの作戦は<b>+${evAll.toFixed(1)}点</b>分。毎日やれば間に合う計画`;}
+      if(evAll+mev>=need-0.05){window._msnFit=true;return `合格ラインまで1日<b>+${need.toFixed(1)}点</b>が必要。パターンで+${evAll.toFixed(1)}点+<b>模試で実力どおり取れれば+${mev.toFixed(1)}点</b>。きょうの作戦で間に合う計画`;}
+      return `⚠ 1日<b>+${need.toFixed(1)}点</b>必要だけど、きょう積めるのは+${(evAll+mev).toFixed(1)}点分(パターン${evAll.toFixed(1)}+模試${mev.toFixed(1)})。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日の見直し</a>も考えよう`;
     }catch(e){return "";}})();
+    const rows=view.map((t,i)=>{
+      const done=flags[i];
+      const ev=done?0:missionEv(t);
+      const label=t.tp==="rev"?`仕訳の復習 ${t.n}問`:t.tp==="mock"?"模試を受ける":escapeHtml(t.label||"");
+      const evTx=t.tp==="mock"?((t.mev||0)>=0.5?`<span class="msn-ev">実力どおりなら+${t.mev.toFixed(1)}点</span>`:`<span class="msn-ev mock">実力測定</span>`):(ev>=0.05?`<span class="msn-ev">+${ev.toFixed(1)}点</span>`:(!done&&t.tp==="srs"?`<span class="msn-ev keep">記憶キープ</span>`:""));
+      const div=i===0?`<div class="msn-div">── ここまでは絶対 ──</div>`:(i===1?`<div class="msn-div bonus">${window._msnFit?"── ここまでやると間に合う ──":"── できたら最高 ──"}</div>`:"");
+      return div+`<div class="msn-row ${done?"done":""}" ${done?"":`onclick="${missionAct(t)}"`}>
+        <span class="msn-ck">${done?"✓":"▢"}</span><span class="msn-lb">${badge(t,done)} ${label}</span>${evTx}
+      </div>`;
+    }).join("");
     const head=allDone?"きょうのぶんは店じまい!また明日🐶":missionSay(nextT);
     const claims=(()=>{try{
       const cl=claimableCount();
