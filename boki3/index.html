@@ -4437,10 +4437,17 @@ function missionCardHTML(){
       const dayTasks=ms.tasks.slice(0,fitN+1);
       const evAll=dayTasks.reduce((a,t)=>a+missionEv(t),0);
       const mev=dayTasks.reduce((a,t)=>a+(t.tp==="mock"?(t.mev||0):0),0);
-      const calc=`<span class="msn-calc">計算: (70−予想${Math.round(cur2)}点)÷実働${Math.max(1,days-reserve)}日 = 1日+${need.toFixed(1)}点</span>`;
-      if(evAll>=need-0.05){window._msnFit=true;return `1日<b>+${need.toFixed(1)}点</b>が必要 → きょうの作戦は<b>+${evAll.toFixed(1)}点</b>分。毎日やれば間に合う計画<br>${calc}`;}
-      if(evAll+mev>=need-0.05){window._msnFit=true;return `1日<b>+${need.toFixed(1)}点</b>が必要。パターンで+${evAll.toFixed(1)}点+<b>模試で実力どおり取れれば+${mev.toFixed(1)}点</b>。きょうの作戦で間に合う計画<br>${calc}`;}
-      return `⚠ 1日<b>+${need.toFixed(1)}点</b>必要だけど、きょう積めるのは+${(evAll+mev).toFixed(1)}点分(パターン${evAll.toFixed(1)}+模試${mev.toFixed(1)})。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日の見直し</a>も考えよう<br>${calc}`;
+      const dayN=dayTasks.filter(t=>t.tp!=="mock").length;
+      /* 点数→問題数の換算: リスト全体の1問あたり平均期待値 */
+      const allEvs=ms.tasks.filter(t=>t.tp!=="mock"&&t.tp!=="acc").map(t=>missionEv(t)).filter(v=>v>0.01);
+      const avgEv=allEvs.length?allEvs.reduce((a,b)=>a+b,0)/allEvs.length:0.25;
+      const needN=Math.ceil(need/Math.max(0.05,avgEv));
+      /* Lv不足でロックされている問題数 */
+      const lockedN=(()=>{let n=0;try{PATMAP.forEach(g=>{g.items.forEach(it=>{const t2=itemTier(it);if(t2>1&&!unlocked("tier"+t2)&&patMastery(it)<MST.timed-1e-9)n++;});});}catch(e){}return n;})();
+      const calc=`<span class="msn-calc">計算: (70−予想${Math.round(cur2)}点)÷実働${Math.max(1,days-reserve)}日 = 1日+${need.toFixed(1)}点 ≈ 1日${needN}問ペース</span>`;
+      if(evAll>=need-0.05){window._msnFit=true;return `間に合わせるには1日<b>約${needN}問(+${need.toFixed(1)}点分)</b> → きょうの分は<b>${dayN}問(+${evAll.toFixed(1)}点分)</b>。毎日やれば間に合う計画<br>${calc}`;}
+      if(evAll+mev>=need-0.05){window._msnFit=true;return `間に合わせるには1日<b>約${needN}問</b>。パターン${dayN}問(+${evAll.toFixed(1)}点)+<b>模試で実力どおり取れれば+${mev.toFixed(1)}点</b>で、きょうの作戦で間に合う計画<br>${calc}`;}
+      return `⚠ 間に合わせるには1日<b>約${needN}問(+${need.toFixed(1)}点分)</b>必要だけど、いま出せるのは${dayN}問(+${(evAll+mev).toFixed(1)}点分)${lockedN>0?`。<b>🔒レベル不足で${lockedN}問がロック中</b>(問題を解いてLvを上げると解禁)`:""}。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日の見直し</a>も考えよう<br>${calc}`;
     }catch(e){return "";}})();
     const mkRow=(t,i)=>{
       const done=flags[i];
@@ -4456,7 +4463,7 @@ function missionCardHTML(){
     let rows="";
     view.slice(0,fit+1).forEach((t,i)=>{
       if(i===0)rows+=`<div class="msn-div">── ここまでは絶対 ──</div>`;
-      else if(i===1)rows+=`<div class="msn-div bonus">${hasExamSet?"── きょうの分: ここまでやると間に合うペース ──":"── できたら最高 ──"}</div>`;
+      else if(i===1)rows+=`<div class="msn-div bonus">${hasExamSet?`── きょうの分: ここまで${fit+1}問やると間に合うペース ──`:"── できたら最高 ──"}</div>`;
       rows+=mkRow(t,i);
     });
     const extra=view.slice(fit+1);
