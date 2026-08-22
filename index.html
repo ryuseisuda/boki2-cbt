@@ -910,6 +910,8 @@ body.dark .gcard.ok{background:linear-gradient(180deg,#12291c,var(--card));borde
 .msn-bg.rev{background:#fef3c7;color:#b45309;}
 .msn-bg.fin{background:#ede9fe;color:#6d28d9;}
 .msn-bg.mock{background:#dbeafe;color:#1d4ed8;}
+.msn-bg.mid{background:#fee2e2;color:#b91c1c;}
+.msn-sub2{margin-left:7px;font-size:10.5px;color:var(--tx2);font-weight:600;}
 .msn-bg.left{background:transparent;color:var(--tx2);font-weight:700;border:1px dashed var(--bd);}
 .msn-ev.keep{color:#6d28d9;background:#ede9fe;}
 .msn-claims{margin-top:10px;font-size:12.5px;color:var(--navy);background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:7px 11px;}
@@ -4952,8 +4954,12 @@ function missionCardHTML(){
       if(t.tp==="rev")return `<span class="msn-bg rev">リベンジ</span>`;
       if(t.tp==="mock")return `<span class="msn-bg mock">模試</span>`;
       if(t.tp==="srs")return `<span class="msn-bg rev">復習${t.k}回目</span>${!done&&t.remain>0?`<span class="msn-bg left">あと${t.remain}回で完璧</span>`:""}`;
-      if((t.m||0)>=MST.settled)return `<span class="msn-bg fin">仕上げ</span>`;
-      if((t.m||0)>=MST.solved)return `<span class="msn-bg rev">定着</span>`;
+      /* いまの習熟度で判定(発行後に解いた分をリアルタイム反映) */
+      let mNow=t.m||0;
+      try{const it=t.gi!=null?PATMAP[t.gi].items[t.ii]:null;if(it)mNow=patMastery(it);}catch(e){}
+      if(mNow>=MST.settled)return `<span class="msn-bg fin">仕上げ</span>`;
+      if(mNow>=MST.solved)return `<span class="msn-bg rev">定着</span>`;
+      if(mNow>=MST.try)return `<span class="msn-bg mid">挑戦中</span>`;
       return `<span class="msn-bg new">新規</span>`;
     };
 
@@ -4985,10 +4991,19 @@ function missionCardHTML(){
     const mkRow=(t,i)=>{
       const done=flags[i];
       const ev=done?0:missionEv(t);
-      const label=t.tp==="rev"?`仕訳の復習 ${t.n}問`:t.tp==="mock"?"模試を受ける":t.tp==="acc"?escapeHtml(t.label||"仕訳特訓"):escapeHtml(t.label||"");
+      let label=t.tp==="rev"?`仕訳の復習 ${t.n}問`:t.tp==="mock"?"模試を受ける":t.tp==="acc"?escapeHtml(t.label||"仕訳特訓"):escapeHtml(t.label||"");
+      let sub="";
+      try{
+        const it=t.gi!=null?PATMAP[t.gi].items[t.ii]:null;
+        if(it&&it.k==="tag"){
+          label=`仕訳: ${escapeHtml(it.tag)}`;
+          const stt=patStat(it);
+          if(stt&&stt.d)sub=`<span class="msn-sub2">${escapeHtml(stt.d)}</span>`;
+        }
+      }catch(e){}
       const evTx=t.tp==="mock"?((t.mev||0)>=0.5?`<span class="msn-ev">実力どおりなら+${t.mev.toFixed(1)}点</span>`:`<span class="msn-ev mock">実力測定</span>`):t.tp==="acc"?(done?"":`<span class="msn-ev keep">反射速度UP</span>`):(ev>=0.05?`<span class="msn-ev">+${ev.toFixed(1)}点</span>`:(!done&&t.tp==="srs"?`<span class="msn-ev keep">記憶キープ</span>`:""));
       return `<div class="msn-row ${done?"done":""}" ${done?"":`onclick="${missionAct(t)}"`}>
-        <span class="msn-ck">${done?"✓":"▢"}</span><span class="msn-lb">${badge(t,done)} ${label}</span>${evTx}
+        <span class="msn-ck">${done?"✓":"▢"}</span><span class="msn-lb">${badge(t,done)} ${label}${sub}</span>${evTx}
       </div>`;
     };
     const fit=Math.max(0,Math.min(ms.fit!=null?ms.fit:4,view.length-1));
