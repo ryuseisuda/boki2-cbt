@@ -930,6 +930,7 @@ body.dark .gcard.ok{background:linear-gradient(180deg,#12291c,var(--card));borde
 .msn-ext{margin-top:8px;}
 .msn-ext summary{cursor:pointer;font-size:12.5px;font-weight:800;color:var(--blue);padding:6px 2px;list-style:none;}
 .msn-ext summary::-webkit-details-marker{display:none;}
+.msn-calc{display:inline-block;margin-top:3px;font-size:11px;color:var(--tx2);}
 .msn-more{margin-top:10px;font-size:13px;}
 .msn-more a{color:var(--blue);font-weight:700;cursor:pointer;text-decoration:underline;}
 .ptasks{display:flex;flex-wrap:wrap;gap:8px;padding:2px;}
@@ -4436,9 +4437,10 @@ function missionCardHTML(){
       const dayTasks=ms.tasks.slice(0,fitN+1);
       const evAll=dayTasks.reduce((a,t)=>a+missionEv(t),0);
       const mev=dayTasks.reduce((a,t)=>a+(t.tp==="mock"?(t.mev||0):0),0);
-      if(evAll>=need-0.05){window._msnFit=true;return `合格ラインまで1日<b>+${need.toFixed(1)}点</b>が必要 → きょうの作戦は<b>+${evAll.toFixed(1)}点</b>分。毎日やれば間に合う計画`;}
-      if(evAll+mev>=need-0.05){window._msnFit=true;return `合格ラインまで1日<b>+${need.toFixed(1)}点</b>が必要。パターンで+${evAll.toFixed(1)}点+<b>模試で実力どおり取れれば+${mev.toFixed(1)}点</b>。きょうの作戦で間に合う計画`;}
-      return `⚠ 1日<b>+${need.toFixed(1)}点</b>必要だけど、きょう積めるのは+${(evAll+mev).toFixed(1)}点分(パターン${evAll.toFixed(1)}+模試${mev.toFixed(1)})。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日の見直し</a>も考えよう`;
+      const calc=`<span class="msn-calc">計算: (70−予想${Math.round(cur2)}点)÷実働${Math.max(1,days-reserve)}日 = 1日+${need.toFixed(1)}点</span>`;
+      if(evAll>=need-0.05){window._msnFit=true;return `1日<b>+${need.toFixed(1)}点</b>が必要 → きょうの作戦は<b>+${evAll.toFixed(1)}点</b>分。毎日やれば間に合う計画<br>${calc}`;}
+      if(evAll+mev>=need-0.05){window._msnFit=true;return `1日<b>+${need.toFixed(1)}点</b>が必要。パターンで+${evAll.toFixed(1)}点+<b>模試で実力どおり取れれば+${mev.toFixed(1)}点</b>。きょうの作戦で間に合う計画<br>${calc}`;}
+      return `⚠ 1日<b>+${need.toFixed(1)}点</b>必要だけど、きょう積めるのは+${(evAll+mev).toFixed(1)}点分(パターン${evAll.toFixed(1)}+模試${mev.toFixed(1)})。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日の見直し</a>も考えよう<br>${calc}`;
     }catch(e){return "";}})();
     const mkRow=(t,i)=>{
       const done=flags[i];
