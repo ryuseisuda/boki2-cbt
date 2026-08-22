@@ -4228,6 +4228,56 @@ function studyTime(){const s=LS.get("b2_stime",null)||{};return{wd:Math.max(5,+s
 function goalScore(){const v=+(LS.get("b3_goal",75))||75;return Math.min(100,Math.max(70,v));}
 /* 今日おぼえた問題が試験日までに受ける復習の回数(+1=最初に解く分) */
 function touchesFor(daysLeft){let c=1,s=0;for(const iv of SRS_IV){s+=iv;if(s<daysLeft)c++;else break;}return c;}
+const NEW_MIN=12,REV_MIN=8;   /* 新規1問・復習1回の所要(分) */
+/* 試験日まで日別に「復習を先に、残りで新規」を回すシミュレーション。
+   新規を置いた日の復習は未来の日に予約される。 */
+function missionSim(nGoal){
+  const ed=examDate();if(!ed)return null;
+  const st=studyTime();
+  const t0=new Date();t0.setHours(0,0,0,0);
+  const budgets=[];
+  for(let d=new Date(t0);d<ed;d.setDate(d.getDate()+1)){
+    const dow=d.getDay();
+    budgets.push((dow===0||dow===6)?st.we:st.wd);
+  }
+  if(!budgets.length)budgets.push(st.wd);
+  const D=budgets.length;
+  /* 既存問題の将来復習を日別に展開 */
+  const revSch=new Array(D+1).fill(0);
+  const edT=ed.getTime();
+  PATMAP.forEach(g=>{g.items.forEach(it=>{
+    if(it.k==="tag")return;
+    const m=patMastery(it);if(m<MST.solved-1e-9)return;
+    const id=it.k==="pq"?it.id:refId(it);
+    const s=srsInfo(id);if(!s||s.grad)return;
+    let t=s.due,kk=s.k,guard=0;
+    while(t<=edT&&guard++<9){
+      const di=Math.max(0,Math.floor((t-t0.getTime())/86400000));
+      if(di<D)revSch[di]++;
+      kk++;t+=SRS_IV[Math.min(kk-1,SRS_IV.length-1)]*86400000;
+    }
+  })});
+  /* cumsum間隔(新規を置いた日からの復習オフセット) */
+  const offs=[];{let s2=0;for(const iv of SRS_IV){s2+=iv;offs.push(s2);}}
+  let newLeft=Math.max(0,nGoal),carry=0,revTotal=0,newTotal=0;
+  let r0=0,n0=0;
+  for(let d=0;d<D;d++){
+    let budget=budgets[d];
+    const due=revSch[d]+carry;
+    const rDo=Math.min(due,Math.floor(budget/REV_MIN));
+    carry=due-rDo;
+    budget-=rDo*REV_MIN;
+    const nDo=Math.min(newLeft,Math.floor(budget/NEW_MIN));
+    newLeft-=nDo;
+    offs.forEach(o=>{const di=d+o;if(di<D)revSch[di]+=nDo;});
+    revTotal+=rDo;newTotal+=nDo;
+    if(d===0){r0=rDo;n0=nDo;}
+  }
+  return{newGoal:nGoal,newToday:n0,revToday:r0,newLeftover:newLeft+0,revCarry:carry,
+    revTotal,newTotal,days:D,todayMin:budgets[0],
+    totalTouch:revTotal+newTotal,
+    fits:(newLeft<=0&&carry<=0)};
+}
 function missionNeedToday(){
   const ed=examDate();
   const cur=estScoreRaw();
@@ -4374,28 +4424,35 @@ function missionBuild(){
         if(fitIdx<0&&needPerDay>0&&evSum>=needPerDay)fitIdx=tasks.length-1;
       }
     }
-    /* 仕事量モデル: 新規はタッチ数(解く+試験日までの復習回数)で数え、既存の復習負債を足す。
-       きょうの分 = 総仕事 × きょうの持ち時間の割合 */
+    /* 仕事量: 日別シミュレーション(復習を先に、残りで新規。新規は未来に復習を予約)。
+       「きょうの分」= 初日の復習◯回+新規◯問 */
     try{
       const nt=missionNeedToday();
       if(nt.days>0){
-        const touches=touchesFor(nt.days);
-        /* 目標到達に必要な新規タスク数: ev累積がgapに届く位置 */
+        /* 目標到達に必要な新規タスク数: ev累積がgapに届く位置(新規patのみ数える) */
         let acc=0,nGoal=0;
-        for(const t of tasks){acc+=missionEv(t);nGoal++;if(acc>=nt.gap)break;}
-        if(acc<nt.gap)nGoal=tasks.length;
-        /* 既存パターンの復習負債(卒業前の残り復習回数の合計) */
-        let revDebt=0;
-        PATMAP.forEach(g=>{g.items.forEach(it=>{
-          if(it.k==="tag")return;
-          const m=patMastery(it);if(m<MST.solved-1e-9)return;
-          const id=it.k==="pq"?it.id:refId(it);
-          const s=srsInfo(id);if(s&&!s.grad)revDebt+=s.remain;
-        })});
-        const total=nGoal*touches+revDebt;
-        const todayTouch=Math.max(1,Math.ceil(total*nt.todayW/Math.max(nt.todayW,nt.W)));
-        tasks._wl={nGoal,touches,revDebt,total,todayTouch};
-        fitIdx=Math.min(tasks.length-1,todayTouch-1);
+        for(const t of tasks){
+          if(t.tp==="pat"&&(t.m||0)<MST.solved-1e-9){acc+=missionEv(t);nGoal++;}
+          else acc+=missionEv(t);
+          if(acc>=nt.gap)break;
+        }
+        if(acc<nt.gap)nGoal=tasks.filter(t=>t.tp==="pat"&&(t.m||0)<MST.solved-1e-9).length;
+        const sim=missionSim(nGoal);
+        if(sim){
+          tasks._wl=sim;
+          /* fit: 先頭から rev/acc は常に、srsは今日の復習枠、patは今日の新規枠まで */
+          let rQ=Math.max(sim.revToday,tasks.filter(t=>t.tp==="srs").length&&sim.revToday===0?0:sim.revToday),nQ=sim.newToday,last=-1;
+          tasks.forEach((t,i)=>{
+            if(t.tp==="rev"||t.tp==="acc"||t.tp==="mock"){last=i;return;}
+            if(t.tp==="srs"){if(rQ>0){rQ--;last=i;}return;}
+            if(t.tp==="pat"){
+              const isNew=(t.m||0)<MST.solved-1e-9;
+              if(isNew){if(nQ>0){nQ--;last=i;}}
+              else{if(rQ>0){rQ--;last=i;}}
+            }
+          });
+          fitIdx=Math.max(0,last);
+        }
       }
     }catch(e){}
     if(fitIdx<0)fitIdx=Math.min(tasks.length-1,needPerDay>0?tasks.length-1:Math.min(4,tasks.length-1));
@@ -4707,13 +4764,12 @@ function missionCardHTML(){
       const dayN=dayTasks.filter(t=>t.tp!=="mock").length;
       const doneDay=dayTasks.filter(t=>missionDone(ms,t)).length;
       const wl=ms.wl;
-      /* 1日の容量(タッチ): きょうの持ち時間÷1問あたり平均10分 */
-      const cap=Math.floor(nt.todayMin/10);
       const lockedN=(()=>{let n=0;try{PATMAP.forEach(g=>{g.items.forEach(it=>{const t2=itemTier(it);if(t2>1&&!unlocked("tier"+t2)&&patMastery(it)<MST.timed-1e-9)n++;});});}catch(e){}return n;})();
       if(!wl){return `目標${nt.goal}点まで あと${Math.round(nt.gap)}点。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">⚙設定</a>`;}
-      const calc=`<span class="msn-calc">計算: 新規${wl.nGoal}問×${wl.touches}回タッチ(復習コスト込み)+たまった復習${wl.revDebt}回 = 総仕事${wl.total}回 → きょうの持ち時間(${nt.isWe?"休日":"平日"}${nt.todayMin}分)の割合で<b>${wl.todayTouch}回</b>　<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">⚙目標・時間設定</a></span>`;
-      if(wl.todayTouch<=cap){window._msnFit=true;return `目標<b>${nt.goal}点</b>まで、復習コスト込みで<b>きょう${wl.todayTouch}問</b>(${doneDay}/${dayN}個 完了)。毎日この分で間に合う計画<br>${calc}`;}
-      return `⚠ きょう<b>${wl.todayTouch}問</b>必要だけど、持ち時間${nt.todayMin}分だと約${cap}問が限界${lockedN>0?`。<b>🔒Lv不足で${lockedN}問ロック中</b>`:""}。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">時間を増やすか目標・試験日の見直し</a>を<br>${calc}`;
+      const todayMin=wl.revToday*8+wl.newToday*12;
+      const calc=`<span class="msn-calc">計算: 試験日まで日ごとに「復習(8分)を先に→残り時間で新規(12分)」を予行 → 総仕事 新規${wl.newTotal}問+復習${wl.revTotal}回。きょうは復習${wl.revToday}回+新規${wl.newToday}問(約${todayMin}分)　<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">⚙目標・時間設定</a></span>`;
+      if(wl.fits){window._msnFit=true;return `目標<b>${nt.goal}点</b>まで: きょうは<b>復習${wl.revToday}回+新規${wl.newToday}問</b>(${doneDay}/${dayN}個 完了)。復習の先読み込みで試験日に間に合う計画<br>${calc}`;}
+      return `⚠ このままだと試験日までに<b>新規${wl.newLeftover}問が消化しきれない</b>見込み${wl.revCarry>0?`(復習も${wl.revCarry}回あふれ)`:""}${lockedN>0?`。<b>🔒Lv不足で${lockedN}問ロック中</b>`:""}。<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">時間を増やすか目標・試験日の見直し</a>を<br>${calc}`;
     }catch(e){return "";}})();
     const mkRow=(t,i)=>{
       const done=flags[i];
