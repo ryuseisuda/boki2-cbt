@@ -889,6 +889,34 @@ body.dark .gcard.ok{background:linear-gradient(180deg,#12291c,var(--card));borde
 .pdtabs button.act{background:var(--card,#fff);color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.14);}
 .pbar-row.big{padding:2px 2px 10px;}
 .pbar-row.big .pbar{height:9px;}
+/* きょうの作戦 */
+.msn .pch{flex-wrap:wrap;gap:8px;}
+.msn-ok{font-size:12px;font-weight:800;color:#b45309;background:#fef3c7;border-radius:999px;padding:3px 10px;}
+.msn-meter{margin:10px 0 4px;display:flex;flex-direction:column;gap:5px;}
+.msn-mrow{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2);}
+.msn-mrow.af .msn-mn{color:var(--navy);font-weight:700;}
+.msn-ml{width:44px;text-align:right;flex:none;}
+.msn-mn{min-width:86px;}
+.msn-bar{position:relative;flex:1;height:10px;background:var(--bd);border-radius:999px;overflow:hidden;}
+.msn-bar i{position:absolute;top:0;bottom:0;background:var(--blue);border-radius:999px;opacity:.85;}
+.msn-mrow.af .msn-bar i{background:#0e9f6e;}
+.msn-bar u{position:absolute;top:-2px;bottom:-2px;width:2px;background:#f59e0b;}
+.msn-up{color:#0e9f6e;font-weight:800;}
+.msn-say{display:flex;gap:8px;align-items:flex-start;background:var(--bg,#f6f4fd);border-radius:12px;padding:9px 12px;font-size:13px;color:var(--navy);margin:8px 0 4px;line-height:1.6;}
+.msn-dog{font-size:18px;flex:none;}
+.msn-div{font-size:10.5px;color:var(--tx2);letter-spacing:.08em;margin:8px 0 2px;}
+.msn-div.bonus{color:#b45309;}
+.msn-row{display:flex;align-items:center;gap:9px;padding:9px 10px;border:2px solid var(--bd);border-radius:12px;margin-top:6px;cursor:pointer;background:var(--card,#fff);}
+.msn-row:hover{border-color:var(--blue);}
+.msn-row.done{opacity:.55;cursor:default;background:transparent;}
+.msn-row.done .msn-lb{text-decoration:line-through;}
+.msn-ck{font-size:15px;color:var(--blue);flex:none;width:18px;text-align:center;}
+.msn-row.done .msn-ck{color:#0e9f6e;}
+.msn-lb{font-size:13.5px;font-weight:700;color:var(--navy);min-width:0;}
+.msn-ev{margin-left:auto;flex:none;font-size:12px;font-weight:800;color:#0e9f6e;background:#dcfce7;border-radius:999px;padding:2px 9px;}
+.msn-ev.mock{color:#1d4ed8;background:#dbeafe;}
+.msn-more{margin-top:10px;font-size:13px;}
+.msn-more a{color:var(--blue);font-weight:700;cursor:pointer;text-decoration:underline;}
 .ptasks{display:flex;flex-wrap:wrap;gap:8px;padding:2px;}
 .ptask{display:inline-flex;align-items:center;gap:7px;border:2px solid var(--bd);background:var(--card,#fff);box-shadow:0 2px 0 var(--bd);border-radius:12px;padding:8px 13px;font-size:12.5px;color:var(--navy);cursor:pointer;font-weight:600;font-family:inherit;}
 .ptask b{font-weight:800;}
@@ -2987,18 +3015,12 @@ function homeTodoHTML(){
   const rr=(()=>{try{return ROAD.filter(n=>roadState(n)==="ready").length;}catch(e){return 0;}})();
   if(rr>0)chips.push(`<button class="ptask gold" onclick="renderRoadmap()">🏆 ロード報酬 <b>${rr}件</b></button>`);
   const todayLeft=Math.max(0,pace.quotaToday-pace.doneToday);
+  /* やることの提案は「きょうの作戦」カードに一本化。ここは進捗と報酬だけ */
   if(pace.remain===0){
-    chips.push(`<button class="ptask" onclick="renderExams()">🎓 クエスト完了! 模試で仕上げよう →</button>`);
+    chips.push(`<span class="ptask done">🎓 パターンは計画到達! 仕上げは模試で</span>`);
   }else if(todayLeft===0){
     chips.push(`<span class="ptask done">🎉 きょうのノルマ達成! おつかれさま</span>`);
-  }else{
-    (()=>{try{gquestTop(Math.min(5,todayLeft)).forEach(t=>{
-      const act=t.m>=0.8?"⏱仕上げ":t.m>=0.5?"🔁定着":"✏️解く";
-      chips.push(`<button class="ptask" onclick="startPat(${t.gi},${t.ii})"><b>${escapeHtml(t.label)}</b><span>${act}</span></button>`);
-    });}catch(e){}})();
   }
-  const mockNeed=(()=>{try{const mocks=mockHist().length;const gr=ROAD.filter(x=>x.mock&&estScore()>=x.v).reduce((a,x)=>Math.max(a,x.mock),0);return Math.max(0,gr-mocks);}catch(e){return 0;}})();
-  if(mockNeed>0)chips.push(`<button class="ptask mock" onclick="renderExams()">🎓 模試を受ける(今週中)</button>`);
   return `<div class="tdcard wide" id="plancard">
     <div class="pch">
       <b>合格プラン</b>
@@ -3421,11 +3443,17 @@ function renderHome(){
         return `<div class="strkbig ${tq===0?"risk":""}"><span class="strkfire">🔥</span><b>${a.streak}</b><span class="strku">日連続</span>${tq===0?'<span class="strkw">今日1問で継続!</span>':""}</div>`;}catch(e){return ""}})()}
       <h1 class="disp" style="margin:4px 0 10px;">${ed?`合格まで、<br>あと ${left} 日。`:`全パターン制覇で、<br>合格ラインへ。`}</h1>
       ${(()=>{try{
-        const p=planPace();
-        const left=p?Math.max(0,p.quotaToday-p.doneToday):0;
-        const t=(p&&p.remain>0&&left>0)?gquestTop(1)[0]:null;
-        if(t)return `<button class="btn go cta gobig" onclick="startPat(${t.gi},${t.ii})">▶ ${p.doneToday>0?`つづきを解く(あと${left}問)`:"きょうの1問目を解く"}</button>
-          <div style="margin-top:8px;"><a style="font-size:12.5px;color:var(--tx2);text-decoration:underline;cursor:pointer;" onclick="openStudy()">べつのモードをえらぶ</a></div>`;
+        const ms=missionGet();
+        const size=LS.get("b2_msize","m");
+        const cap={s:1,m:3,l:5}[size]||3;
+        const view=ms.tasks.slice(0,Math.max(1,cap));
+        const undone=view.filter(t=>!missionDone(ms,t));
+        if(undone.length){
+          const t=undone[0];
+          const doneN=view.length-undone.length;
+          return `<button class="btn go cta gobig" onclick="${missionAct(t)}">▶ ${doneN>0?`作戦のつづき(あと${undone.length}個)`:"きょうの作戦をはじめる"}</button>
+          <div style="margin-top:8px;"><a style="font-size:12.5px;color:var(--tx2);text-decoration:underline;cursor:pointer;" onclick="openStudy()">じぶんで選ぶ</a></div>`;
+        }
       }catch(e){}
       return `<button class="btn go cta gobig" onclick="openStudy()">学習を始める　<span class="arrowa">→</span></button>`;})()}
       <div class="qrow" id="qrow">${qrowHTML()}</div>
@@ -3439,6 +3467,7 @@ function renderHome(){
     </div>
     </div>
   </section>
+  ${(()=>{try{return missionCardHTML();}catch(e){return ""}})()}
   ${(()=>{try{return homeTodoHTML();}catch(e){return ""}})()}
   ${(!sbUser&&(Date.now()-LS.get("b2_savehide",0)>86400000)&&(totalQ>=5||dogs.length>0))?`
   <div class="qpane" id="savecard" style="margin-top:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
@@ -4189,9 +4218,11 @@ function masteryFromLogs(id,fallback){
   return v;
 }
 function patMastery(it){
+  /* きょうの作戦: 完了後シミュレーション用のオーバーライド */
+  if(window._mstOvr){const k=it.k==="tag"?("tag:"+it.tag):(it.k==="pq"?it.id:refId(it));if(k in window._mstOvr)return window._mstOvr[k];}
   if(it.k==="tag"){
     const qs=DRILLS.filter(d=>d.tag===it.tag);if(!qs.length)return 0;
-    const st=LS.get(KEY_D,{}),wrong=LS.get(KEY_W,[]);
+    const st=LS.get(KEY_D,{}),wrong=window._wrOvr?[]:LS.get(KEY_W,[]);
     let s=0;
     qs.forEach(q=>{
       const e=st[q.id];
@@ -4209,7 +4240,7 @@ function patMastery(it){
   return masteryFromLogs(id,MST.solved);   /* ○だがログに成功が残っていない(古いデータ)→解けた扱い */
 }
 window.patMastery=patMastery;
-function estScore(){
+function estScoreRaw(){
   initPatMap();
   let total=0,wsum=0;
   PATMAP.forEach((g,gi)=>{
@@ -4231,8 +4262,9 @@ function estScore(){
     /* 模試前は、初回の実力チェック結果をスタート地点(下限)として使う。模試を受けたら実測が上書き */
     try{const dg=(LS.get("b2_onb",null)||{}).diag;if(typeof dg==="number")total=Math.max(total,dg);}catch(e){}
   }
-  return Math.max(0,Math.min(100,Math.round(total)));
+  return Math.max(0,Math.min(100,total));
 }
+function estScore(){return Math.round(estScoreRaw());}
 window.estScore=estScore;
 /* 合格ライン(70点)への到達予測 */
 function passForecast(){
@@ -4560,6 +4592,171 @@ function gquestTop(k){
   return out;
 }
 window.gquestTop=gquestTop;
+/* ================= きょうの作戦: 単一動線 =================
+   復習(横串)→定着チャンス→本線(gquest)→模試 の優先順で1日のタスクを最大5つ発行。
+   下限=先頭1つだけがコミット、残りはボーナス。期待値はマスタリー遷移×配点で誠実に計算 */
+function itemKeyOf(it){return it.k==="tag"?("tag:"+it.tag):(it.k==="pq"?it.id:refId(it));}
+function missionBuild(){
+  initPatMap();
+  const tasks=[];const used={};
+  /* 1) 仕訳の間違い復習(忘却前のリベンジが最優先) */
+  const wrong=LS.get(KEY_W,[]);
+  if(wrong.length&&LS.get("b2_expdd","")!==daysKey(new Date())){
+    tasks.push({tp:"rev",n:Math.min(wrong.length,5),total:wrong.length});
+  }
+  /* 2) 定着チャンス: 解けた(○)が定着前で、初成功から12時間以上たったもの */
+  const logs=LS.get(KEY_LOG,[]);
+  const settles=[];
+  PATMAP.forEach((g,gi)=>{
+    if(secExp(gi).exp>=gplan()[gi+1]-1e-9)return;
+    g.items.forEach((it,ii)=>{
+      if(it.k==="tag")return;
+      const m=patMastery(it);
+      if(m<MST.solved-1e-9||m>=MST.settled-1e-9)return;
+      const tier=itemTier(it);if(tier>1&&!unlocked("tier"+tier))return;
+      const id=it.k==="pq"?it.id:refId(it);
+      const succ=logs.filter(x=>x.id===id&&x.n>0&&x.ok/x.n>=0.8).sort((a,b)=>a.t-b.t);
+      if(!succ.length||Date.now()-succ[0].t<MST_GAP)return;
+      settles.push({gi,ii,t:succ[0].t});
+    });
+  });
+  settles.sort((a,b)=>a.t-b.t);
+  settles.slice(0,2).forEach(s=>{
+    const it=PATMAP[s.gi].items[s.ii];
+    tasks.push({tp:"settle",gi:s.gi,ii:s.ii,goal:MST.settled,label:it.label,days:Math.max(1,Math.round((Date.now()-s.t)/86400000))});
+    used[s.gi+"_"+s.ii]=1;
+  });
+  /* 3) 本線: 合格プランの次の一歩(配点効率順=gquest) */
+  try{gquestTop(6).forEach(t=>{
+    if(tasks.length>=4||used[t.gi+"_"+t.ii])return;
+    used[t.gi+"_"+t.ii]=1;
+    tasks.push({tp:"pat",gi:t.gi,ii:t.ii,goal:t.goal,m:t.m,label:t.label});
+  });}catch(e){}
+  /* 4) 模試: 2週間受けていない(ある程度進んでから) */
+  try{
+    const h=mockHist();
+    const lastT=h.length?Math.max(...h.map(x=>x.t||0)):0;
+    const stale=h.length?(Date.now()-lastT>14*86400000):estScoreRaw()>=30;
+    if(tasks.length<5&&stale)tasks.push({tp:"mock"});
+  }catch(e){}
+  return tasks.slice(0,5);
+}
+function missionGet(){
+  const today=daysKey(new Date());
+  let ms=LS.get("b2_mission",null);
+  if(!ms||ms.d!==today||!Array.isArray(ms.tasks)){
+    ms={d:today,tasks:missionBuild(),wrongSnap:LS.get(KEY_W,[]).slice(0,99),mockN:(mockHist()||[]).length};
+    LS.set("b2_mission",ms);
+  }
+  return ms;
+}
+function missionDone(ms,t){
+  try{
+    if(t.tp==="rev"){
+      const cur=LS.get(KEY_W,[]);
+      if(!cur.length)return true;
+      const solved=(ms.wrongSnap||[]).filter(id=>!cur.includes(id)).length;
+      return solved>=t.n||LS.get("b2_expdd","")===daysKey(new Date());
+    }
+    if(t.tp==="mock")return (mockHist()||[]).length>ms.mockN;
+    const it=PATMAP[t.gi]&&PATMAP[t.gi].items[t.ii];if(!it)return true;
+    return patMastery(it)>=t.goal-1e-9;
+  }catch(e){return false;}
+}
+function missionOvr(tasks){
+  const ovr={};let wr=false;
+  tasks.forEach(t=>{
+    if(t.tp==="rev")wr=true;
+    else if(t.gi!=null){
+      const it=PATMAP[t.gi]&&PATMAP[t.gi].items[t.ii];
+      if(it){const k=itemKeyOf(it);const cur=patMastery(it);ovr[k]=Math.max(cur,t.goal||0);}
+    }
+  });
+  return {ovr,wr};
+}
+function missionEv(t){
+  try{
+    const base=estScoreRaw();
+    const {ovr,wr}=missionOvr([t]);
+    window._mstOvr=ovr;window._wrOvr=wr;
+    const after=estScoreRaw();
+    window._mstOvr=null;window._wrOvr=false;
+    return Math.max(0,after-base);
+  }catch(e){window._mstOvr=null;window._wrOvr=false;return 0;}
+}
+function missionAfterRange(tasks){
+  const {ovr,wr}=missionOvr(tasks);
+  window._mstOvr=ovr;window._wrOvr=wr;
+  let r=null;try{r={...mockRange(),raw:estScoreRaw()};}catch(e){}
+  window._mstOvr=null;window._wrOvr=false;
+  return r;
+}
+function missionSay(t){
+  if(!t)return "きょうのぶんは店じまい!また明日🐶";
+  if(t.tp==="rev")return `まちがえた仕訳が${t.total}問たまってるよ。忘れるまえにリベンジしよう`;
+  if(t.tp==="mock")return "そろそろ実力をはかる日。模試にちょうせんしよう";
+  const nm=(t.label||"").replace(/★.*$/,"").trim();
+  if(t.tp==="settle")return `${t.days}日まえに解けた「${nm}」、いま解きなおせば定着するよ`;
+  if(t.goal>=MST.timed)return `「${nm}」を時間内に解けたら仕上げかんりょう!`;
+  if((t.m||0)>=MST.solved)return `「${nm}」を定着させて、確実に取れるようにしよう`;
+  return `つぎは「${nm}」。配点の大きいところから攻めるよ`;
+}
+function missionAct(t){
+  if(t.tp==="rev")return "startReview()";
+  if(t.tp==="mock")return "renderExams()";
+  return `startPat(${t.gi},${t.ii})`;
+}
+window.missionSize=function(s){LS.set("b2_msize",s);const el=document.getElementById("missioncard");if(el)el.outerHTML=missionCardHTML();mountIcons(main);};
+function missionCardHTML(){
+  try{
+    const ms=missionGet();
+    if(!ms.tasks.length)return "";
+    const size=LS.get("b2_msize","m");
+    const cap={s:1,m:3,l:5}[size]||3;
+    const view=ms.tasks.slice(0,Math.max(1,cap));
+    const flags=view.map(t=>missionDone(ms,t));
+    const nextT=view.find((t,i)=>!flags[i])||null;
+    const allDone=flags.every(Boolean);
+    const floorDone=flags[0];
+    let cur=null,af=null;
+    try{cur=mockRange();}catch(e){}
+    const remainTasks=view.filter((t,i)=>!flags[i]);
+    try{af=remainTasks.length?missionAfterRange(view):null;}catch(e){}
+    const dRaw=af&&cur?Math.max(0,(af.raw!=null?af.raw:af.c)-estScoreRaw()):0;
+    const meter=cur?`
+    <div class="msn-meter">
+      <div class="msn-mrow"><span class="msn-ml">いま</span><span class="msn-bar"><i style="left:${cur.lo}%;width:${Math.max(2,cur.hi-cur.lo)}%;"></i><u style="left:70%;"></u></span><span class="msn-mn">${cur.lo}〜${cur.hi}点</span></div>
+      ${af&&!allDone?`<div class="msn-mrow af"><span class="msn-ml">完了後</span><span class="msn-bar"><i style="left:${af.lo}%;width:${Math.max(2,af.hi-af.lo)}%;"></i><u style="left:70%;"></u></span><span class="msn-mn">${af.lo}〜${af.hi}点${dRaw>=0.05?` <b class="msn-up">+${dRaw.toFixed(1)}</b>`:""}</span></div>`:""}
+    </div>`:"";
+    const rows=view.map((t,i)=>{
+      const done=flags[i];
+      const ev=done?0:missionEv(t);
+      const label=t.tp==="rev"?`仕訳の復習 ${t.n}問`:t.tp==="mock"?"模試を受ける":escapeHtml(t.label||"");
+      const evTx=t.tp==="mock"?`<span class="msn-ev mock">実力測定</span>`:(ev>=0.05?`<span class="msn-ev">+${ev.toFixed(1)}点</span>`:"");
+      const div=i===0?`<div class="msn-div">── ここまでは絶対 ──</div>`:(i===1?`<div class="msn-div bonus">── できたら最高 ──</div>`:"");
+      return div+`<div class="msn-row ${done?"done":""}" ${done?"":`onclick="${missionAct(t)}"`}>
+        <span class="msn-ck">${done?"✓":"▢"}</span><span class="msn-lb">${label}</span>${evTx}
+      </div>`;
+    }).join("");
+    let pace=null;try{pace=planPace();}catch(e){}
+    const foot=(()=>{ if(!pace)return "";
+      if(pace.remain===0)return "パターンはぜんぶ計画到達。あとは模試で仕上げるだけ";
+      if(pace.hasExam)return `1日${pace.perDay}問ペースで試験日にまにあう計画${pace.doneToday<pace.quotaToday?`(きょうの作戦で追いつけるよ)`:""}`;
+      return `<a style="text-decoration:underline;cursor:pointer;" onclick="openExamCfg()">試験日を設定</a>すると逆算プランになるよ`;})();
+    const head=allDone?"きょうのぶんは店じまい!また明日🐶":missionSay(nextT);
+    return `<div class="tdcard wide msn" id="missioncard">
+      <div class="pch"><b>きょうの作戦</b>${floorDone?`<span class="msn-ok">きょうのぶん成立🔥</span>`:""}
+        <span class="pdtabs" style="margin-left:auto;">${[["s","5分"],["m","15分"],["l","30分"]].map(([k,l])=>`<button class="${size===k?"act":""}" onclick="missionSize('${k}')">${l}</button>`).join("")}</span>
+      </div>
+      ${meter}
+      <div class="msn-say"><span class="msn-dog">🐶</span><span>${head}</span></div>
+      ${rows}
+      ${allDone?`<div class="msn-more"><a onclick="openStudy()">もっとやる(じぶんで選ぶ)　→</a></div>`:""}
+      <div class="pfoot"><span class="prog">${foot}</span></div>
+    </div>`;
+  }catch(e){return "";}
+}
+window.missionCardHTML=missionCardHTML;
 /* ---------- 合格プラン(ホーム): ペース計算と学習ログ ---------- */
 /* そのパターンが「解けた/定着/仕上げ」に到達した時刻を挑戦ログから復元 */
 function masteryTimes(id){
